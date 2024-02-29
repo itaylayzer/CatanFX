@@ -1,0 +1,17 @@
+hex 3 dots are 7 11 12 16 17 22 
+
+4 is all the dots of 3 plus 1 = 8 12 13 17 18 23
+
+so the pattern is just to find hexes 0,7,12,16 then we can find the rest based on them just by adding (index - current_row_first_hex), and the current_row_first_hex (for example for hex 8 is hex 7) is the floored closest value in the starting dots array.
+
+so the starting:
+
+hex 0  dots are  0 3 4 7 8 12
+
+hex 7  dots are  16 21 22 27 28 33
+
+hex 12 dots are 28 33w 34 38 39 43
+
+hex 16 dots are 39 43 44 47 48 51
+
+from this data create the function!
