@@ -12,11 +12,10 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 
-    @SuppressWarnings("exports")
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(@SuppressWarnings("exports") Stage primaryStage) throws Exception {
         startGame(primaryStage);
-        primaryStage.setMinHeight(735);
+        primaryStage.setMinHeight(100);
         primaryStage.setMinWidth(1203);
     }
 
