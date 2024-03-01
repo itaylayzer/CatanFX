@@ -394,6 +394,9 @@ public class CatanBoard {
                 circle.setOnMouseClicked((event) -> {
                     action.action(pickedVertex);
                 });
+                circle.onMouseClickedProperty().addListener((e,a,b)->{
+                    
+                });
             } else {
                 if (!settlementsGroup.getChildren().contains(circle))
                     circle.setOpacity(0);

@@ -16,11 +16,11 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="1103.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.c1t45.controller.GameController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="700.0" prefWidth="1103.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.c1t45.controller.GameController">
    <right>
-      <VBox alignment="BOTTOM_CENTER" prefHeight="200.0" prefWidth="350.0" spacing="5.0" style="-fx-background-color: #1a1a1a;" BorderPane.alignment="CENTER">
+      <VBox alignment="BOTTOM_CENTER" spacing="5.0" style="-fx-background-color: #1a1a1a;" BorderPane.alignment="CENTER">
          <children>
-            <VBox prefHeight="200.0" prefWidth="100.0" spacing="10.0" VBox.vgrow="ALWAYS">
+            <VBox prefWidth="100.0" spacing="10.0" VBox.vgrow="NEVER">
                <children>
                   <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" text="\@Itay Lazyerovich" textAlignment="CENTER" textFill="#ffffff9a">
                      <font>
@@ -40,7 +40,7 @@
                         <Insets top="-10.0" />
                      </VBox.margin>
                   </Rectangle>
-                  <ScrollPane hbarPolicy="NEVER" prefHeight="571.0" prefWidth="250.0">
+                  <ScrollPane hbarPolicy="NEVER" minHeight="0.0" prefWidth="250.0" VBox.vgrow="ALWAYS">
                      <content>
                         <VBox fx:id="actionsBox" prefWidth="215.0" spacing="10.0" styleClass="folder" />
                      </content>
@@ -57,13 +57,13 @@
                <VBox.margin>
                   <Insets bottom="5.0" top="5.0" />
                </VBox.margin></Rectangle>
-            <VBox fx:id="playersHBox" alignment="TOP_CENTER" prefHeight="200.0" prefWidth="250.0" />
+            <VBox fx:id="playersHBox" alignment="TOP_CENTER" prefWidth="250.0" VBox.vgrow="ALWAYS" />
          </children></VBox>
    </right>
    <bottom>
       <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0" style="-fx-background-color: #252525;" BorderPane.alignment="CENTER">
          <children>
-            <FlowPane fx:id="materialsFlow" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS">
+            <FlowPane fx:id="materialsFlow" HBox.hgrow="ALWAYS">
                <opaqueInsets>
                   <Insets />
                </opaqueInsets>
@@ -71,7 +71,7 @@
                   <Insets />
                </HBox.margin>
             </FlowPane>
-            <FlowPane fx:id="buttonsFlow" alignment="TOP_RIGHT" columnHalignment="RIGHT" hgap="5.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="86.0" prefWidth="580.0" HBox.hgrow="NEVER">
+            <FlowPane fx:id="buttonsFlow" alignment="TOP_RIGHT" columnHalignment="RIGHT" hgap="5.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="580.0" HBox.hgrow="NEVER">
                <opaqueInsets>
                   <Insets />
                </opaqueInsets>

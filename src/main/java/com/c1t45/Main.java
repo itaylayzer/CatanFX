@@ -22,15 +22,12 @@ public class Main extends Application {
     void startMenu(Stage primaryStage) {
         try {
             Parent root = FXMLLoader.load(getClass().getResource("fxml/menu.fxml"));
-
             primaryStage.setTitle("Catan: Trade Build Settle");
 
             primaryStage.setScene(new Scene(root));
-
             root.getStylesheets().add(getClass().getResource("css/main.css").toExternalForm());
 
             primaryStage.getIcons().add(Constants.Images.icon);
-
             primaryStage.show();
 
             primaryStage.setMinHeight(639);
