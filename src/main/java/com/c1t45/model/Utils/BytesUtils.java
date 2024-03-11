@@ -23,9 +23,9 @@ public class BytesUtils {
     }
 
     private static byte[] operator(byte[] dest, byte[] array, Operator<Byte> operator) {
-        int index;
+        int index, length = Math.min(dest.length, array.length);
 
-        for (index = 0; index < dest.length; index++)
+        for (index = 0; index < length; index++)
             dest[index] = operator.operate(dest[index], array[index]);
         return dest;
     }
