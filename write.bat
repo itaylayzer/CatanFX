@@ -1,0 +1,1 @@
+gcc write/write.c utils/math/compare.h utils/math/compare.c  -o write_exe && write_exe

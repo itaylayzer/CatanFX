@@ -1,0 +1,21 @@
+{
+    "files.associations": {
+        "linux_server.h": "c",
+        "controller.h": "c",
+        "types.h": "c",
+        "server.h": "c",
+        "stdio.h": "c",
+        "compare.h": "c",
+        "type_traits": "c",
+        "cstdlib": "c",
+        "algorithm": "c",
+        "numbers": "c",
+        "graph.h": "c",
+        "model.h": "c",
+        "random": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c"
+    }
+}
