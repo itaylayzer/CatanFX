@@ -1,7 +1,5 @@
 package com.c1t45.view;
 
-import com.c1t45.model.LocalePlayer;
-import com.c1t45.model.Player;
 import com.c1t45.view.CatanBoard.DicePane;
 import com.c1t45.view.Inventory.ButtonsPane;
 import com.c1t45.view.Inventory.InventoryPane;
@@ -18,12 +16,12 @@ import javafx.scene.layout.VBox;
 
 public class UserInterface {
 
-    private LocalePlayer player;
+    private Player player;
     private InventoryPane inventoryPane;
     private ButtonsPane buttonsPane;
     private VBox actionsBox;
 
-    public UserInterface(LocalePlayer localPlayer,
+    public UserInterface(Player localPlayer,
             FlowPane inventoryFlow,
             FlowPane buttonsFlow,
             DicePane dices,
@@ -38,7 +36,7 @@ public class UserInterface {
         buttonsPane.setOnDice((setDisable) -> {
             setDisable.action(true);
             Render();
-            dices.roll((c1, c2) -> {
+            dices.randRoll((c1, c2) -> {
 
                 setDisable.action(false);
                 player.rollAction(c1, c2);

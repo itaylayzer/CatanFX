@@ -1,6 +1,6 @@
 package com.c1t45.view.Navbar;
 
-import com.c1t45.model.Player;
+import com.c1t45.view.Player;
 import com.c1t45.view.Constants.Materials;
 
 import javafx.geometry.Insets;

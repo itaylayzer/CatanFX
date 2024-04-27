@@ -7,8 +7,9 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.Paint;
 
 public class Constants {
-        static public final byte dots = 54;
-        static public final byte lines = 72;
+        static public final byte AREAS = 19;
+        static public final byte VERTECIES = 54;
+        static public final byte LINES = 72;
 
         public enum Materials {
                 wood((byte) 0),

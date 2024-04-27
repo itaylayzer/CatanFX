@@ -61,7 +61,7 @@
          </children></VBox>
    </right>
    <bottom>
-      <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0" style="-fx-background-color: #252525;" BorderPane.alignment="CENTER">
+      <HBox prefHeight="100.0" prefWidth="200.0" spacing="10.0" style="-fx-background-color: #1a1a1a;" BorderPane.alignment="CENTER">
          <children>
             <FlowPane fx:id="materialsFlow" HBox.hgrow="ALWAYS">
                <opaqueInsets>

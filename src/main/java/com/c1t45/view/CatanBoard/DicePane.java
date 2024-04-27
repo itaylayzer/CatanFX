@@ -12,17 +12,18 @@ import javafx.util.Duration;
 import java.util.Random;
 import java.util.function.Function;
 
-import com.c1t45.model.Interfaces.Action2;
 import com.c1t45.view.Constants;
+import com.c1t45.view.Interfaces.Action2;
 
 public class DicePane {
-    public ImageView dice1;
-    public ImageView dice2;
-    public Random random;
+    private ImageView dice1;
+    private ImageView dice2;
+    private Random random;
+    private Function<Void, byte[]> socketDice;
     private static final double smoothness = Math.sqrt(2);
     private static final double end = 0.5;
 
-    public DicePane(FlowPane father) {
+    public DicePane(FlowPane father, Function<Void, byte[]> socketDice) {
         dice1 = new ImageView(Constants.Images.dices[0]);
         dice2 = new ImageView(Constants.Images.dices[1]);
 
@@ -33,35 +34,36 @@ public class DicePane {
         dice2.setFitHeight(size);
         dice2.setFitWidth(size);
 
-        random = new Random();
+        this.random = new Random();
+        this.socketDice = socketDice;
 
         father.getChildren().addAll(dice1, dice2);
     }
 
     private void rollRec(Function<Double, byte[]> rollFunction,
             Action2<Byte, Byte> onFinish,
-            double current,
-            byte[] lastValue) {
+            double current) {
         if (current >= end) {
-            if (onFinish != null)
-                onFinish.action(lastValue[0], lastValue[1]);
-            return;
+            if (onFinish != null) {
+                byte[] roll_result = this.socketDice.apply(null);
+                onFinish.action(roll_result[0], roll_result[1]);
+            }
         } else {
             Timeline timeline = new Timeline();
             timeline.getKeyFrames().add(new KeyFrame(Duration.seconds(current), (e) -> {
-                byte[] value = rollFunction.apply(current);
-                rollRec(rollFunction, onFinish, current * smoothness, value);
+                rollFunction.apply(current);
+                rollRec(rollFunction, onFinish, current * smoothness);
             }));
             timeline.play();
         }
     }
 
-    public void roll(Action2<Byte, Byte> onFinish) {
+    public void randRoll(Action2<Byte, Byte> onFinish) {
         this.rollRec(new Function<Double, byte[]>() {
             @Override
             public byte[] apply(Double current) {
-                byte c1 = 5;// (byte) random.nextInt(1, 7);
-                byte c2 = 6;// (byte) random.nextInt(1, 7);
+                byte c1 = (byte) random.nextInt(1, 7);
+                byte c2 = (byte) random.nextInt(1, 7);
 
                 double from = current * smoothness >= end ? 1.1 : 0.7;
                 double to = current * smoothness >= end ? 1 : 0.9;
@@ -95,6 +97,6 @@ public class DicePane {
                 if (from < to)
                     fadeTransition.play();
             }
-        }, onFinish, 0.01, new byte[] { 0, 0 });
+        }, onFinish, 0.01);
     }
 }

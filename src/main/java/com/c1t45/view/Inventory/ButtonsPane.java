@@ -4,10 +4,10 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.layout.FlowPane;
 
-import com.c1t45.model.Player;
-import com.c1t45.model.Interfaces.Action;
 import com.c1t45.view.Constants;
+import com.c1t45.view.Player;
 import com.c1t45.view.CatanBoard.CatanBoard;
+import com.c1t45.view.Interfaces.Action;
 
 public class ButtonsPane {
     private Action<Action<Boolean>> onDice;

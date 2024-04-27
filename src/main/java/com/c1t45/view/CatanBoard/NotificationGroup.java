@@ -1,7 +1,7 @@
 package com.c1t45.view.CatanBoard;
 
-import com.c1t45.model.Timeout;
-import com.c1t45.model.Interfaces.Action;
+import com.c1t45.view.Timeout;
+import com.c1t45.view.Interfaces.Action;
 import com.c1t45.view.Packages.NotificationPackage;
 
 import javafx.animation.Interpolator;

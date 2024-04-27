@@ -1,7 +1,5 @@
 package com.c1t45.controller;
 
-import java.io.IOException;
-
 import com.c1t45.view.Constants;
 
 import javafx.fxml.FXML;
@@ -47,7 +45,7 @@ public class MenuController {
                 // this url is locale to the stage
                 stage.getIcons().add(Constants.Images.icon);
                 stage.show();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 

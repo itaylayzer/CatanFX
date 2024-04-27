@@ -1,14 +1,12 @@
 package com.c1t45.controller;
 
-import com.c1t45.model.EnemyPlayer;
-import com.c1t45.model.LocalePlayer;
-import com.c1t45.model.Player;
-import com.c1t45.model.Generators.LandsGenerator;
-import com.c1t45.model.Interfaces.Action;
+import com.c1t45.view.EnemyPlayer;
+import com.c1t45.view.Player;
 import com.c1t45.view.UserInterface;
 import com.c1t45.view.CatanBoard.CatanBoard;
 import com.c1t45.view.CatanBoard.DicePane;
 import com.c1t45.view.CatanBoard.NotificationGroup;
+import com.c1t45.view.Interfaces.Action;
 import com.c1t45.view.Navbar.PlayersFlow;
 import com.c1t45.view.Packages.NotificationPackage;
 import com.c1t45.view.Windows.StoreWindow;
@@ -20,6 +18,7 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -61,7 +60,10 @@ public class GameController {
     @FXML
     private VBox notificationBar;
 
-    public void initialize(Window window, byte playerCount, String localeName) {
+    public void initialize(Window window, byte playerCount, String localeName) throws Exception {
+
+        SocketClient sock = new SocketClient();
+
         System.out.println("Locale Player name: " + localeName);
         List<Color> listColors = Arrays.asList(Color.RED, Color.WHITE, Color.GREEN, Color.ORANGE);
         Collections.shuffle(listColors);
@@ -74,11 +76,13 @@ public class GameController {
         listColors = null;
 
         players = new Player[playerCount];
-        LocalePlayer local = new LocalePlayer((byte) 0, localeName, colorsArray[0]);
+        Player local = new Player((byte) 0, localeName, colorsArray[0]);
         players[0] = local;
         EnemyPlayer.fillPlayers(players, colorsArray, playerCount);
 
-        DicePane dices = new DicePane(dicePane);
+        DicePane dices = new DicePane(dicePane, t -> {
+            return sock.rollDice();
+        });
 
         @SuppressWarnings("unused")
         UserInterface userInterface = new UserInterface(local, materialsFlow, buttonsFlow, dices, actionsBox);
@@ -86,38 +90,30 @@ public class GameController {
         @SuppressWarnings("unused")
         PlayersFlow playersFlow = new PlayersFlow(players, playersHBox);
 
-        byte[] landsPackage = new LandsGenerator().generate();
+        byte[] landsBytes = sock.getLands();
+        byte[] harborsBytes = sock.getHarbors();
 
-        Player.initialize(landsPackage);
-        try {
-            CatanBoard.Initialize(catanBoardPane, landsPackage);
+        System.out.println(Arrays.toString(harborsBytes));
 
-            Interpolator interpolate = Interpolator.SPLINE(0, 0.6, 0.3, 1);
+        Player.initialize(landsBytes);
+        CatanBoard.Initialize(catanBoardPane, landsBytes, harborsBytes);
 
-            final double smoothness = 0.2;
-            window.widthProperty().addListener((obs, oldVal, newVal) -> {
-                final double calculation = window.getHeight() / 735;
-                final double scale = Math.min(1.5, Math.max(calculation, 0.5));
-                ScaleTransition scaleTo = new ScaleTransition(Duration.seconds(smoothness), catanBoardPane);
-                scaleTo.setToX(scale);
-                scaleTo.setToY(scale);
-                scaleTo.setInterpolator(interpolate);
-                scaleTo.play();
-            });
+        Interpolator interpolate = Interpolator.SPLINE(0, 0.6, 0.3, 1);
 
-            window.heightProperty().addListener((obs, oldVal, newVal) -> {
-                final double calculation = window.getHeight() / 735;
-                final double scale = Math.min(1.5, Math.max(calculation, 0.5));
-                ScaleTransition scaleTo = new ScaleTransition(Duration.seconds(smoothness), catanBoardPane);
-                scaleTo.setToX(scale);
-                scaleTo.setToY(scale);
-                scaleTo.setInterpolator(interpolate);
-                scaleTo.play();
-            });
+        final double smoothness = 0.2;
 
-        } catch (Exception exception) {
-            exception.printStackTrace();
-        }
+        ChangeListener<? super Number> windowScaleListener = (obs, oldVal, newVal) -> {
+            final double calculation = window.getHeight() / 735;
+            final double scale = Math.min(1.5, Math.max(calculation, 0.5));
+            ScaleTransition scaleTo = new ScaleTransition(Duration.seconds(smoothness), catanBoardPane);
+            scaleTo.setToX(scale);
+            scaleTo.setToY(scale);
+            scaleTo.setInterpolator(interpolate);
+            scaleTo.play();
+        };
+
+        window.widthProperty().addListener(windowScaleListener);
+        window.heightProperty().addListener(windowScaleListener);
 
         Long startTime = System.currentTimeMillis();
         ObjectProperty<Duration> timer = new SimpleObjectProperty<>(Duration.seconds(0));
@@ -145,6 +141,7 @@ public class GameController {
                 }));
             }
         };
+        System.out.println("start!");
     }
 
     public void showMemoryMonitor(ActionEvent event) {
