@@ -1,6 +1,21 @@
 
 #include "model.h"
 
+// helper function
+void print_vec(unsigned char *arr, char size)
+{
+    unsigned char offset;
+    printf("[");
+
+    for (offset = 0; offset < size; offset++)
+    {
+        printf(offset ? ", %d" : "%d", arr[offset]);
+    }
+
+    printf("]");
+    puts("");
+}
+
 unsigned char brand(unsigned char min, unsigned char max)
 {
     return (babs(rand()) % (max - min)) + min;
@@ -60,7 +75,7 @@ void catan_lands(GraphPtr graph)
 
 void catan_harbors(GraphPtr graph, unsigned char harbors[HARBOR_COUNT * 2])
 {
-    unsigned char offset, mats[HARBOR_COUNT] = {WOOD, WOOL, WHEET, BRICK, ORE, GENERAL_DEAL, GENERAL_DEAL, GENERAL_DEAL};
+    unsigned char offset, mats[HARBOR_COUNT] = {WOOD, WOOL, WHEET, BRICK, ORE, GENERAL_DEAL, GENERAL_DEAL, GENERAL_DEAL, GENERAL_DEAL};
 
     vec_shuffle((char *)mats, HARBOR_COUNT);
 
@@ -102,8 +117,6 @@ unsigned char *harbors_numbers(unsigned char *size,
                                GraphPtr graph,
                                unsigned char harbors[HARBOR_COUNT * 2])
 {
-    (*size = HARBOR_COUNT * 2);
-    return harbors;
 
     unsigned char offset, general_deal_counter, mat, mat_index,
         *harbors_numbs = malloc((*size = HARBOR_COUNT * 2) * sizeof(unsigned char));
@@ -118,14 +131,29 @@ unsigned char *harbors_numbers(unsigned char *size,
         harbors_numbs[mat_index * 2] = harbors[offset * 2];
         harbors_numbs[mat_index * 2 + 1] = harbors[offset * 2 + 1];
     }
-
+    print_vec(harbors_numbs, HARBOR_COUNT * 2);
     return harbors_numbs;
 }
-unsigned char *roll_dice(unsigned char *size)
+unsigned char *roll_dice(unsigned char *size,
+                         PlayerPtr players,
+                         GraphPtr graph,
+                         char *bank)
 {
-    unsigned char *arr = calloc((*size = 1), sizeof(char)), value;
+    unsigned char *arr, dice, sum;
 
-    arr[0] = (brand(1, 13) << 4) | brand(1, 13);
+    sum = dice = brand(1, 13);
+    sum += (dice = brand(1, 13));
+    arr = single_byte(size, (dice << 4) | (sum - dice));
+
+    switch (sum)
+    {
+    case 7:
+        break;
+
+    default:
+        collect_materials(sum, players, graph, bank);
+        break;
+    }
 
     return arr;
 }
@@ -133,10 +161,10 @@ bool bis_neg(char x)
 {
     return x < 0;
 }
-unsigned char *player_actionable(unsigned char *size,
-                                 PlayerPtr player,
-                                 char dev_bank[TOTAL_DEVELOPMENT_CARD],
-                                 const char store[TOTAL_STORE][TOTAL_MATERIALS])
+unsigned char *inf_player_actionable(unsigned char *size,
+                                     PlayerPtr player,
+                                     char dev_bank[TOTAL_DEVELOPMENT_CARD],
+                                     const char store[TOTAL_STORE][TOTAL_MATERIALS])
 {
     unsigned char *arr = calloc((*size = 1), sizeof(char)), offset;
 
@@ -154,6 +182,64 @@ unsigned char *player_actionable(unsigned char *size,
     }
 
     return arr;
+}
+
+unsigned char *inf_players_manip(unsigned char *size,
+                                 PlayerPtr players,
+                                 unsigned char offset,
+                                 unsigned char count,
+                                 unsigned char *(*manipulation)(PlayerPtr))
+{
+    PlayerPtr player = players + offset;
+    unsigned char *res;
+    if (offset)
+    {
+        // return only the count of the materials
+        res = single_byte(size, vec_sum((char *)manipulation(player), count));
+    }
+    else
+    {
+        // return every materials
+        res = (unsigned char *)vec_dup((char *)manipulation(player), (*size = count));
+    }
+    return res;
+}
+
+unsigned char *get_player_materials(PlayerPtr player)
+{
+    return player->materials;
+}
+
+unsigned char *get_player_devcards(PlayerPtr player)
+{
+    return player->developmentCards;
+}
+
+unsigned char *inf_player_materials(unsigned char *size,
+                                    PlayerPtr players,
+                                    unsigned char offset)
+{
+    return inf_players_manip(size,
+                             players,
+                             offset,
+                             TOTAL_MATERIALS,
+                             get_player_materials);
+}
+unsigned char *inf_player_devcards(unsigned char *size,
+                                   PlayerPtr players,
+                                   unsigned char offset)
+{
+    return inf_players_manip(size,
+                             players,
+                             offset,
+                             TOTAL_DEVELOPMENT_CARD,
+                             get_player_devcards);
+}
+unsigned char *single_byte(unsigned char *size, char value)
+{
+    unsigned char *res = malloc(sizeof(unsigned char) * (*size = 1));
+    *res = value;
+    return res;
 }
 
 void transfer_materials(PlayerPtr player,
@@ -305,6 +391,66 @@ unsigned char *switch_action_store(unsigned char *size,
     }
     return res;
 }
+
+void collect_materials_area(VertexPtr area, PlayerPtr players, char *bank)
+{
+    Queue que;
+    Node node;
+    EdgePtr edge;
+    const unsigned char material = area->material_number & 0x07;
+    unsigned char player_offset, cost[TOTAL_MATERIALS];
+    bool is_city;
+    queue_init(&que);
+
+    enqueue(&que, area->edges);
+    while (!queue_empty(&que))
+    {
+        vector_val((char *)cost, TOTAL_MATERIALS, 0);
+        node = dequeue(&que);
+        edge = node->data;
+        player_offset = edge->vertex->color & 0x0F;
+        is_city = (edge->vertex->color >> 6) & 0x01;
+
+        if (node->left)
+        {
+            enqueue(&que, node->left);
+        }
+        if (node->right)
+        {
+            enqueue(&que, node->right);
+        }
+
+        if (player_offset < MAX_PLAYERS)
+        {
+            cost[material] = 1 + is_city;
+            transfer_materials(players + player_offset, bank, (char *)cost, true);
+        }
+    }
+}
+void collect_materials(unsigned char rolled_num,
+                       PlayerPtr players,
+                       GraphPtr graph,
+                       char *bank)
+{
+    // for each rolled num there can be between 1 to 2 vertecies;
+    VertexPtr vertecies[2] = {NULL, NULL};
+    unsigned char offset;
+    char vertex;
+    for (offset = 0, vertex = 0; offset < AREAS; offset++)
+    {
+        if (graph->vertices[offset].material_number >> 3 == rolled_num)
+        {
+            vertecies[vertex++] = graph->vertices + offset;
+        }
+    }
+
+    while (--vertex >= 0)
+    {
+        collect_materials_area(vertecies[vertex], players, bank);
+    }
+}
+
+// math
 char *vector_join(const char *first,
                   const char *second,
                   char size,
@@ -400,6 +546,15 @@ char vec_sum(char *arr, char size)
         val += arr[size];
     }
     return val;
+}
+char *vec_dup(char *arr, char size)
+{
+    char *new = malloc(sizeof(char) * size);
+    while (--size >= 0)
+    {
+        new[size] = arr[size];
+    }
+    return new;
 }
 void bswap(char *x, char *y)
 {

@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PORT 1050
+#define PORT 5900
 #define BUFFER_SIZE 256
 
 int server_listen(void (*handle_request)(char *, int socket));

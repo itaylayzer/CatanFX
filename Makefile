@@ -11,9 +11,12 @@ SRCS=$(wildcard $(SRC_DIR)/*.c) \
      $(wildcard $(SRC_DIR)/server/*.c) \
      $(wildcard $(SRC_DIR)/structures/avl_tree/*.c) \
      $(wildcard $(SRC_DIR)/structures/graph/*.c) \
-	 $(wildcard $(SRC_DIR)/utils/math/*.c)
+	 $(wildcard $(SRC_DIR)/utils/math/*.c) \
+	 $(wildcard $(SRC_DIR)/structures/linked_list/*.c) \
+	 $(wildcard $(SRC_DIR)/structures/linked_list/circular/*.c) \
+	 $(wildcard $(SRC_DIR)/structures/queue/*.c)
 
-WRITE_SRCS =$(wildcard $(SRC_DIR)/utils/math/*.c) \
+WRITE_SRCS=$(wildcard $(SRC_DIR)/utils/math/*.c) \
 		$(wildcard $(SRC_DIR)/write/*.c)
 
 WRITE_OBJS=$(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(WRITE_SRCS))

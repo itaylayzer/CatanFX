@@ -2,6 +2,8 @@
 
 #define _INC_TYPES
 
+#include "structures/avl_tree/typedef.h"
+
 #define TOTAL_MATERIALS 5         // כמות מצרכים
 #define TOTAL_DEVELOPMENT_CARD 5  // כמות קלפי פיתוח
 #define TOTAL_ACHIEVEMENTS_CARD 2 // כמות קלפי הישג
@@ -9,6 +11,7 @@
 #define VERTECIES 54              // כמות קודקודי התיישבות
 #define TOTAL_STORE 4             // כמות המפתחות בחנות
 #define HARBOR_COUNT 9
+#define MAX_PLAYERS 4
 
 typedef enum
 {
@@ -48,13 +51,6 @@ typedef enum
     CITY,
     DEVELOPMENT_CARD
 } STORE_KEYS;
-typedef struct nodeType
-{
-    void *data;
-    struct nodeType *left;
-    struct nodeType *right;
-    char height;
-} NodeRec, *Node;
 
 typedef struct vertexType
 {

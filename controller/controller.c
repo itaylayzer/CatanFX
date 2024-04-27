@@ -36,13 +36,23 @@ void handle_request(char *buffer, int socket)
         _buff = harbors_numbers(&size, graph, harbors);
         break;
     case 10:
-        _buff = player_actionable(&size, players, bankDevelopments, store);
+        _buff = inf_player_actionable(&size, players, bankDevelopments, store);
         break;
-    case 20:
-    case 21:
-    
+
+    case 11: // player materials
+        _buff = inf_player_materials(&size, players, buffer[1]);
+        break;
+
+    case 12: // developements cards
+        _buff = inf_player_devcards(&size, players, buffer[1]);
+        break;
+
+    case 13: // victory points
+        _buff = single_byte(&size, (players + buffer[1])->victoryPoints);
+        break;
+        
     case 30:
-        _buff = roll_dice(&size);
+        _buff = roll_dice(&size, players, graph, bankMaterials);
         break;
     case 31:
         _buff = switch_action_store(&size,
