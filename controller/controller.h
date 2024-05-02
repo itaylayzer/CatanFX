@@ -6,6 +6,7 @@
 #include "../model/model.h"
 #include "../structures/graph/graph.h"
 #include "../server/server.h"
+#include "../utils/printt/printt.h"
 
 void catan_start(char);
 

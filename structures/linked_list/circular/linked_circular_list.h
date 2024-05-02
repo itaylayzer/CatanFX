@@ -7,7 +7,7 @@
 #include "../typedef.h"
 
 // n = 0
-linkNode circular_insert_first(linkNode *);
+void circular_init(linkNode *);
 // n > 0
 linkNode circular_insert_after(linkNode);
 // n > 0
@@ -15,7 +15,7 @@ linkNode circular_insert_end(linkNode *);
 // n > 1
 void *circular_remove_end(linkNode *);
 // n > 1
-void *circular_remove_after(linkNode);
+void *circular_remove_after(linkNode *);
 // n = 1
 void *circular_remove_last(linkNode *);
 

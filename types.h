@@ -72,7 +72,7 @@ typedef struct edgeType
 
 typedef struct graphType
 {
-    VertexRec *vertices;
+    VertexPtr vertices;
 } GraphRec, *GraphPtr;
 
 typedef struct playerType

@@ -85,7 +85,7 @@ byte *adjacentVertecies(byte dot, byte *size)
     bool isEvan = vertexRow % 2 == 0;
     byte *dots = malloc(sizeof(byte) * 3);
 
-    const char isAbove5 = vertexRow > 5;
+    const byte isAbove5 = vertexRow > 5;
 
     dots[0] = (modify(offset, 0, above));
     dots[1] = (modify(offset, 0 + -(isAbove5 && isEvan), below));

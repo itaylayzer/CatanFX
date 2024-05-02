@@ -6,6 +6,6 @@ typedef struct linkedType
 {
     void *data;
     struct linkedType *next;
-} *linkNode;
+} linkedRec, *linkNode;
 
 #endif

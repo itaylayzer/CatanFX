@@ -21,8 +21,8 @@ void graph_join(GraphPtr graph,
     const EdgePtr edge = malloc(sizeof(EdgeRec));
 
     edge->color = color;
-    edge->vertex = &graph->vertices[from];
+    edge->vertex = graph->vertices + from;
     edge->offset = to;
 
-    avl_insert(&graph->vertices[from].edges, (void *)(&edge), edge_compare);
+    avl_insert(&graph->vertices[from].edges, (void *)(edge), edge_compare);
 }

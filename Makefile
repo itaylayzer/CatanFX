@@ -14,7 +14,8 @@ SRCS=$(wildcard $(SRC_DIR)/*.c) \
 	 $(wildcard $(SRC_DIR)/utils/math/*.c) \
 	 $(wildcard $(SRC_DIR)/structures/linked_list/*.c) \
 	 $(wildcard $(SRC_DIR)/structures/linked_list/circular/*.c) \
-	 $(wildcard $(SRC_DIR)/structures/queue/*.c)
+	 $(wildcard $(SRC_DIR)/structures/queue/*.c) \
+	 $(wildcard $(SRC_DIR)/utils/printt/*.c)
 
 WRITE_SRCS=$(wildcard $(SRC_DIR)/utils/math/*.c) \
 		$(wildcard $(SRC_DIR)/write/*.c)
@@ -48,7 +49,6 @@ clean:
 	rm -rf ${OBJ_DIR}
 
 wr:
-	clean
 	rm -rf ${OBJ_DIR}
 	mkdir -p $(OBJ_DIR)
 	@for src in $(WRITE_SRCS); do \

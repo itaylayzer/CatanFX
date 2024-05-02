@@ -32,9 +32,27 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../types.h"
+#include "../utils/printt/printt.h"
+
 #define PORT 5900
 #define BUFFER_SIZE 256
 
-int server_listen(void (*handle_request)(char *, int socket));
-
+int server_listen(void (*handle_request)(
+                      char *buffer,
+                      int socket,
+                      GraphPtr graph,
+                      unsigned char *harbors, PlayerPtr players,
+                      char *bankDevelopments,
+                      char *bankMaterials,
+                      const char (*store)[TOTAL_MATERIALS],
+                      unsigned char *turnOffset,
+                      const unsigned char num_of_players),
+                  GraphPtr graph,
+                  unsigned char *harbors, PlayerPtr players,
+                  char *bankDevelopments,
+                  char *bankMaterials,
+                  const char (*store)[TOTAL_MATERIALS],
+                  unsigned char *turnOffset,
+                  const unsigned char num_of_players);
 #endif

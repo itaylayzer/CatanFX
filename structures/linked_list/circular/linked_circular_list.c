@@ -1,6 +1,11 @@
 #include "linked_circular_list.h"
 
 // n = 0
+void circular_init(linkNode *manager)
+{
+    *manager = NULL;
+}
+// n = 0
 linkNode circular_insert_first(linkNode *manager)
 {
     // allocate new node
@@ -17,7 +22,7 @@ linkNode circular_insert_first(linkNode *manager)
 linkNode circular_insert_after(linkNode node)
 {
     // allocate new node
-    linkNode new = malloc(sizeof(struct linkedType));
+    linkNode new = malloc(sizeof(linkedRec));
     // set node next variable
     new->next = node->next;
 
@@ -28,8 +33,11 @@ linkNode circular_insert_after(linkNode node)
 // n > 0
 linkNode circular_insert_end(linkNode *manager)
 {
-    *manager = circular_insert_after(*manager);
-    return *manager;
+    if (*manager == NULL)
+    {
+        return circular_insert_first(manager);
+    }
+    return (*manager = circular_insert_after(*manager));
 }
 // n > 1
 void *circular_remove_end(linkNode *manager)
@@ -41,18 +49,31 @@ void *circular_remove_end(linkNode *manager)
 
     *manager = before;
 
-    return circular_remove_after(*manager);
+    return circular_remove_after(manager);
 }
+
 // n > 1
-void *circular_remove_after(linkNode node)
+void *circular_remove_after(linkNode *head)
 {
-    linkNode old = node->next;
-    node->next = old->next;
+    linkNode old = (*head)->next;
+
     void *data = old->data;
-    free(old);
+
+    if (*head == (*head)->next)
+    {
+        free(*head);
+        *head = NULL;
+    }
+    else
+    {
+        (*head)->next = old->next;
+        free(old);
+    }
+
     return data;
 }
 // n = 1
+
 void *circular_remove_last(linkNode *manager)
 {
     void *data = (*manager)->data;

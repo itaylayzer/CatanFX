@@ -72,7 +72,7 @@ Node left_right_rotate(Node node)
     return right_rotate(node);
 }
 
-Node avl_insert(Node *root, void *element, char (*compare)(const void *, const void *))
+Node avl_insert(Node *root, void *element, signed char (*compare)(const void *, const void *))
 {
     if (*root == NULL)
     {
@@ -118,7 +118,7 @@ Node avl_insert(Node *root, void *element, char (*compare)(const void *, const v
 
     return *root;
 }
-Node avl_search(Node node, void *element, char (*compare)(const void *, const void *))
+Node avl_search(Node node, void *element, signed char (*compare)(const void *, const void *))
 {
     if (node == NULL)
     {

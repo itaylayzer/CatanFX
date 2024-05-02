@@ -7,7 +7,23 @@ void print_error(const char *type, const int code)
     perror(error_buffer);
 }
 
-int server_listen(void (*handle_request)(char *, int socket))
+int server_listen(void (*handle_request)(
+                      char *buffer,
+                      int socket,
+                      GraphPtr graph,
+                      unsigned char *harbors, PlayerPtr players,
+                      char *bankDevelopments,
+                      char *bankMaterials,
+                      const char (*store)[TOTAL_MATERIALS],
+                      unsigned char *turnOffset,
+                      const unsigned char num_of_players),
+                  GraphPtr graph,
+                  unsigned char *harbors, PlayerPtr players,
+                  char *bankDevelopments,
+                  char *bankMaterials,
+                  const char (*store)[TOTAL_MATERIALS],
+                  unsigned char *turnOffset,
+                  const unsigned char num_of_players)
 {
     int server_fd, new_socket, valread, error_code;
     struct sockaddr_in address;
@@ -31,7 +47,7 @@ int server_listen(void (*handle_request)(char *, int socket))
     if ((error_code = (setsockopt(server_fd,
                                   SOL_SOCKET,
                                   SO_REUSEADDR
-#if defined(__linux__)
+#ifdef _WIN64
                                       | SO_REUSEPORT
 
 #endif
@@ -58,7 +74,7 @@ int server_listen(void (*handle_request)(char *, int socket))
         perror("listen");
         exit(EXIT_FAILURE);
     }
-    puts("Waiting for a client to connect!");
+    putts("Waiting for a client to connect!");
 
     if ((new_socket = accept(server_fd, (struct sockaddr *)&address,
                              (socklen_t *)&addrlen)) < 0)
@@ -66,7 +82,7 @@ int server_listen(void (*handle_request)(char *, int socket))
         perror("accept");
         exit(EXIT_FAILURE);
     }
-    puts("Server up and running");
+    putts("Server up and running");
     while (1)
     {
         buffer = calloc(BUFFER_SIZE, sizeof(char));
@@ -78,11 +94,20 @@ int server_listen(void (*handle_request)(char *, int socket))
             return 0; // FIXME: exit(EXIT_FAILURE)
             break;
         case 0:
-            puts("eod");
-            exit(EXIT_SUCCESS);
+            putts("eod");
+            return 0; // exit(EXIT_SUCCESS);
             break;
         default:
-            handle_request(buffer, new_socket);
+            handle_request(buffer,
+                           new_socket,
+                           graph,
+                           harbors,
+                           players,
+                           bankDevelopments,
+                           bankMaterials,
+                           store,
+                           turnOffset,
+                           num_of_players);
         }
         free(buffer);
     }

@@ -7,6 +7,6 @@
 #include "typedef.h"
 
 Node make_tree(Node *);
-Node avl_insert(Node *, void *element, char (*compare)(const void *, const void *));
-Node avl_search(Node node, void *element, char (*compare)(const void *, const void *));
+Node avl_insert(Node *, void *element, signed char (*compare)(const void *, const void *));
+Node avl_search(Node node, void *element, signed char (*compare)(const void *, const void *));
 #endif

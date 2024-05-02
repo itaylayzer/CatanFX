@@ -18,6 +18,10 @@
         "initializer_list": "c",
         "utility": "c",
         "linked_circular_list.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "stdbool.h": "c",
+        "unistd.h": "c",
+        "printt.h": "c",
+        "typedef.h": "c"
     }
 }
