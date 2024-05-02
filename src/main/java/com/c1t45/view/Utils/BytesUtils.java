@@ -75,4 +75,8 @@ public class BytesUtils {
         }
         return array;
     }
+
+    public static boolean bit(byte num, byte bit) {
+        return ((num >> bit) & 0x01) == 1;
+    }
 }

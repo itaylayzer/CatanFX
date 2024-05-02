@@ -46,6 +46,7 @@ public class DicePane {
         if (current >= end) {
             if (onFinish != null) {
                 byte[] roll_result = this.socketDice.apply(null);
+                System.out.println("roll " + roll_result[0] + " " + roll_result[1] + " ;");
                 onFinish.action(roll_result[0], roll_result[1]);
             }
         } else {
@@ -97,6 +98,10 @@ public class DicePane {
                 if (from < to)
                     fadeTransition.play();
             }
-        }, onFinish, 0.01);
+        }, (c1, c2) -> {
+            dice1.setImage(Constants.Images.dices[c1 - 1]);
+            dice2.setImage(Constants.Images.dices[c2 - 1]);
+            onFinish.action(c1, c2);
+        }, 0.01);
     }
 }

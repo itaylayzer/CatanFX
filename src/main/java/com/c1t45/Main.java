@@ -1,7 +1,12 @@
 package com.c1t45;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.Scanner;
+
 import com.c1t45.controller.GameController;
 import com.c1t45.view.Constants;
+import com.c1t45.view.CatanBoard.CatanBoard;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -11,12 +16,39 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 public class Main extends Application {
+    static Scanner scanner = new Scanner(System.in);
 
-    @Override
-    public void start(@SuppressWarnings("exports") Stage primaryStage) throws Exception {
+    private void open(Stage primaryStage) throws Exception, UnknownHostException, IOException {
         startGame(primaryStage);
         primaryStage.setMinHeight(100);
         primaryStage.setMinWidth(1203);
+    }
+
+    @Override
+    public void start(@SuppressWarnings("exports") Stage primaryStage) {
+        try {
+            open(primaryStage);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static void waitForInput() {
+
+        System.out.println("Press any key to continue...");
+        scanner.nextLine(); // Wait for the user to press Enter
+    }
+
+    void restartGame(Stage primaryStage) {
+        primaryStage.close();
+        try {
+            CatanBoard.clear();
+            waitForInput();
+            open(new Stage());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     void startMenu(Stage primaryStage) {
@@ -38,27 +70,30 @@ public class Main extends Application {
         }
     }
 
-    void startGame(Stage primaryStage) {
-        try {
-            new Image(getClass().getResource("icons/materials/wood3.png").toString());
+    void startGame(Stage primaryStage) throws Exception, UnknownHostException, IOException {
+        new Image(getClass().getResource("icons/materials/wood3.png").toString());
 
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("fxml/game.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("fxml/game.fxml"));
 
-            Parent root = loader.load();
-            GameController gameController = (GameController) loader.getController();
+        Parent root = loader.load();
+        GameController gameController = (GameController) loader.getController();
 
-            gameController.initialize(primaryStage, (byte) 4, "Local Runner");
-            Scene scene = new Scene(root);
+        primaryStage.setOnCloseRequest(event -> {
+            event.consume();
+            primaryStage.close();
+            restartGame(primaryStage);
+        });
 
-            primaryStage.setTitle("Catan: Trade Build Settle");
-            primaryStage.setScene(scene);
+        gameController.initialize(primaryStage, (byte) 4, "Local Runner");
+        Scene scene = new Scene(root);
 
-            root.getStylesheets().add(getClass().getResource("css/main.css").toExternalForm());
-            primaryStage.getIcons().add(Constants.Images.icon);
-            primaryStage.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        primaryStage.setTitle("Catan: Trade Build Settle");
+        primaryStage.setScene(scene);
+
+        root.getStylesheets().add(getClass().getResource("css/main.css").toExternalForm());
+        primaryStage.getIcons().add(Constants.Images.icon);
+        primaryStage.show();
+
     }
 
     public static void main(String[] args) {

@@ -1,6 +1,7 @@
 package com.c1t45.controller;
 
 import com.c1t45.view.EnemyPlayer;
+import com.c1t45.view.LocalPlayer;
 import com.c1t45.view.Player;
 import com.c1t45.view.UserInterface;
 import com.c1t45.view.CatanBoard.CatanBoard;
@@ -30,9 +31,11 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Window;
 import javafx.util.Duration;
 
+import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
+import java.util.function.Function;
 
 public class GameController {
 
@@ -60,28 +63,44 @@ public class GameController {
     @FXML
     private VBox notificationBar;
 
-    public void initialize(Window window, byte playerCount, String localeName) throws Exception {
+    private Color[] shuffleColors() {
+        var list = Arrays.asList(Color.RED, Color.WHITE, Color.GREEN, Color.ORANGE);
+        Collections.shuffle(list);
 
-        SocketClient sock = new SocketClient();
+        Color[] array = new Color[4];
+        list.toArray(array);
+
+        return array;
+    }
+
+    public void initialize(Window window, byte playerCount, String localeName)
+            throws Exception, UnknownHostException, IOException {
 
         System.out.println("Locale Player name: " + localeName);
-        List<Color> listColors = Arrays.asList(Color.RED, Color.WHITE, Color.GREEN, Color.ORANGE);
-        Collections.shuffle(listColors);
+        Color[] colors = shuffleColors();
 
-        Color[] colorsArray = new Color[4];
-        listColors.toArray(colorsArray);
-
-        turnRect.setFill(colorsArray[0]);
+        turnRect.setFill(colors[0]);
         turnRect.setOpacity(0.5);
-        listColors = null;
+
+        LocalPlayer local = new LocalPlayer((byte) 0, localeName, colors[0]);
+        SocketClient sock = new SocketClient(local);
 
         players = new Player[playerCount];
-        Player local = new Player((byte) 0, localeName, colorsArray[0]);
         players[0] = local;
-        EnemyPlayer.fillPlayers(players, colorsArray, playerCount);
+        EnemyPlayer.fillPlayers(players, colors, playerCount);
 
-        DicePane dices = new DicePane(dicePane, t -> {
-            return sock.rollDice();
+        DicePane dices = new DicePane(dicePane, new Function<Void, byte[]>() {
+            @Override
+            public byte[] apply(Void t) {
+                try {
+                    return sock.rollDice();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    restart();
+                    return null; // or throw a custom exception if needed
+                }
+
+            }
         });
 
         @SuppressWarnings("unused")
@@ -95,9 +114,17 @@ public class GameController {
 
         System.out.println(Arrays.toString(harborsBytes));
 
-        Player.initialize(landsBytes);
         CatanBoard.Initialize(catanBoardPane, landsBytes, harborsBytes);
 
+        initializeWindowEvents(window);
+
+    }
+
+    private void restart() {
+        throw new RuntimeException();
+    }
+
+    private void initializeWindowEvents(Window window) {
         Interpolator interpolate = Interpolator.SPLINE(0, 0.6, 0.3, 1);
 
         final double smoothness = 0.2;

@@ -1,7 +1,6 @@
 package com.c1t45.view.CatanBoard;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +29,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.c1t45.view.Constants;
-import com.c1t45.view.Player;
-import com.c1t45.view.Constants.Materials;
 import com.c1t45.view.Interfaces.Action;
 import com.c1t45.view.Interfaces.Predicate;
 import com.c1t45.view.Packages.ImagePackage;
@@ -72,6 +69,10 @@ public class CatanBoard {
     // private Group linesGroup;
 
     private HashMap<Byte, ImageView> settlementsMap;
+
+    public static void clear() {
+        instance = null;
+    }
 
     public static CatanBoard Initialize(AnchorPane pane, byte[] landsBytes, byte[] harborsBytes)
             throws ValueException, IndexOutOfBoundsException {
@@ -298,16 +299,6 @@ public class CatanBoard {
 
         edgesGroup.setOpacity(0);
         edgesGroup.setMouseTransparent(true);
-
-        Player.addOnHouseChange((house, player) -> {
-            addSettlement(Constants.Images.house, house, player.getColor());
-        });
-        Player.addOnCityChange((city, player) -> {
-            addSettlement(Constants.Images.city, city, player.getColor());
-        });
-        Player.addOnRoadChange((line, player) -> {
-            addLine(line, player.getColor());
-        });
 
     }
 
