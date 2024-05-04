@@ -29,11 +29,11 @@ unsigned char *harbors_numbers(unsigned char *size,
 unsigned char *roll_dice(unsigned char *size,
                          PlayerPtr players,
                          GraphPtr graph,
-                         char *bank);
+                         signed char *bank);
 unsigned char *inf_player_actionable(unsigned char *size,
                                      PlayerPtr player,
-                                     char dev_bank[TOTAL_DEVELOPMENT_CARD],
-                                     const char store[TOTAL_STORE][TOTAL_MATERIALS]);
+                                     signed char dev_bank[TOTAL_DEVELOPMENT_CARD],
+                                     const signed char store[TOTAL_STORE][TOTAL_MATERIALS]);
 unsigned char *inf_player_materials(unsigned char *size,
                                     PlayerPtr players,
                                     unsigned char offset);
@@ -41,17 +41,17 @@ unsigned char *inf_player_devcards(unsigned char *size,
                                    PlayerPtr players,
                                    unsigned char offset);
 unsigned char *switch_action_store(unsigned char *size,
-                                   unsigned char *params,
+                                   signed char *params,
                                    GraphPtr graph,
                                    PlayerPtr player,
-                                   char mat_bank[TOTAL_MATERIALS],
-                                   char devcard_bank[TOTAL_DEVELOPMENT_CARD],
-                                   const char store[TOTAL_STORE][TOTAL_MATERIALS]);
-unsigned char *single_byte(unsigned char *size, char value);
+                                   signed char mat_bank[TOTAL_MATERIALS],
+                                   signed char devcard_bank[TOTAL_DEVELOPMENT_CARD],
+                                   const signed char store[TOTAL_STORE][TOTAL_MATERIALS]);
+unsigned char *single_byte(unsigned char *size, signed char value);
 void collect_materials(unsigned char rolled_num,
                        PlayerPtr players,
                        GraphPtr graph,
-                       char *bank);
+                       signed char *bank);
 //    bots
 void bot_inits(PlayerPtr players, unsigned char num_of_players);
 void handle_rest_turns(int socket,
@@ -59,19 +59,19 @@ void handle_rest_turns(int socket,
                        PlayerPtr players,
                        const unsigned num_of_players);
 // mathematical
-char *vector_join(const char *first,
-                  const char *second,
-                  signed char size,
-                  char (*func)(char first, char second));
-char *vector_map(const char *, signed char size, char (*func)(char));
-char *vector_add(const char *first, const char *second, char size);
-char *vector_sub(const char *first, const char *second, char size);
-char *vector_neg(const char *, char size);
-bool vector_any(const char *, signed char size, bool (*condition)(char));
-bool vector_all(const char *, signed char size, bool (*condition)(char));
-void vector_cpy(char *dest, char *src, signed char size);
-void vector_val(char *dest, signed char size, char val);
-char vec_sum(char *, signed char size);
-char *vec_dup(char *, signed char size);
-void vec_shuffle(char *, unsigned char size);
+signed char *vector_join(const signed char *first,
+                         const signed char *second,
+                         signed char size,
+                         signed char (*func)(signed char first, signed char second));
+signed char *vector_map(const signed char *, signed char size, signed char (*func)(signed char));
+signed char *vector_add(const signed char *first, const signed char *second, signed char size);
+signed char *vector_sub(const signed char *first, const signed char *second, signed char size);
+signed char *vector_neg(const signed char *, signed char size);
+bool vector_any(const signed char *, signed char size, bool (*condition)(signed char));
+bool vector_all(const signed char *, signed char size, bool (*condition)(signed char));
+void vector_cpy(signed char *dest, signed char *src, signed char size);
+void vector_val(signed char *dest, signed char size, signed char val);
+signed char vec_sum(signed char *, signed char size);
+signed char *vec_dup(signed char *, signed char size);
+void vec_shuffle(signed char *, unsigned char size);
 #endif

@@ -4,7 +4,7 @@
 
 #include "../utils/math/compare.h"
 
-#define byte char
+#define byte signed char
 
 const byte settlementsRowsInitials[] = {0, 3, 7, 11, 16, 21, 27, 33, 38, 43, 47, 51, 54};
 const byte areaRowsInitials[] = {0, 3, 7, 12, 16, 19};
@@ -109,7 +109,7 @@ int main()
     const byte AREAS = 19;
     const byte DOTS = 54;
 
-    char *dots, size;
+    signed char *dots, size;
     byte offset, index;
 
     for (offset = 0; offset < AREAS; offset++)
@@ -134,6 +134,8 @@ int main()
             byte org = offset + AREAS;
             byte dest = dots[index] + AREAS;
             byte elements[2] = {org, dest};
+            if (offset < 3)
+                printf("%hhu %hhu\n", elements[0], elements[1]);
             fwrite(elements, sizeof(byte), 2, file);
         }
         free(dots);

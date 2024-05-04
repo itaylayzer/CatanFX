@@ -58,7 +58,7 @@ typedef struct vertexType
     Node edges;
     union
     {
-        char harbor;
+        signed char harbor;
         unsigned char material_number;
     };
 } VertexRec, *VertexPtr;
@@ -83,7 +83,7 @@ typedef struct playerType
     // קלפי פיתוח
     unsigned char developmentCards[TOTAL_DEVELOPMENT_CARD];
     // כל ביט יסמן האם העסקת נמל בבעלות השחקן
-    char harbors;
+    signed char harbors;
     Node settlements; // התיישבויות
     unsigned char amounts[TOTAL_STORE - 1];
 

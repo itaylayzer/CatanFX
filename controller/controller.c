@@ -1,13 +1,13 @@
 #include "controller.h"
 
 void handle_request(
-    char *buffer,
+    signed char *buffer,
     int socket,
     GraphPtr graph,
     unsigned char *harbors, PlayerPtr players,
-    char *bankDevelopments,
-    char *bankMaterials,
-    const char (*store)[TOTAL_MATERIALS],
+    signed char *bankDevelopments,
+    signed char *bankMaterials,
+    const signed char (*store)[TOTAL_MATERIALS],
     unsigned char *turnOffset,
     const unsigned char num_of_players)
 {
@@ -42,7 +42,7 @@ void handle_request(
         break;
     case 31:
         _buff = switch_action_store(&size,
-                                    _buff + 1,
+                                    buffer + 1,
                                     graph,
                                     players,
                                     bankMaterials,
@@ -61,18 +61,18 @@ void handle_request(
     free(_buff);
 }
 
-void catan_start(char _num_of_players)
+void catan_start(signed char _num_of_players)
 {
 
     // initialize game variables
-    char num_of_players;
+    signed char num_of_players;
     PlayerRec *players;
-    char bankMaterials[TOTAL_MATERIALS] = {19, 19, 19, 19, 19};
-    char bankDevelopments[TOTAL_DEVELOPMENT_CARD] = {14, 5, 2, 2, 2};
-    char achievementCards[TOTAL_ACHIEVEMENTS_CARD] = {-1, -1};
+    signed char bankMaterials[TOTAL_MATERIALS] = {19, 19, 19, 19, 19};
+    signed char bankDevelopments[TOTAL_DEVELOPMENT_CARD] = {14, 5, 2, 2, 2};
+    signed char achievementCards[TOTAL_ACHIEVEMENTS_CARD] = {-1, -1};
     unsigned char turnOffset = 0, robberArea = 9;
     GraphPtr graph;
-    const char store[TOTAL_STORE][TOTAL_MATERIALS] = {
+    const signed char store[TOTAL_STORE][TOTAL_MATERIALS] = {
         {1, 0, 0, 1, 0},
         {1, 1, 1, 1, 0},
         {0, 0, 2, 0, 3},
@@ -83,7 +83,6 @@ void catan_start(char _num_of_players)
     srand(time(NULL));
 
     puts("\n");
-
     // num of players
     players = malloc((num_of_players = _num_of_players) * sizeof(PlayerRec));
 
@@ -91,6 +90,7 @@ void catan_start(char _num_of_players)
     graph_init(&graph);
     catan_graph_init(graph, harbors);
     printt("num_of_players:%d\n", num_of_players);
+
     catab_players_init(players, num_of_players);
     printt("done:%d\n", num_of_players);
 

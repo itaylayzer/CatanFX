@@ -9,13 +9,13 @@ Node make_tree(Node *tree)
 }
 
 // safe get height element of Node
-char safe_height(Node N)
+signed char safe_height(Node N)
 {
     if (N == NULL)
         return 0;
     return N->height;
 }
-char balance_factor(Node N)
+signed char balance_factor(Node N)
 {
     if (N == NULL)
         return 0;
@@ -79,7 +79,7 @@ Node avl_insert(Node *root, void *element, signed char (*compare)(const void *, 
         *root = new_node(element);
         return *root;
     }
-    char cmp_result = compare(element, (*root)->data);
+    signed char cmp_result = compare(element, (*root)->data);
     if (cmp_result < 0)
     {
         (*root)->left = avl_insert(&((*root)->left), element, compare);
@@ -96,6 +96,7 @@ Node avl_insert(Node *root, void *element, signed char (*compare)(const void *, 
     (*root)->height = 1 + bmax(safe_height((*root)->left), safe_height((*root)->right));
 
     int balance = safe_height((*root)->left) - safe_height((*root)->right);
+
     if (balance > 1 && compare(element, (*root)->left->data) < 0)
     {
         return right_rotate(*root);
@@ -113,9 +114,9 @@ Node avl_insert(Node *root, void *element, signed char (*compare)(const void *, 
 
     if (balance < -1 && compare(element, (*root)->right->data) < 0)
     {
+
         return right_left_rotate(*root);
     }
-
     return *root;
 }
 Node avl_search(Node node, void *element, signed char (*compare)(const void *, const void *))
@@ -126,7 +127,7 @@ Node avl_search(Node node, void *element, signed char (*compare)(const void *, c
     }
     else
     {
-        char cmp_result = compare(element, node->data);
+        signed char cmp_result = compare(element, node->data);
         if (!cmp_result)
         {
             return node;

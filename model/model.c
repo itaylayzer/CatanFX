@@ -2,7 +2,7 @@
 #include "model.h"
 
 // helper function
-void print_vec(unsigned char *arr, char size)
+void print_vec(unsigned char *arr, signed char size)
 {
     unsigned char offset;
     printf("[");
@@ -36,16 +36,15 @@ void catan_edges(GraphPtr graph)
         exit(EXIT_FAILURE);
     }
 
-    char elements[2];
+    signed char elements[2];
     // printt("building graph\n");
     while (!feof(file))
     {
-        fread(elements, sizeof(char), 2, file);
+        fread(elements, sizeof(signed char), 2, file);
 
         const unsigned char from = elements[0], to = elements[1];
-        if (to == 146)
-            continue;
-        // printf("\t%hhu %hhu\n", from, to);
+
+        printf("\t%hhu %hhu\n", from, to);
         const bool is_connecting = (bmin(from, to) < AREAS);
 
         graph_join(graph, from, to, BLACK + is_connecting);
@@ -62,8 +61,8 @@ void catan_lands(GraphPtr graph)
     bool middle_or_after;
 
     // shuffle numbers and materials
-    vec_shuffle((char *)materials, AREAS - 1);
-    vec_shuffle((char *)numbers, AREAS - 1);
+    vec_shuffle((signed char *)materials, AREAS - 1);
+    vec_shuffle((signed char *)numbers, AREAS - 1);
 
     for (offset = 0; offset < AREAS - 1; offset++)
     {
@@ -81,7 +80,7 @@ void catan_harbors(GraphPtr graph, unsigned char harbors[HARBOR_COUNT * 2])
 {
     unsigned char offset, mats[HARBOR_COUNT] = {WOOD, WOOL, WHEET, BRICK, ORE, GENERAL_DEAL, GENERAL_DEAL, GENERAL_DEAL, GENERAL_DEAL};
 
-    vec_shuffle((char *)mats, HARBOR_COUNT);
+    vec_shuffle((signed char *)mats, HARBOR_COUNT);
 
     for (offset = 0; offset < HARBOR_COUNT; offset++)
     {
@@ -110,7 +109,7 @@ void catab_players_init(PlayerPtr players, signed char size)
 }
 unsigned char *areas_numbers(unsigned char *size, GraphPtr graph)
 {
-    unsigned char *arr = malloc(sizeof(char) * (*size = AREAS)), offset;
+    unsigned char *arr = malloc(sizeof(signed char) * (*size = AREAS)), offset;
 
     for (offset = 0; offset < AREAS; offset++)
         arr[offset] = graph->vertices[offset].material_number;
@@ -141,7 +140,7 @@ unsigned char *harbors_numbers(unsigned char *size,
 unsigned char *roll_dice(unsigned char *size,
                          PlayerPtr players,
                          GraphPtr graph,
-                         char *bank)
+                         signed char *bank)
 {
     unsigned char *arr, dice, sum;
 
@@ -162,21 +161,21 @@ unsigned char *roll_dice(unsigned char *size,
 
     return arr;
 }
-bool bis_neg(char x)
+bool bis_neg(signed char x)
 {
     return x < 0;
 }
 unsigned char *inf_player_actionable(unsigned char *size,
                                      PlayerPtr player,
-                                     char dev_bank[TOTAL_DEVELOPMENT_CARD],
-                                     const char store[TOTAL_STORE][TOTAL_MATERIALS])
+                                     signed char dev_bank[TOTAL_DEVELOPMENT_CARD],
+                                     const signed char store[TOTAL_STORE][TOTAL_MATERIALS])
 {
-    unsigned char *arr = calloc((*size = 1), sizeof(char)), offset;
+    unsigned char *arr = calloc((*size = 1), sizeof(signed char)), offset;
 
     for (offset = 0; offset < TOTAL_STORE; offset++)
     {
-        char *arr_res = vector_sub((char *)player->materials,
-                                   store[offset], TOTAL_MATERIALS);
+        signed char *arr_res = vector_sub((signed char *)player->materials,
+                                          store[offset], TOTAL_MATERIALS);
         bool not_neg = !vector_any(arr_res, TOTAL_MATERIALS, bis_neg);
         bool has_amount = offset == DEVELOPMENT_CARD
                               ? vec_sum(dev_bank, TOTAL_DEVELOPMENT_CARD)
@@ -200,12 +199,12 @@ unsigned char *inf_players_manip(unsigned char *size,
     if (offset)
     {
         // return only the count of the materials
-        res = single_byte(size, vec_sum((char *)manipulation(player), count));
+        res = single_byte(size, vec_sum((signed char *)manipulation(player), count));
     }
     else
     {
         // return every materials
-        res = (unsigned char *)vec_dup((char *)manipulation(player), (*size = count));
+        res = (unsigned char *)vec_dup((signed char *)manipulation(player), (*size = count));
     }
     return res;
 }
@@ -240,7 +239,7 @@ unsigned char *inf_player_devcards(unsigned char *size,
                              TOTAL_DEVELOPMENT_CARD,
                              get_player_devcards);
 }
-unsigned char *single_byte(unsigned char *size, char value)
+unsigned char *single_byte(unsigned char *size, signed char value)
 {
     unsigned char *res = malloc(sizeof(unsigned char) * (*size = 1));
     *res = value;
@@ -248,32 +247,32 @@ unsigned char *single_byte(unsigned char *size, char value)
 }
 
 void transfer_materials(PlayerPtr player,
-                        char bank[TOTAL_MATERIALS],
-                        const char cost[TOTAL_MATERIALS],
+                        signed char bank[TOTAL_MATERIALS],
+                        const signed char cost[TOTAL_MATERIALS],
                         bool to_player)
 {
-    char *player_mats = (char *)player->materials;
+    signed char *player_mats = (signed char *)player->materials;
 
     // remove cost from player materials
-    char *new_materials = (to_player ? vector_add : vector_sub)(player_mats, cost, TOTAL_MATERIALS);
-    vector_cpy(player_mats, (char *)new_materials, TOTAL_MATERIALS);
+    signed char *new_materials = (to_player ? vector_add : vector_sub)(player_mats, cost, TOTAL_MATERIALS);
+    vector_cpy(player_mats, (signed char *)new_materials, TOTAL_MATERIALS);
     free(new_materials);
 
     // update bank
     new_materials = (to_player ? vector_sub : vector_add)(bank, cost, TOTAL_MATERIALS);
-    vector_cpy(bank, (char *)new_materials, TOTAL_MATERIALS);
+    vector_cpy(bank, (signed char *)new_materials, TOTAL_MATERIALS);
     free(new_materials);
 }
 
 void transfer_dev_card(PlayerPtr player,
-                       char bank[TOTAL_DEVELOPMENT_CARD],
-                       const char *cost,
+                       signed char bank[TOTAL_DEVELOPMENT_CARD],
+                       const signed char *cost,
                        bool to_player)
 {
-    char *player_devs = (char *)player->developmentCards;
+    signed char *player_devs = (signed char *)player->developmentCards;
 
     // remove cost from player materials
-    char *new_materials =
+    signed char *new_materials =
         (to_player ? vector_add : vector_sub)(player_devs, cost, TOTAL_DEVELOPMENT_CARD);
     vector_cpy(player_devs, new_materials, TOTAL_DEVELOPMENT_CARD);
     free(new_materials);
@@ -292,8 +291,8 @@ signed char compare_edges_offset(const void *first, const void *second)
 
 bool buy_road(PlayerPtr player,
               GraphPtr graph,
-              const char cost[TOTAL_MATERIALS],
-              char bank[TOTAL_MATERIALS],
+              const signed char cost[TOTAL_MATERIALS],
+              signed char bank[TOTAL_MATERIALS],
               unsigned char from,
               unsigned char to)
 {
@@ -319,16 +318,18 @@ bool buy_road(PlayerPtr player,
     player->amounts[ROAD]--;
     return true;
 }
-char value_compare(const void *first, const void *second)
+signed char value_compare(const void *first, const void *second)
 {
     return first - second;
 }
 bool buy_settlement(PlayerPtr player,
                     GraphPtr graph,
-                    const char cost[TOTAL_MATERIALS],
-                    char bank[TOTAL_MATERIALS],
+                    const signed char cost[TOTAL_MATERIALS],
+                    signed char bank[TOTAL_MATERIALS],
                     unsigned char index)
 {
+
+    putts("-A");
 
     transfer_materials(player, bank, cost, false);
 
@@ -336,9 +337,13 @@ bool buy_settlement(PlayerPtr player,
     graph->vertices[index].color = player->color;
     player->victoryPoints++;
 
+    putts("A");
+
     void *void_val = NULL;
     *(unsigned char *)&void_val = index;
     avl_insert(&player->settlements, void_val, value_compare);
+
+    putts("C");
 
     player->victoryPoints++;
     player->amounts[SETTLEMENT]--;
@@ -348,8 +353,8 @@ bool buy_settlement(PlayerPtr player,
 
 bool buy_city(PlayerPtr player,
               GraphPtr graph,
-              const char cost[TOTAL_MATERIALS],
-              char bank[TOTAL_MATERIALS],
+              const signed char cost[TOTAL_MATERIALS],
+              signed char bank[TOTAL_MATERIALS],
               unsigned char index)
 {
 
@@ -365,13 +370,13 @@ bool buy_city(PlayerPtr player,
 }
 
 bool buy_developement(PlayerPtr player,
-                      char bank[TOTAL_MATERIALS],
-                      char dev_bank[TOTAL_DEVELOPMENT_CARD],
-                      const char cost[TOTAL_MATERIALS])
+                      signed char bank[TOTAL_MATERIALS],
+                      signed char dev_bank[TOTAL_DEVELOPMENT_CARD],
+                      const signed char cost[TOTAL_MATERIALS])
 {
 
-    char *how_many = calloc(TOTAL_DEVELOPMENT_CARD, sizeof(char));
-    char card_offset = -1, rand = brand(0, vec_sum(dev_bank, TOTAL_DEVELOPMENT_CARD));
+    signed char *how_many = calloc(TOTAL_DEVELOPMENT_CARD, sizeof(signed char));
+    signed char card_offset = -1, rand = brand(0, vec_sum(dev_bank, TOTAL_DEVELOPMENT_CARD));
 
     transfer_materials(player, bank, cost, false);
 
@@ -388,24 +393,34 @@ bool buy_developement(PlayerPtr player,
 }
 
 unsigned char *switch_action_store(unsigned char *size,
-                                   unsigned char *params,
+                                   signed char *params,
                                    GraphPtr graph,
                                    PlayerPtr player,
-                                   char mat_bank[TOTAL_MATERIALS],
-                                   char devcard_bank[TOTAL_DEVELOPMENT_CARD],
-                                   const char store[TOTAL_STORE][TOTAL_MATERIALS])
+                                   signed char mat_bank[TOTAL_MATERIALS],
+                                   signed char devcard_bank[TOTAL_DEVELOPMENT_CARD],
+                                   const signed char store[TOTAL_STORE][TOTAL_MATERIALS])
 {
     unsigned char *res = calloc((*size = 1), sizeof(unsigned char));
+
     switch (params[0])
     {
     case 0:
-        res[0] = buy_road(player, graph, store[ROAD], mat_bank, params[1], params[2]);
+        res[0] = buy_road(player,
+                          graph,
+                          store[ROAD],
+                          mat_bank,
+                          params[1] + AREAS,
+                          params[2] + AREAS);
         break;
     case 1:
-        res[0] = buy_settlement(player, graph, store[SETTLEMENT], mat_bank, params[1]);
+        res[0] = buy_settlement(player,
+                                graph,
+                                store[SETTLEMENT],
+                                mat_bank,
+                                params[1] + AREAS);
         break;
     case 2:
-        res[0] = buy_city(player, graph, store[CITY], mat_bank, params[1]);
+        res[0] = buy_city(player, graph, store[CITY], mat_bank, params[1] + AREAS);
         break;
     case 3:
         res[0] = buy_developement(player,
@@ -420,7 +435,7 @@ unsigned char *switch_action_store(unsigned char *size,
     return res;
 }
 
-void collect_materials_area(VertexPtr area, PlayerPtr players, char *bank)
+void collect_materials_area(VertexPtr area, PlayerPtr players, signed char *bank)
 {
     Queue que;
     Node node;
@@ -435,7 +450,7 @@ void collect_materials_area(VertexPtr area, PlayerPtr players, char *bank)
     enqueue(&que, area->edges);
     while (!queue_empty(que))
     {
-        vector_val((char *)cost, TOTAL_MATERIALS, 0);
+        vector_val((signed char *)cost, TOTAL_MATERIALS, 0);
 
         node = dequeue(&que);
         edge = node->data;
@@ -454,7 +469,7 @@ void collect_materials_area(VertexPtr area, PlayerPtr players, char *bank)
         if (player_offset < MAX_PLAYERS)
         {
             cost[material] = 1 + is_city;
-            transfer_materials(players + player_offset, bank, (char *)cost, true);
+            transfer_materials(players + player_offset, bank, (signed char *)cost, true);
         }
     }
 }
@@ -462,7 +477,7 @@ void collect_materials_area(VertexPtr area, PlayerPtr players, char *bank)
 void collect_materials(unsigned char rolled_num,
                        PlayerPtr players,
                        GraphPtr graph,
-                       char *bank)
+                       signed char *bank)
 {
     // for each rolled num there can be between 1 to 2 vertecies;
     VertexPtr vertecies[2] = {NULL, NULL};
@@ -516,12 +531,12 @@ void handle_rest_turns(int socket,
     }
 }
 // math
-char *vector_join(const char *first,
-                  const char *second,
-                  signed char size,
-                  char (*func)(char first, char second))
+signed char *vector_join(const signed char *first,
+                         const signed char *second,
+                         signed char size,
+                         signed char (*func)(signed char first, signed char second))
 {
-    char *arr = calloc(size, sizeof(char));
+    signed char *arr = calloc(size, sizeof(signed char));
 
     while (--size >= 0)
     {
@@ -530,11 +545,11 @@ char *vector_join(const char *first,
 
     return arr;
 }
-char *vector_map(const char *first,
-                 signed char size,
-                 char (*func)(char))
+signed char *vector_map(const signed char *first,
+                        signed char size,
+                        signed char (*func)(signed char))
 {
-    char *arr = calloc(size, sizeof(char));
+    signed char *arr = calloc(size, sizeof(signed char));
 
     while (--size >= 0)
     {
@@ -543,51 +558,51 @@ char *vector_map(const char *first,
 
     return arr;
 }
-char badd(char x, char y)
+signed char badd(signed char x, signed char y)
 {
     return x + y;
 }
-char bminus(char x, char y)
+signed char bminus(signed char x, signed char y)
 {
     return x - y;
 }
-char bnegative(char x)
+signed char bnegative(signed char x)
 {
     return -x;
 }
-char *vector_add(const char *first,
-                 const char *second,
-                 char size)
+signed char *vector_add(const signed char *first,
+                        const signed char *second,
+                        signed char size)
 {
     return vector_join(first, second, size, badd);
 }
 
-char *vector_sub(const char *first,
-                 const char *second,
-                 char size)
+signed char *vector_sub(const signed char *first,
+                        const signed char *second,
+                        signed char size)
 {
     return vector_join(first, second, size, bminus);
 }
-char *vector_neg(const char *arr,
-                 char size)
+signed char *vector_neg(const signed char *arr,
+                        signed char size)
 {
     return vector_map(arr, size, bnegative);
 }
-bool vector_any(const char *arr, signed char size, bool (*condition)(char))
+bool vector_any(const signed char *arr, signed char size, bool (*condition)(signed char))
 {
     while (--size >= 0 && !condition(arr[size]))
         ;
 
     return size >= 0;
 }
-bool vector_all(const char *arr, signed char size, bool (*condition)(char))
+bool vector_all(const signed char *arr, signed char size, bool (*condition)(signed char))
 {
     while (--size >= 0 && condition(arr[size]))
         ;
 
     return size < 0;
 }
-void vector_cpy(char *dest, char *src, signed char size)
+void vector_cpy(signed char *dest, signed char *src, signed char size)
 {
     while (--size >= 0)
     {
@@ -595,7 +610,7 @@ void vector_cpy(char *dest, char *src, signed char size)
     }
 }
 
-void vector_val(char *dest, signed char size, char val)
+void vector_val(signed char *dest, signed char size, signed char val)
 {
     unsigned char offset;
 
@@ -604,7 +619,7 @@ void vector_val(char *dest, signed char size, char val)
         dest[offset] = val;
     }
 }
-char vec_sum(char *arr, signed char size)
+signed char vec_sum(signed char *arr, signed char size)
 {
     unsigned char val;
 
@@ -614,22 +629,22 @@ char vec_sum(char *arr, signed char size)
     }
     return val;
 }
-char *vec_dup(char *arr, signed char size)
+signed char *vec_dup(signed char *arr, signed char size)
 {
-    char *new = malloc(sizeof(char) * size);
+    signed char *new = malloc(sizeof(signed char) * size);
     while (--size >= 0)
     {
         new[size] = arr[size];
     }
     return new;
 }
-void bswap(char *x, char *y)
+void bswap(signed char *x, signed char *y)
 {
-    char temp = *y;
+    signed char temp = *y;
     *y = *x;
     *x = temp;
 }
-void vec_shuffle(char *arr, unsigned char size)
+void vec_shuffle(signed char *arr, unsigned char size)
 {
     unsigned char offset;
     for (offset = 0; offset < size; offset++)

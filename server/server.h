@@ -39,20 +39,20 @@
 #define BUFFER_SIZE 256
 
 int server_listen(void (*handle_request)(
-                      char *buffer,
+                      signed char *buffer,
                       int socket,
                       GraphPtr graph,
                       unsigned char *harbors, PlayerPtr players,
-                      char *bankDevelopments,
-                      char *bankMaterials,
-                      const char (*store)[TOTAL_MATERIALS],
+                      signed char *bankDevelopments,
+                      signed char *bankMaterials,
+                      const signed char (*store)[TOTAL_MATERIALS],
                       unsigned char *turnOffset,
                       const unsigned char num_of_players),
                   GraphPtr graph,
                   unsigned char *harbors, PlayerPtr players,
-                  char *bankDevelopments,
-                  char *bankMaterials,
-                  const char (*store)[TOTAL_MATERIALS],
+                  signed char *bankDevelopments,
+                  signed char *bankMaterials,
+                  const signed char (*store)[TOTAL_MATERIALS],
                   unsigned char *turnOffset,
                   const unsigned char num_of_players);
 #endif

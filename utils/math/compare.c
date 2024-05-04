@@ -1,17 +1,17 @@
 #include "compare.h"
-char bsign(char x)
+signed char bsign(signed char x)
 {
     return (((x >> 7) & 0x01) * 2 - 1) * -1;
 }
-char babs(char x)
+signed char babs(signed char x)
 {
     return bsign(x) * x;
 }
-char bmin(char x, char y)
+signed char bmin(signed char x, signed char y)
 {
     return (x + y - babs(x - y)) / 2;
 }
-char bmax(char x, char y)
+signed char bmax(signed char x, signed char y)
 {
     return (x + y + babs(x - y)) / 2;
 }

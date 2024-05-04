@@ -7,7 +7,7 @@ typedef struct nodeType
     void *data;
     struct nodeType *left;
     struct nodeType *right;
-    char height;
+    signed char height;
 } NodeRec, *Node;
 
 #endif

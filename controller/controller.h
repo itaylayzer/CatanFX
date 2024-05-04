@@ -8,6 +8,6 @@
 #include "../server/server.h"
 #include "../utils/printt/printt.h"
 
-void catan_start(char);
+void catan_start(signed char);
 
 #endif

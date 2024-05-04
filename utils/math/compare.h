@@ -2,9 +2,9 @@
 
 #define _INC_MATH_COMPARE
 
-char bsign(char x);
-char babs(char x);
-char bmin(char x, char y);
-char bmax(char x, char y);
+signed char bsign(signed char x);
+signed char babs(signed char x);
+signed char bmin(signed char x, signed char y);
+signed char bmax(signed char x, signed char y);
 
 #endif

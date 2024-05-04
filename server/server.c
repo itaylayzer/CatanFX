@@ -8,20 +8,20 @@ void print_error(const char *type, const int code)
 }
 
 int server_listen(void (*handle_request)(
-                      char *buffer,
+                      signed char *buffer,
                       int socket,
                       GraphPtr graph,
                       unsigned char *harbors, PlayerPtr players,
-                      char *bankDevelopments,
-                      char *bankMaterials,
-                      const char (*store)[TOTAL_MATERIALS],
+                      signed char *bankDevelopments,
+                      signed char *bankMaterials,
+                      const signed char (*store)[TOTAL_MATERIALS],
                       unsigned char *turnOffset,
                       const unsigned char num_of_players),
                   GraphPtr graph,
                   unsigned char *harbors, PlayerPtr players,
-                  char *bankDevelopments,
-                  char *bankMaterials,
-                  const char (*store)[TOTAL_MATERIALS],
+                  signed char *bankDevelopments,
+                  signed char *bankMaterials,
+                  const signed char (*store)[TOTAL_MATERIALS],
                   unsigned char *turnOffset,
                   const unsigned char num_of_players)
 {
@@ -30,11 +30,11 @@ int server_listen(void (*handle_request)(
 #if defined(__linux__)
     int
 #else
-    char
+    signed char
 #endif
         opt = 1;
     int addrlen = sizeof(address);
-    char *buffer;
+    signed char *buffer;
 
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -85,7 +85,7 @@ int server_listen(void (*handle_request)(
     putts("Server up and running");
     while (1)
     {
-        buffer = calloc(BUFFER_SIZE, sizeof(char));
+        buffer = calloc(BUFFER_SIZE, sizeof(signed char));
         valread = recv(new_socket, buffer, BUFFER_SIZE, 0);
         switch (valread)
         {

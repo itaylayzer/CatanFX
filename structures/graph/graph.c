@@ -8,9 +8,9 @@ void graph_init(GraphPtr *graph)
     *graph = temp;
 }
 
-char edge_compare(const void *first, const void *second)
+signed char edge_compare(const void *first, const void *second)
 {
-    return (((EdgePtr)first)->offset - ((EdgePtr)second)->offset);
+    return ((EdgePtr)first)->offset - ((EdgePtr)second)->offset;
 }
 
 void graph_join(GraphPtr graph,
@@ -18,11 +18,12 @@ void graph_join(GraphPtr graph,
                 const unsigned char to,
                 const unsigned char color)
 {
-    const EdgePtr edge = malloc(sizeof(EdgeRec));
+    EdgePtr edge = malloc(sizeof(EdgeRec));
 
     edge->color = color;
     edge->vertex = graph->vertices + from;
     edge->offset = to;
 
-    avl_insert(&graph->vertices[from].edges, (void *)(edge), edge_compare);
+    void *voidPtr = edge;
+    avl_insert(&graph->vertices[from].edges, voidPtr, edge_compare);
 }
