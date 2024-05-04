@@ -22,6 +22,7 @@
         "stdbool.h": "c",
         "unistd.h": "c",
         "printt.h": "c",
-        "typedef.h": "c"
+        "typedef.h": "c",
+        "sock.h": "c"
     }
 }

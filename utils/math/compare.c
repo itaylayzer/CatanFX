@@ -3,9 +3,9 @@ signed char bsign(signed char x)
 {
     return (((x >> 7) & 0x01) * 2 - 1) * -1;
 }
-signed char babs(signed char x)
+unsigned char babs(signed char x)
 {
-    return bsign(x) * x;
+    return (unsigned char)(bsign(x) * x);
 }
 signed char bmin(signed char x, signed char y)
 {

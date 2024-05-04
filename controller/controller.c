@@ -13,6 +13,8 @@ void handle_request(
 {
     unsigned char size = 0;
     void *_buff;
+    putts("");
+    printt("start handeling request! buffer[0] = %d\n", buffer[0]);
     switch (buffer[0])
     {
     case 0:
@@ -23,6 +25,7 @@ void handle_request(
         break;
     case 10:
         _buff = inf_player_actionable(&size, players, bankDevelopments, store);
+        printt("inf_player_actionable %d\n", *(char *)_buff);
         break;
 
     case 11: // player materials
@@ -50,7 +53,9 @@ void handle_request(
                                     store);
         break;
     case 40:
+        printf("got 40!\n");
         handle_rest_turns(socket, turnOffset, players, num_of_players);
+        break;
 
     default:
         return;

@@ -18,6 +18,7 @@
 #include "../structures/graph/graph.h"
 #include "../structures/queue/queue.h"
 #include "../utils/math/compare.h"
+#include "../server/sock.h"
 
 // game logic
 void catan_graph_init(GraphPtr graph, unsigned char harbors[HARBOR_COUNT * 2]);

@@ -43,8 +43,6 @@ void catan_edges(GraphPtr graph)
         fread(elements, sizeof(signed char), 2, file);
 
         const unsigned char from = elements[0], to = elements[1];
-
-        printf("\t%hhu %hhu\n", from, to);
         const bool is_connecting = (bmin(from, to) < AREAS);
 
         graph_join(graph, from, to, BLACK + is_connecting);
@@ -328,22 +326,15 @@ bool buy_settlement(PlayerPtr player,
                     signed char bank[TOTAL_MATERIALS],
                     unsigned char index)
 {
-
-    putts("-A");
-
     transfer_materials(player, bank, cost, false);
 
     // change settlement color
     graph->vertices[index].color = player->color;
     player->victoryPoints++;
 
-    putts("A");
-
     void *void_val = NULL;
     *(unsigned char *)&void_val = index;
     avl_insert(&player->settlements, void_val, value_compare);
-
-    putts("C");
 
     player->victoryPoints++;
     player->amounts[SETTLEMENT]--;
@@ -520,14 +511,27 @@ void handle_rest_turns(int socket,
                        const unsigned num_of_players)
 {
     (*turnOffset)++;
+    signed char *_buff = malloc(sizeof(char) * 1000);
 
-    unsigned char turnColor;
+    unsigned char turnColor, size;
 
     // while the turn color its not WHITE
-    while ((turnColor = (*turnOffset) / num_of_players))
+    while ((turnColor = (*turnOffset) % num_of_players))
     {
+        printt("\tturnOffset=%d\n", *turnOffset);
+
         bot_plays(players + turnColor, socket);
+        // sleep(1);
+
+        // printt("\tbot number %d done playing!", turnColor);
         (*turnOffset)++;
+
+        _buff[0] = 0;
+        _buff[1] = (*turnOffset) % num_of_players;
+        size = 2;
+
+        send(socket, &size, 1, 0);
+        send(socket, _buff, size, 0);
     }
 }
 // math
