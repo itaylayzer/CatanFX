@@ -30,7 +30,7 @@ public class Main extends Application {
             open(primaryStage);
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            ex.printStackTrace(System.err);
         }
     }
 
@@ -47,7 +47,7 @@ public class Main extends Application {
             waitForInput();
             open(new Stage());
         } catch (Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
     }
 
@@ -66,7 +66,7 @@ public class Main extends Application {
             primaryStage.setMinWidth(816);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
         }
     }
 

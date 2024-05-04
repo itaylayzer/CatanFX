@@ -46,7 +46,7 @@ public class MenuController {
                 stage.getIcons().add(Constants.Images.icon);
                 stage.show();
             } catch (Exception e) {
-                e.printStackTrace();
+                e.printStackTrace(System.err);
             }
 
         });

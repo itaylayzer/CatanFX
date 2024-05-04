@@ -8,7 +8,9 @@ import java.net.UnknownHostException;
 
 import com.c1t45.controller.Constants.ClientCodes;
 import com.c1t45.controller.Constants.ServerCodes;
-import com.c1t45.view.LocalPlayer;
+import com.c1t45.view.Player;
+import com.c1t45.view.Interfaces.Action;
+import com.c1t45.view.Interfaces.Condition;
 
 public class SocketClient {
     private Socket socket;
@@ -16,10 +18,7 @@ public class SocketClient {
     static private final String ip = "127.0.0.1";
     static private final int port = 5900;
 
-    private LocalPlayer player;
-
-    public SocketClient(LocalPlayer localPlayer) throws UnknownHostException, IOException {
-        this.player = localPlayer;
+    public SocketClient() throws UnknownHostException, IOException {
         this.socket = new Socket(ip, port);
 
     }
@@ -30,7 +29,7 @@ public class SocketClient {
             outputStream.write(msg);
             outputStream.flush();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            ex.printStackTrace(System.err);
         }
     }
 
@@ -72,16 +71,53 @@ public class SocketClient {
         }
     }
 
-    public void mainLoop() throws IOException, Exception {
-        switch (this.recv()[0]) {
-            case ServerCodes.TURN:
-                player.setActionable(this.action(new byte[] { ClientCodes.INFORMATION.PLAYER })[0]);
-                break;
-            case ServerCodes.UPDATE:
-                break;
-            case ServerCodes.PUT:
-                break;
-        }
+    public byte getActionable() throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.INFORMATION.PLAYER })[0];
+    }
+
+    public boolean storeRoad(byte from, byte to) throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.ACTIONS.STORE, 0, from, to })[0] != 1;
+    }
+
+    public boolean storeHouse(byte vertex) throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.ACTIONS.STORE, 1, vertex })[0] != 1;
+    }
+
+    public boolean storeCity(byte vertex) throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.ACTIONS.STORE, 2, vertex })[0] != 1;
+    }
+
+    public void endTurn(Condition<Void> condition, Action<Void> onDone) throws IOException, Exception {
+        this.send(new byte[] { ClientCodes.ACTIONS.END_TURN });
+
+        Thread thread = new Thread(() -> {
+            System.out.println("starting thread!");
+            while (condition.condition(null)) {
+                try {
+                    System.out.println("before recv()");
+                    byte[] response = this.recv();
+                    System.out.println("after recv()");
+
+                    switch (response[0]) {
+                        case ServerCodes.TURN:
+                            Player.setTurnID(response[1]);
+                            break;
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace(System.err);
+                }
+            }
+            try {
+                this.recv();
+                onDone.action(null);
+            } catch (Exception ex) {
+                System.err.println("Last Recv before returning to local turn!");
+                ex.printStackTrace(System.err);
+            }
+
+        });
+        thread.start();
+
     }
 
 }

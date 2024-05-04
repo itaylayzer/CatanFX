@@ -299,7 +299,18 @@ public class CatanBoard {
 
         edgesGroup.setOpacity(0);
         edgesGroup.setMouseTransparent(true);
+    }
 
+    public static void addHouse(byte vertex, Color color) {
+        instance.addSettlement(Constants.Images.house, vertex, color);
+    }
+
+    public static void addCity(byte vertex, Color color) {
+        instance.addSettlement(Constants.Images.city, vertex, color);
+    }
+
+    public static void addRoad(byte edge, Color color) {
+        instance.addLine(edge, color);
     }
 
     private void addSettlement(Image image, byte index, Color color) {

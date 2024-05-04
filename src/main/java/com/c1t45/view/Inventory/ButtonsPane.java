@@ -6,6 +6,7 @@ import javafx.scene.layout.FlowPane;
 
 import com.c1t45.view.Constants;
 import com.c1t45.view.LocalPlayer;
+import com.c1t45.view.Player;
 import com.c1t45.view.CatanBoard.CatanBoard;
 import com.c1t45.view.Interfaces.Action;
 import com.c1t45.view.Utils.BytesUtils;
@@ -54,9 +55,43 @@ public class ButtonsPane {
                 });
             } else {
                 doRolls.setValue(true);
+                player.endTurn();
                 rollAction.setPackage(Constants.Packages.rolldice);
             }
 
+        });
+
+        houseAction.setOnAction((event) -> {
+            CatanBoard board = CatanBoard.getInstance();
+            houseAction.setButtonDisabled(true);
+            board.cancelCurrentPick(false);
+
+            board.pickVertex((value, index) -> {
+                return Player.houseDontBelong(value);
+            }, () -> {
+
+            }, (picked) -> {
+                System.out.println("picked-dot=" + picked);
+                houseAction.decrease();
+
+                player.buyHouse(picked);
+                CatanBoard.addHouse(picked, player.getColor());
+            });
+        });
+
+        cityAction.setOnAction((event) -> {
+            CatanBoard board = CatanBoard.getInstance();
+            cityAction.setButtonDisabled(true);
+            board.cancelCurrentPick(false);
+            board.pickVertex((value, index) -> {
+                return player.hasHouse(value) && !player.hasCity(value);
+            }, () -> {
+            }, (picked) -> {
+                System.out.println("picked-dot=" + picked);
+                cityAction.decrease();
+                player.buyCity(picked);
+                CatanBoard.addCity(picked, player.getColor());
+            });
         });
 
         player.addOnActionableEvent(actionable -> {
@@ -66,7 +101,7 @@ public class ButtonsPane {
             devcardAction.setButtonDisabled(!(player.myTurn() && BytesUtils.bit((byte) actionable, (byte) 3)));
             tradeAction.setButtonDisabled(!player.myTurn());
             rollAction.setButtonDisabled(!player.myTurn());
-        });
+        }, true);
 
     }
 

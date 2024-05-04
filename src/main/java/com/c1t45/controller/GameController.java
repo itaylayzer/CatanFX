@@ -82,8 +82,8 @@ public class GameController {
         turnRect.setFill(colors[0]);
         turnRect.setOpacity(0.5);
 
-        LocalPlayer local = new LocalPlayer((byte) 0, localeName, colors[0]);
-        SocketClient sock = new SocketClient(local);
+        SocketClient sock = new SocketClient();
+        LocalPlayer local = new LocalPlayer((byte) 0, localeName, colors[0], sock);
 
         players = new Player[playerCount];
         players[0] = local;
@@ -95,7 +95,7 @@ public class GameController {
                 try {
                     return sock.rollDice();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    e.printStackTrace(System.err);
                     restart();
                     return null; // or throw a custom exception if needed
                 }

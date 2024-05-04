@@ -164,10 +164,16 @@ public class Player {
     }
 
     public boolean myTurn() {
-        return Player.turnID == this.id;
+        return Player.turnID + 1 == this.id;
     }
 
     static public void setTurnID(byte id) {
         turnID = id;
+    }
+
+    protected static void moveTurn() {
+        turnID++;
+        if (turnID > 2)
+            turnID = 0;
     }
 }
