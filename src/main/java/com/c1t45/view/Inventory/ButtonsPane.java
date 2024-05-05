@@ -102,21 +102,21 @@ public class ButtonsPane {
             board.cancelCurrentPick(false);
 
             board.pickEdge((value) -> {
-                return Player.roadDontBelong(value);
+                return Player.roadDontBelong(value) && player.roadable().contains(value);
             }, () -> {
             }, (picked) -> {
                 System.out.println("picked-dot=" + picked);
                 cityAction.decrease();
                 byte[] fromto = board.seperateEdge(picked);
-                player.buyRoad(true, fromto[0], fromto[1]);
+                player.buyRoad(true, picked, fromto[0], fromto[1]);
                 CatanBoard.addRoad(picked, player.getColor());
             });
         });
 
         player.addOnActionableEvent(actionable -> {
-            houseAction.setButtonDisabled(!(player.turnable() && BytesUtils.bit((byte) actionable, (byte) 0)));
-            cityAction.setButtonDisabled(!(player.turnable() && BytesUtils.bit((byte) actionable, (byte) 1)));
-            roadAction.setButtonDisabled(!(player.turnable() && BytesUtils.bit((byte) actionable, (byte) 2)));
+            roadAction.setButtonDisabled(!(player.turnable() && BytesUtils.bit((byte) actionable, (byte) 0)));
+            houseAction.setButtonDisabled(!(player.turnable() && BytesUtils.bit((byte) actionable, (byte) 1)));
+            cityAction.setButtonDisabled(!(player.turnable() && BytesUtils.bit((byte) actionable, (byte) 2)));
             devcardAction.setButtonDisabled(!(player.turnable() && BytesUtils.bit((byte) actionable, (byte) 3)));
             tradeAction.setButtonDisabled(!player.turnable());
             rollAction.setButtonDisabled(!player.turnable());

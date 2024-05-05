@@ -2,12 +2,16 @@ package com.c1t45.view;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.c1t45.controller.SocketClient;
 import com.c1t45.view.Constants.Actions.TransferMaterials;
 import com.c1t45.view.CatanBoard.CatanBoard;
 import com.c1t45.view.Interfaces.Action;
 import com.c1t45.view.Navbar.BankPane;
+import com.c1t45.view.Packages.LinePackage;
+import com.c1t45.view.Packages.VertexPackage;
 
 import javafx.scene.paint.Color;
 
@@ -18,6 +22,7 @@ public class LocalPlayer extends Player {
     private byte actionable;
     private List<Action<Byte>> onActionableChange;
     private SocketClient client;
+    private List<Byte> roads;
 
     private boolean initMode;
     private BankPane bank;
@@ -31,6 +36,7 @@ public class LocalPlayer extends Player {
         this.actionable = 0;
         this.initMode = true;
         this.onActionableChange = new ArrayList<>();
+        this.roads = new ArrayList<>();
 
         this.update();
 
@@ -54,15 +60,22 @@ public class LocalPlayer extends Player {
             CatanBoard.addHouse(picked_house, getColor());
 
             board.pickEdge((value) -> {
-                return Player.roadDontBelong(value);
+                VertexPackage vertex = board.getVertex(picked_house);
+                boolean found = false;
+
+                for (var line : vertex.lines) {
+                    found = found || line.offset == value;
+                }
+
+                return Player.roadDontBelong(value) && found;
             }, () -> {
             }, (picked_road) -> {
                 byte[] fromto = board.seperateEdge(picked_road);
-                this.buyRoad(false, fromto[0], fromto[1]);
+                this.buyRoad(false, picked_road, fromto[0], fromto[1]);
                 CatanBoard.addRoad(picked_road, getColor());
                 finished.run();
-            });
-        });
+            }, false);
+        }, false);
     }
 
     public boolean hasHouse(Byte value) {
@@ -92,7 +105,7 @@ public class LocalPlayer extends Player {
             eve.action(actionable);
     }
 
-    private void update() {
+    public void update() {
         try {
             setActionable(client.getActionable());
             setMaterials(client.getMaterials(this.id));
@@ -110,6 +123,7 @@ public class LocalPlayer extends Player {
     public void buyHouse(TransferMaterials transferMaterials, byte vertex) {
 
         try {
+            super.buyHouse(vertex);
             client.storeHouse(transferMaterials, vertex);
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
@@ -120,6 +134,7 @@ public class LocalPlayer extends Player {
 
     public void buyCity(byte vertex) {
         try {
+            super.buyCity(vertex);
             client.storeCity(vertex);
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
@@ -128,14 +143,37 @@ public class LocalPlayer extends Player {
 
     }
 
-    public void buyRoad(boolean transferMaterials, byte from, byte to) {
+    public void buyRoad(boolean transferMaterials, byte offset, byte from, byte to) {
         try {
+            super.buyRoad(offset);
             client.storeRoad(transferMaterials, from, to);
+            roads.add(offset);
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
         }
         update();
 
+    }
+
+    public Set<Byte> roadable() {
+        Set<Byte> set = new TreeSet<Byte>();
+        CatanBoard instance = CatanBoard.getInstance();
+
+        for (var edge : this.roads) {
+            LinePackage line = instance.getLine(edge);
+
+            for (var xline : instance.getVertex(line.from).lines) {
+                set.add(xline.offset);
+            }
+
+            for (var xline : instance.getVertex(line.to).lines) {
+                set.add(xline.offset);
+            }
+
+        }
+
+        set.removeAll(this.roads);
+        return set;
     }
 
     public void endTurn() {

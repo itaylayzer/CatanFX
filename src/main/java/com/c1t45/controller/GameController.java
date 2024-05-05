@@ -90,7 +90,10 @@ public class GameController {
             @Override
             public byte[] apply(Void t) {
                 try {
-                    return sock.rollDice();
+                    byte[] rolls = sock.rollDice();
+                    local.update();
+
+                    return rolls;
                 } catch (Exception e) {
                     e.printStackTrace(System.err);
                     restart();

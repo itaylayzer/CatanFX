@@ -2,7 +2,6 @@ package com.c1t45.view.Components;
 
 import com.c1t45.view.Packages.ImagePackage;
 
-import javafx.application.Platform;
 import javafx.scene.paint.Paint;
 
 public class MaterialGroup extends ImageButton {

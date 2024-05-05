@@ -34,6 +34,7 @@ import com.c1t45.view.Interfaces.Action;
 import com.c1t45.view.Interfaces.Condition;
 import com.c1t45.view.Packages.ImagePackage;
 import com.c1t45.view.Packages.LinePackage;
+import com.c1t45.view.Packages.VertexPackage;
 import com.c1t45.view.Utils.DoubleUtils;
 import com.c1t45.view.Utils.ImageUtils;
 import com.c1t45.view.Utils.ShapeUtils;
@@ -54,7 +55,7 @@ public class CatanBoard {
     // private double scale;
 
     // vertex
-    private Point2D[] vertecies;
+    private VertexPackage[] vertecies;
     private Circle[] vertexCircles;
     private Group vertexGroup;
     // harbor
@@ -155,7 +156,7 @@ public class CatanBoard {
 
     private void initGraphGraphics(byte[] harborsBytes, Point2D boardMiddle) {
         for (int vertexOffset = 0; vertexOffset < vertecies.length; vertexOffset++) {
-            Point2D vertex = vertecies[vertexOffset];
+            Point2D vertex = vertecies[vertexOffset].point;
 
             Circle circle = new Circle();
             double color = (double) vertexOffset / (double) (vertecies.length - 1);
@@ -176,8 +177,8 @@ public class CatanBoard {
             byte vertexAOffset = harborsBytes[harborOffset * 2];
             byte vertexBOffset = harborsBytes[harborOffset * 2 + 1];
 
-            Point2D vertexA = vertecies[vertexAOffset];
-            Point2D vertexB = vertecies[vertexBOffset];
+            Point2D vertexA = vertecies[vertexAOffset].point;
+            Point2D vertexB = vertecies[vertexBOffset].point;
 
             Point2D harbPoint = this.harbordCords(vertexA, vertexB, boardMiddle);
             Paint color = harborOffset < Constants.Packages.materials.length
@@ -251,6 +252,13 @@ public class CatanBoard {
             }
         };
 
+        Comparator<VertexPackage> vertexComparator = new Comparator<VertexPackage>() {
+            @Override
+            public int compare(VertexPackage p1, VertexPackage p2) {
+                return doubleComparator.compare(p1.point, p2.point);
+            }
+        };
+
         Comparator<LinePackage> edgeComparator = new Comparator<LinePackage>() {
             @Override
             public int compare(LinePackage p1, LinePackage p2) {
@@ -258,17 +266,19 @@ public class CatanBoard {
             }
         };
 
-        Point2D middle = initVerteciesAndHexagons(landsByte, doubleComparator);
+        Point2D middle = initVerteciesAndHexagons(landsByte, vertexComparator);
         initEdges(edgesByte, edgeComparator);
         return middle;
     }
 
-    private Point2D initVerteciesAndHexagons(byte[] landsBytes, Comparator<Point2D> doubleComparator) {
+    private Point2D initVerteciesAndHexagons(byte[] landsBytes, Comparator<VertexPackage> vertexComparator) {
 
         int resourceIndex = 0;
 
-        Set<Point2D> verticesSet = new TreeSet<>(doubleComparator);
+        Set<VertexPackage> verticesSet = new TreeSet<>(vertexComparator);
+
         Point2D boardMiddle = new Point2D(0, 0);
+
         for (int row = 0; row < rows.length; row++) {
             int cols = rows[row];
             for (int col = 0; col < cols; col++) {
@@ -289,7 +299,7 @@ public class CatanBoard {
                     double vy = hexagonPoints[i + 1];
                     mY += vy;
                     Point2D vertex = new Point2D(vx, vy);
-                    verticesSet.add(vertex);
+                    verticesSet.add(new VertexPackage(vertex));
 
                     // int j = i < 10 ? i : i - 12;
                     // nx = hexagonPoints[j + 2];
@@ -316,8 +326,14 @@ public class CatanBoard {
             }
         }
 
-        vertecies = new Point2D[verticesSet.size()];
+        byte offset = 0;
+        for (var vertex : verticesSet) {
+            vertex.index = offset++;
+        }
+
+        vertecies = new VertexPackage[verticesSet.size()];
         verticesSet.toArray(vertecies);
+
         return boardMiddle;
     }
 
@@ -336,8 +352,8 @@ public class CatanBoard {
             byte from = (byte) (edgesByte[offset] - AREAS),
                     to = (byte) (edgesByte[offset + 1] - AREAS);
 
-            Point2D start = vertecies[from];
-            Point2D end = vertecies[to];
+            Point2D start = vertecies[from].point;
+            Point2D end = vertecies[to].point;
 
             edgesSet.add(new LinePackage(start.getX(), start.getY(), end.getX(), end.getY(), from, to));
 
@@ -346,6 +362,8 @@ public class CatanBoard {
         offset = 0;
         for (LinePackage line : edgesSet) {
             line.offset = (byte) (offset++);
+            vertecies[line.from].lines.add(line);
+            vertecies[line.to].lines.add(line);
         }
         edges = new LinePackage[edgesSet.size()];
         edgesSet.toArray(edges);
@@ -368,7 +386,7 @@ public class CatanBoard {
     private void addSettlement(Image image, byte index, Color color) {
         final double size = 15;
         boolean isCity = settlementsMap.containsKey(index);
-        Point2D vertex = vertecies[index];
+        Point2D vertex = vertecies[index].point;
 
         ImageView view = new ImageView(ImageUtils.colorChange(image, color));
         Circle circle = vertexCircles[index];
@@ -437,6 +455,10 @@ public class CatanBoard {
     }
 
     public void pickVertex(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked) {
+        pickVertex(allowVertex, onCancel, onPicked, true);
+    }
+
+    public void pickVertex(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked, boolean useFade) {
 
         Scene scene = vertexGroup.getScene();
         lastCancel = onCancel;
@@ -455,13 +477,17 @@ public class CatanBoard {
             @Override
             public void action(Byte param) {
                 onPicked.action(param);
-                cancelPickVertexUI(true);
+                cancelPickVertexUI(useFade);
             }
         });
 
     }
 
     public void pickEdge(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked) {
+        pickEdge(allowVertex, onCancel, onPicked, true);
+    }
+
+    public void pickEdge(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked, boolean useFade) {
 
         Scene scene = edgesGroup.getScene();
         lastCancel = onCancel;
@@ -478,7 +504,7 @@ public class CatanBoard {
         };
         scene.addEventHandler(KeyEvent.KEY_PRESSED, cancelEvent);
 
-        applyPickEdgeUI(allowVertex, new Action<Byte>() {
+        applyPickEdgeUI(useFade, allowVertex, new Action<Byte>() {
             @Override
             public void action(Byte param) {
                 onPicked.action(param);
@@ -531,12 +557,17 @@ public class CatanBoard {
 
     }
 
-    private void applyPickEdgeUI(Condition<Byte> allowVertex, Action<Byte> action) {
+    private void applyPickEdgeUI(boolean useFade, Condition<Byte> allowVertex, Action<Byte> action) {
         edgesGroup.setMouseTransparent(false);
         roadsGroup.setMouseTransparent(false);
 
-        fade(landsGroup, 0.5);
-        fade(edgesGroup, 1);
+        if (useFade) {
+            fade(landsGroup, 0.5);
+            fade(edgesGroup, 1);
+        } else {
+            landsGroup.setOpacity(0.5);
+            edgesGroup.setOpacity(1);
+        }
         int index;
         for (index = 0; index < edgesRectangles.length; index++) {
             Rectangle rect = edgesRectangles[index];
@@ -583,5 +614,13 @@ public class CatanBoard {
     public byte[] seperateEdge(Byte picked) {
         LinePackage line = edges[picked];
         return new byte[] { line.from, line.to };
+    }
+
+    public VertexPackage getVertex(byte index) {
+        return vertecies[index];
+    }
+
+    public LinePackage getLine(Byte offset) {
+        return edges[offset];
     }
 }

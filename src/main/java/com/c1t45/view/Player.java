@@ -10,7 +10,6 @@ import com.c1t45.view.Utils.BytesUtils;
 import com.c1t45.view.Constants.Materials;
 
 import javafx.scene.paint.Color;
-import java.util.Arrays;
 
 public class Player {
     protected byte id;
@@ -21,7 +20,6 @@ public class Player {
 
     private byte[] devcards;
     private static byte houses[];
-    private static byte cities[];
     private static byte roads[];
 
     @SuppressWarnings("unused")
@@ -32,7 +30,6 @@ public class Player {
 
     static {
         houses = new byte[Constants.VERTECIES];
-        cities = new byte[Constants.VERTECIES];
         roads = new byte[Constants.LINES];
 
         onTurnIDChange = new ArrayList<>();
@@ -41,10 +38,6 @@ public class Player {
 
     public static byte[] getHouses() {
         return houses;
-    }
-
-    public static byte[] getCities() {
-        return cities;
     }
 
     public Player(byte id, String localeName, Color color) {
@@ -81,7 +74,7 @@ public class Player {
         byte count = 0;
 
         for (index = 0; index < Constants.VERTECIES; index++) {
-            if (cities[index] == this.id) {
+            if (houses[index] == (byte) (this.id | 0x40)) {
                 count += 2;
             }
 
@@ -172,16 +165,32 @@ public class Player {
         return bytes.size() == 0;
     }
 
+    public void buyHouse(byte value) {
+        Player.houses[value] = id;
+    }
+
+    public void buyCity(byte value) {
+        Player.houses[value] = (byte) (id | 0x40);
+    }
+
+    public void buyRoad(byte value) {
+        Player.roads[value] = id;
+    }
+
     public static boolean houseDontBelong(Byte value) {
         return houses[value] == 0;
     }
 
     public static boolean hasHouse(byte id, Byte value) {
-        return houses[value] == id + 1;
+        return houses[value] == id;
     }
 
     public static boolean hasCity(byte id, Byte value) {
-        return cities[value] == id + 1;
+        return houses[value] == (byte) (id | 0x40);
+    }
+
+    public static boolean hasRoad(byte id, Byte value) {
+        return houses[value] == id;
     }
 
     public static boolean roadDontBelong(Byte value) {
