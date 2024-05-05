@@ -159,9 +159,8 @@ public class CatanBoard {
             Point2D vertex = vertecies[vertexOffset].point;
 
             Circle circle = new Circle();
-            double color = (double) vertexOffset / (double) (vertecies.length - 1);
 
-            circle.setFill(vertexOffset == 0 ? Color.WHITE : new Color(color, color, color, 1.0));
+            circle.setFill(Color.WHITE);
             circle.setRadius(5);
 
             circle.setLayoutX(vertex.getX());
@@ -214,9 +213,8 @@ public class CatanBoard {
             LinePackage edge = edges[edgeOffset];
 
             Rectangle rect = new Rectangle();
-            double color = (double) edgeOffset / (double) (edges.length - 1);
 
-            rect.setFill(edgeOffset == 0 ? Color.WHITE : new Color(color, color, color, 1.0));
+            rect.setFill(Color.WHITE);
 
             final double size = 10;
 
@@ -300,14 +298,6 @@ public class CatanBoard {
                     mY += vy;
                     Point2D vertex = new Point2D(vx, vy);
                     verticesSet.add(new VertexPackage(vertex));
-
-                    // int j = i < 10 ? i : i - 12;
-                    // nx = hexagonPoints[j + 2];
-                    // ny = hexagonPoints[j + 3];
-
-                    // LinePackage line = new LinePackage(vx, vy, nx, ny);
-
-                    // edgesSet.add(line);
 
                 }
                 if (row == 2 && col == 2) {
@@ -455,60 +445,68 @@ public class CatanBoard {
     }
 
     public void pickVertex(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked) {
-        pickVertex(allowVertex, onCancel, onPicked, true);
+        pickVertex(allowVertex, onCancel, onPicked, true, true);
     }
 
-    public void pickVertex(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked, boolean useFade) {
+    public void pickVertex(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked, boolean useFade,
+            boolean escapeToExit) {
 
         Scene scene = vertexGroup.getScene();
         lastCancel = onCancel;
-        EventHandler<KeyEvent> cancelEvent = new EventHandler<>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                if (keyEvent.getCode() == KeyCode.ESCAPE) {
-                    scene.removeEventHandler(KeyEvent.KEY_PRESSED, this);
-                    cancelCurrentPick(true);
+
+        if (escapeToExit) {
+            EventHandler<KeyEvent> cancelEvent = new EventHandler<>() {
+                @Override
+                public void handle(KeyEvent keyEvent) {
+                    if (keyEvent.getCode() == KeyCode.ESCAPE) {
+                        scene.removeEventHandler(KeyEvent.KEY_PRESSED, this);
+                        cancelCurrentPick(true);
+                    }
                 }
-            }
-        };
-        scene.addEventHandler(KeyEvent.KEY_PRESSED, cancelEvent);
+            };
+            scene.addEventHandler(KeyEvent.KEY_PRESSED, cancelEvent);
+        }
 
         applyPickVertexUI(allowVertex, new Action<Byte>() {
             @Override
             public void action(Byte param) {
-                onPicked.action(param);
                 cancelPickVertexUI(useFade);
+                onPicked.action(param);
             }
         });
 
     }
 
     public void pickEdge(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked) {
-        pickEdge(allowVertex, onCancel, onPicked, true);
+        pickEdge(allowVertex, onCancel, onPicked, true, true);
     }
 
-    public void pickEdge(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked, boolean useFade) {
+    public void pickEdge(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked, boolean useFade,
+            boolean escapeToExit) {
 
         Scene scene = edgesGroup.getScene();
         lastCancel = onCancel;
-        EventHandler<KeyEvent> cancelEvent = new EventHandler<>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                if (keyEvent.getCode() == KeyCode.ESCAPE) {
 
-                    scene.removeEventHandler(KeyEvent.KEY_PRESSED, this);
-                    cancelCurrentPick(true);
+        if (escapeToExit) {
+            EventHandler<KeyEvent> cancelEvent = new EventHandler<>() {
+                @Override
+                public void handle(KeyEvent keyEvent) {
+                    if (keyEvent.getCode() == KeyCode.ESCAPE) {
 
+                        scene.removeEventHandler(KeyEvent.KEY_PRESSED, this);
+                        cancelCurrentPick(true);
+
+                    }
                 }
-            }
-        };
-        scene.addEventHandler(KeyEvent.KEY_PRESSED, cancelEvent);
+            };
+            scene.addEventHandler(KeyEvent.KEY_PRESSED, cancelEvent);
+        }
 
         applyPickEdgeUI(useFade, allowVertex, new Action<Byte>() {
             @Override
             public void action(Byte param) {
-                onPicked.action(param);
                 cancelPickEdgeUI(true);
+                onPicked.action(param);
             }
         });
 

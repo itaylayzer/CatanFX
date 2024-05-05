@@ -4,7 +4,7 @@ public class Constants {
 
     public static class ClientCodes {
         public static class INFORMATION {
-            public static final byte LANDS = 0, HARBORS = 1, PLAYER = 10, MATS = 11, DEVCARDS = 12;
+            public static final byte LANDS = 0, HARBORS = 1, PLAYER = 10, MATS = 11, DEVCARDS = 12, AMOUNTS = 14;
         }
 
         public static class ACTIONS {

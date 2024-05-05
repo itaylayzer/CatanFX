@@ -190,7 +190,7 @@ public class Player {
     }
 
     public static boolean hasRoad(byte id, Byte value) {
-        return houses[value] == id;
+        return roads[value] == id;
     }
 
     public static boolean roadDontBelong(Byte value) {

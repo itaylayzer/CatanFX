@@ -21,11 +21,14 @@ public class LocalPlayer extends Player {
 
     private byte actionable;
     private List<Action<Byte>> onActionableChange;
+    private List<Action<Byte[]>> onAmountsChange;
     private SocketClient client;
     private List<Byte> roads;
 
     private boolean initMode;
     private BankPane bank;
+
+    private byte[] amounts;
 
     public LocalPlayer(byte id, String localeName, Color color, SocketClient client) {
         super(id, localeName, color);
@@ -36,6 +39,8 @@ public class LocalPlayer extends Player {
         this.actionable = 0;
         this.initMode = true;
         this.onActionableChange = new ArrayList<>();
+        onAmountsChange = new ArrayList<>();
+        amounts = new byte[3];
         this.roads = new ArrayList<>();
 
         this.update();
@@ -74,8 +79,8 @@ public class LocalPlayer extends Player {
                 this.buyRoad(false, picked_road, fromto[0], fromto[1]);
                 CatanBoard.addRoad(picked_road, getColor());
                 finished.run();
-            }, false);
-        }, false);
+            }, false, false);
+        }, false, false);
     }
 
     public boolean hasHouse(Byte value) {
@@ -96,7 +101,10 @@ public class LocalPlayer extends Player {
 
     public void addOnActionableEvent(Action<Byte> eve) {
         this.addOnActionableEvent(eve, false);
+    }
 
+    public void addOnAmountsChange(Action<Byte[]> eve) {
+        this.onAmountsChange.add(eve);
     }
 
     public void addOnActionableEvent(Action<Byte> eve, boolean call) {
@@ -105,12 +113,19 @@ public class LocalPlayer extends Player {
             eve.action(actionable);
     }
 
+    private void setAmounts(byte[] _amounts) {
+        this.amounts = _amounts;
+        for (var event : onAmountsChange) {
+            event.action(new Byte[] { this.amounts[0], this.amounts[1], this.amounts[2] });
+        }
+    }
+
     public void update() {
         try {
             setActionable(client.getActionable());
             setMaterials(client.getMaterials(this.id));
             setDevelopements(client.getDevelopments((byte) 5));
-
+            setAmounts(client.getAmounts());
             if (bank == null)
                 return;
             bank.setMaterials(client.getMaterials((byte) 5));
@@ -140,7 +155,6 @@ public class LocalPlayer extends Player {
             ex.printStackTrace(System.err);
         }
         update();
-
     }
 
     public void buyRoad(boolean transferMaterials, byte offset, byte from, byte to) {
@@ -155,7 +169,7 @@ public class LocalPlayer extends Player {
 
     }
 
-    public Set<Byte> roadable() {
+    public Set<Byte> validRoadsToBuy() {
         Set<Byte> set = new TreeSet<Byte>();
         CatanBoard instance = CatanBoard.getInstance();
 
@@ -174,6 +188,23 @@ public class LocalPlayer extends Player {
 
         set.removeAll(this.roads);
         return set;
+    }
+
+    public boolean validHousesToBuy(byte offset) {
+        boolean dontHaveHouseNear = true, hasLineBelongs = false;
+        CatanBoard instance = CatanBoard.getInstance();
+
+        for (var line : instance.getVertex(offset).lines) {
+            byte other = (byte) (line.from + line.to - offset);
+            if (!Player.houseDontBelong((byte) other)) {
+                dontHaveHouseNear = false;
+            }
+            if (Player.hasRoad(id, line.offset)) {
+                hasLineBelongs = true;
+            }
+
+        }
+        return dontHaveHouseNear && hasLineBelongs;
     }
 
     public void endTurn() {

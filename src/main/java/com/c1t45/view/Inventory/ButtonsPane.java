@@ -11,6 +11,7 @@ import com.c1t45.view.CatanBoard.CatanBoard;
 import com.c1t45.view.Constants.Actions.TransferMaterials;
 import com.c1t45.view.Interfaces.Action;
 import com.c1t45.view.Utils.BytesUtils;
+import com.c1t45.view.Components.ActionButton;
 
 public class ButtonsPane {
     private Action<Action<Boolean>> onDice;
@@ -70,11 +71,12 @@ public class ButtonsPane {
             board.cancelCurrentPick(false);
 
             board.pickVertex((value) -> {
-                return Player.houseDontBelong(value);
+                return Player.houseDontBelong(value) && player.validHousesToBuy(value);
             }, () -> {
+                houseAction.setButtonDisabled(false);
             }, (picked) -> {
+                houseAction.setButtonDisabled(false);
                 System.out.println("picked-dot=" + picked);
-                houseAction.decrease();
 
                 player.buyHouse(TransferMaterials.FROM, picked);
                 CatanBoard.addHouse(picked, player.getColor());
@@ -88,9 +90,10 @@ public class ButtonsPane {
             board.pickVertex((value) -> {
                 return player.hasHouse(value) && !player.hasCity(value);
             }, () -> {
+                cityAction.setButtonDisabled(false);
             }, (picked) -> {
+                cityAction.setButtonDisabled(false);
                 System.out.println("picked-dot=" + picked);
-                cityAction.decrease();
                 player.buyCity(picked);
                 CatanBoard.addCity(picked, player.getColor());
             });
@@ -102,17 +105,23 @@ public class ButtonsPane {
             board.cancelCurrentPick(false);
 
             board.pickEdge((value) -> {
-                return Player.roadDontBelong(value) && player.roadable().contains(value);
+                return Player.roadDontBelong(value) && player.validRoadsToBuy().contains(value);
             }, () -> {
+                roadAction.setButtonDisabled(false);
             }, (picked) -> {
+                roadAction.setButtonDisabled(false);
                 System.out.println("picked-dot=" + picked);
-                cityAction.decrease();
                 byte[] fromto = board.seperateEdge(picked);
                 player.buyRoad(true, picked, fromto[0], fromto[1]);
                 CatanBoard.addRoad(picked, player.getColor());
             });
         });
 
+        player.addOnAmountsChange((amounts) -> {
+            roadAction.setCount(amounts[0]);
+            houseAction.setCount(amounts[1]);
+            cityAction.setCount(amounts[2]);
+        });
         player.addOnActionableEvent(actionable -> {
             roadAction.setButtonDisabled(!(player.turnable() && BytesUtils.bit((byte) actionable, (byte) 0)));
             houseAction.setButtonDisabled(!(player.turnable() && BytesUtils.bit((byte) actionable, (byte) 1)));

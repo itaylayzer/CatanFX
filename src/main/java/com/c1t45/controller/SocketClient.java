@@ -128,4 +128,8 @@ public class SocketClient {
         return this.action(new byte[] { ClientCodes.INFORMATION.DEVCARDS, (byte) (id - 1) });
     }
 
+    public byte[] getAmounts() throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.INFORMATION.AMOUNTS });
+    }
+
 }
