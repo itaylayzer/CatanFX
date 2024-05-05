@@ -3,6 +3,7 @@ package com.c1t45.view.Components;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.ScaleTransition;
+import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
@@ -130,7 +131,9 @@ public class ImageButton extends Group {
     public void setText(String text) {
         if (text == null) {
             if (label != null) {
-                getChildren().remove(label);
+                Platform.runLater(() -> {
+                    getChildren().remove(label);
+                });
                 label = null;
             }
             return;
@@ -138,12 +141,18 @@ public class ImageButton extends Group {
 
         if (label == null) {
             label = new Label();
-            getChildren().add(label);
+            Platform.runLater(() -> {
+                getChildren().add(label);
+            });
+
             initLabel();
         }
 
-        label.setText(text);
-        calculateTextRectangle();
+        Platform.runLater(() -> {
+            label.setText(text);
+            calculateTextRectangle();
+
+        });
 
     }
 
@@ -200,9 +209,13 @@ public class ImageButton extends Group {
     }
 
     public ScaleTransition scale(double size) {
+        return scale(size, 0.1);
+    }
+
+    public ScaleTransition scale(double size, double duration) {
         Interpolator interpolator = Interpolator.SPLINE(0, 0.6, 0.3, 1);
 
-        ScaleTransition scaleTransition = new ScaleTransition(Duration.seconds(0.1), this);
+        ScaleTransition scaleTransition = new ScaleTransition(Duration.seconds(duration), this);
         scaleTransition.setToX(size);
         scaleTransition.setToY(size);
         scaleTransition.setInterpolator(interpolator);

@@ -124,32 +124,34 @@ public class GameController {
             @Override
             public void action(Byte param) {
 
-                if (turnTimer != null)
-                    turnTimer.stop();
+                Platform.runLater(() -> {
+                    if (turnTimer != null)
+                        turnTimer.stop();
 
-                try {
-                    turnRect.setFill(colors[param]);
+                    try {
+                        turnRect.setFill(colors[param]);
 
-                    Long startTime = System.currentTimeMillis();
-                    ObjectProperty<Duration> timer = new SimpleObjectProperty<>(Duration.seconds(0));
+                        Long startTime = System.currentTimeMillis();
+                        ObjectProperty<Duration> timer = new SimpleObjectProperty<>(Duration.seconds(0));
 
-                    turnTime.textProperty().bind(Bindings.createStringBinding(() -> {
-                        return String.format("%02d:%01d%.2f",
-                                (int) (timer.get().toMinutes()),
-                                (int) (timer.get().toSeconds() % 60) / 10,
-                                ((timer.get().toSeconds() % 10)));
-                    }, timer));
+                        turnTime.textProperty().bind(Bindings.createStringBinding(() -> {
+                            return String.format("%02d:%01d%.2f",
+                                    (int) (timer.get().toMinutes()),
+                                    (int) (timer.get().toSeconds() % 60) / 10,
+                                    ((timer.get().toSeconds() % 10)));
+                        }, timer));
 
-                    turnTimer = new AnimationTimer() {
-                        public void handle(long arg0) {
-                            timer.setValue(Duration.millis(System.currentTimeMillis() - startTime));
-                        }
-                    };
+                        turnTimer = new AnimationTimer() {
+                            public void handle(long arg0) {
+                                timer.setValue(Duration.millis(System.currentTimeMillis() - startTime));
+                            }
+                        };
 
-                    turnTimer.start();
-                } catch (Exception exp) {
+                        turnTimer.start();
+                    } catch (Exception exp) {
 
-                }
+                    }
+                });
 
             }
         };

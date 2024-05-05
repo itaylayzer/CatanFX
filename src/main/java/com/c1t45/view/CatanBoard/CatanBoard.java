@@ -32,7 +32,6 @@ import com.c1t45.view.Constants;
 import com.c1t45.view.LocalPlayer;
 import com.c1t45.view.Interfaces.Action;
 import com.c1t45.view.Interfaces.Condition;
-import com.c1t45.view.Interfaces.Predicate;
 import com.c1t45.view.Packages.ImagePackage;
 import com.c1t45.view.Packages.LinePackage;
 import com.c1t45.view.Utils.DoubleUtils;
