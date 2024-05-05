@@ -25,7 +25,7 @@ public class LocalPlayer extends Player {
     private SocketClient client;
     private List<Byte> roads;
 
-    private boolean initMode;
+    private char initMode;
     private BankPane bank;
 
     private byte[] amounts;
@@ -37,7 +37,7 @@ public class LocalPlayer extends Player {
 
         this.client = client;
         this.actionable = 0;
-        this.initMode = true;
+        this.initMode = 2;
         this.onActionableChange = new ArrayList<>();
         onAmountsChange = new ArrayList<>();
         amounts = new byte[3];
@@ -57,7 +57,7 @@ public class LocalPlayer extends Player {
         CatanBoard board = CatanBoard.getInstance();
         board.cancelCurrentPick(false);
         board.pickVertex((value) -> {
-            return Player.houseDontBelong(value);
+            return Player.houseDontBelong(value) && validHousesToBuy(value, false);
         }, () -> {
 
         }, (picked_house) -> {
@@ -191,7 +191,11 @@ public class LocalPlayer extends Player {
     }
 
     public boolean validHousesToBuy(byte offset) {
-        boolean dontHaveHouseNear = true, hasLineBelongs = false;
+        return validHousesToBuy(offset, true);
+    }
+
+    private boolean validHousesToBuy(byte offset, boolean hasRoad) {
+        boolean dontHaveHouseNear = true, hasLineBelongs = !hasRoad;
         CatanBoard instance = CatanBoard.getInstance();
 
         for (var line : instance.getVertex(offset).lines) {
@@ -216,12 +220,13 @@ public class LocalPlayer extends Player {
             }, (t) -> {
                 setActionable(actionable);
 
-                if (this.initMode) {
-                    this.initMode = false;
+                if (this.initMode > 1) {
+                    this.initMode = 1;
                     init_pickVertexAndEdge(TransferMaterials.TO, () -> {
                         this.endTurn();
                     });
                 } else {
+                    this.initMode = 0;
                     update();
                 }
             });
@@ -233,7 +238,7 @@ public class LocalPlayer extends Player {
     }
 
     public boolean turnable() {
-        return super.myTurn() && !this.initMode;
+        return super.myTurn() && this.initMode == 0;
     }
 
     public static void clear() {
