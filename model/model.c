@@ -342,30 +342,23 @@ bool buy_road(PlayerPtr player,
     if (transferMats)
         transfer_materials(player, bank, cost, (transferMats));
 
-    printt("road from:%hhu to:%hhu\n", from, to);
     EdgePtr foundPtr;
     EdgeRec lookRec;
 
     lookRec.offset = to;
-    putts("\t\tbefore searching!");
-    puts("");
+
     avl_inorder(graph->vertices[from].edges, print_edge_offset);
-    puts("\n");
+
     foundPtr = avl_search(graph->vertices[from].edges,
                           &lookRec, compare_edges_offset)
                    ->data;
-    printt("\tafter searching! foundPtr == null %d \n", foundPtr == NULL);
     foundPtr->color = player->color;
-    putts("\t\tbefore searching!");
 
     lookRec.offset = from;
     foundPtr = avl_search(graph->vertices[to].edges,
                           &lookRec, compare_edges_offset)
                    ->data;
-    printt("\tafter searching! foundPtr == null %d \n", foundPtr == NULL);
-
     foundPtr->color = player->color;
-    putts("\tafter searching!");
 
     // TODO: Now check who has the most longest path
 
@@ -384,6 +377,8 @@ unsigned char *svertex_to_materials(GraphPtr graph, signed char index)
     unsigned char size = 0, *mats = calloc(TOTAL_MATERIALS, sizeof(char));
     Node node = graph->vertices[index].edges;
 
+    avl_inorder(node, print_edge_offset);
+    puts("");
     queue_init(&que);
     enqueue(&que, node);
 
@@ -403,7 +398,7 @@ unsigned char *svertex_to_materials(GraphPtr graph, signed char index)
 
         if (edge->color == GRAY)
         {
-            printt("\t\t\tedge->color = %d material = %d\n", edge->color, extract_area_materials(edge->vertex->material_number));
+            printt("\t\t\edge->offset = %d edge->color = %d material = %d index material = %d\n", edge->offset, edge->color, extract_area_materials(edge->vertex->material_number), extract_area_materials(graph->vertices[edge->offset].material_number));
 
             mats[extract_area_materials(edge->vertex->material_number)]++;
         }
@@ -424,6 +419,7 @@ bool buy_settlement(PlayerPtr player,
     {
     case 1:
         transfer_materials(player, bank, cost, false);
+        break;
     case -1:
     {
         unsigned char *materials = svertex_to_materials(graph, index);
@@ -431,7 +427,10 @@ bool buy_settlement(PlayerPtr player,
         printt("\t\t moved materials to player index=%d ", index);
         print_vec(materials, TOTAL_MATERIALS);
         free(materials);
+        break;
     }
+    default:
+        break;
     }
 
     // change settlement color
@@ -502,7 +501,6 @@ unsigned char *switch_action_store(unsigned char *size,
     switch (params[0])
     {
     case 0:
-        putts("buy_road");
         res[0] = buy_road(player,
                           graph,
                           store[ROAD],
@@ -545,8 +543,11 @@ void collect_materials_area(VertexPtr area, PlayerPtr players, signed char *bank
     Node node;
     EdgePtr edge;
 
+    signed char(*mats_to_players)[TOTAL_MATERIALS] =
+        calloc(MAX_PLAYERS, sizeof(*mats_to_players));
+
     const unsigned char material = extract_area_materials(area->material_number);
-    unsigned char player_offset, cost[TOTAL_MATERIALS];
+    unsigned char player_offset;
 
     bool is_city;
     queue_init(&que);
@@ -554,8 +555,6 @@ void collect_materials_area(VertexPtr area, PlayerPtr players, signed char *bank
     enqueue(&que, area->edges);
     while (!queue_empty(que))
     {
-        vector_val((signed char *)cost, TOTAL_MATERIALS, 0);
-
         node = dequeue(&que);
         edge = node->data;
         player_offset = edge->vertex->color & 0x0F;
@@ -572,9 +571,14 @@ void collect_materials_area(VertexPtr area, PlayerPtr players, signed char *bank
 
         if (player_offset < MAX_PLAYERS)
         {
-            cost[material] = 1 + is_city;
-            transfer_materials(players + player_offset, bank, (signed char *)cost, true);
+            printt("player_offset < MAX_PLAYERS! %d\n", player_offset);
         }
+        mats_to_players[player_offset][material] += (player_offset < MAX_PLAYERS) * (1 + is_city);
+    }
+
+    for (player_offset = 0; player_offset < MAX_PLAYERS; player_offset++)
+    {
+        transfer_materials(players + player_offset, bank, mats_to_players[player_offset], true);
     }
 }
 
@@ -615,7 +619,7 @@ void bot_inits(PlayerPtr players, unsigned char num_of_players)
 void bot_plays(PlayerPtr player, int socket)
 {
     // TODO: play by selected approach and update client player!
-    sleep(1);
+    sleep(0);
 }
 
 void handle_rest_turns(int socket,
