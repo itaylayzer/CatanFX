@@ -8,6 +8,7 @@ import java.net.UnknownHostException;
 
 import com.c1t45.controller.Constants.ClientCodes;
 import com.c1t45.controller.Constants.ServerCodes;
+import com.c1t45.view.Constants.Actions.TransferMaterials;
 import com.c1t45.view.Player;
 import com.c1t45.view.Interfaces.Action;
 import com.c1t45.view.Interfaces.Condition;
@@ -75,12 +76,14 @@ public class SocketClient {
         return this.action(new byte[] { ClientCodes.INFORMATION.PLAYER })[0];
     }
 
-    public boolean storeRoad(byte from, byte to) throws IOException, Exception {
-        return this.action(new byte[] { ClientCodes.ACTIONS.STORE, 0, from, to })[0] != 1;
+    public boolean storeRoad(boolean transferMaterials, byte from, byte to) throws IOException, Exception {
+        return this.action(
+                new byte[] { ClientCodes.ACTIONS.STORE, 0, (byte) (transferMaterials ? 1 : 0), from, to })[0] != 1;
     }
 
-    public boolean storeHouse(byte vertex) throws IOException, Exception {
-        return this.action(new byte[] { ClientCodes.ACTIONS.STORE, 1, vertex })[0] != 1;
+    public boolean storeHouse(TransferMaterials transferMaterials, byte vertex) throws IOException, Exception {
+        return this.action(
+                new byte[] { ClientCodes.ACTIONS.STORE, 1, transferMaterials.getValue(), vertex })[0] != 1;
     }
 
     public boolean storeCity(byte vertex) throws IOException, Exception {
@@ -91,12 +94,9 @@ public class SocketClient {
         this.send(new byte[] { ClientCodes.ACTIONS.END_TURN });
 
         Thread thread = new Thread(() -> {
-            System.out.println("starting thread!");
             while (condition.condition(null)) {
                 try {
-                    System.out.println("before recv()");
                     byte[] response = this.recv();
-                    System.out.println("after recv()");
 
                     switch (response[0]) {
                         case ServerCodes.TURN:
@@ -118,6 +118,14 @@ public class SocketClient {
         });
         thread.start();
 
+    }
+
+    public byte[] getMaterials(byte id) throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.INFORMATION.MATS, (byte) (id - 1) });
+    }
+
+    public byte[] getDevelopments(byte id) throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.INFORMATION.DEVCARDS, (byte) (id - 1) });
     }
 
 }

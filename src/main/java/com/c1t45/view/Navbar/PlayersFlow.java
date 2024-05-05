@@ -1,7 +1,7 @@
 package com.c1t45.view.Navbar;
 
 import com.c1t45.view.Player;
-import com.c1t45.view.Constants.Materials;
+import com.c1t45.view.LocalPlayer;
 
 import javafx.geometry.Insets;
 import javafx.scene.layout.VBox;
@@ -16,6 +16,8 @@ public class PlayersFlow {
         bank = new BankPane();
 
         playersVBox.getChildren().add(bank);
+
+        LocalPlayer.setBank(bank);
 
         // Rectangle rectangle = new Rectangle();
         // rectangle.setWidth(230);
@@ -32,10 +34,6 @@ public class PlayersFlow {
 
         playersVBox.setPadding(new Insets(10, 7, 10, 7));
         playersVBox.setSpacing(10);
-    }
-
-    public void bankCount(Materials material, byte count) {
-        this.bank.setCount(material, count);
     }
 
 }

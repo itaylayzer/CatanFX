@@ -3,22 +3,23 @@ package com.c1t45.view;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.c1t45.view.Interfaces.Action;
 import com.c1t45.view.Interfaces.Action2;
 import com.c1t45.view.Interfaces.Predicate;
 import com.c1t45.view.Utils.BytesUtils;
 import com.c1t45.view.Constants.Materials;
 
 import javafx.scene.paint.Color;
+import java.util.Arrays;
 
 public class Player {
-
     protected byte id;
     protected String name;
     protected byte[] materials;
     private Color color;
     private static byte turnID;
 
-    private List<Object> devCards;
+    private byte[] devcards;
     private static byte houses[];
     private static byte cities[];
     private static byte roads[];
@@ -27,10 +28,14 @@ public class Player {
     private Action2<Byte, Player> onDevcardChange;
     private List<Runnable> onInventoryChange;
 
+    private static List<Action<Byte>> onTurnIDChange;
+
     static {
         houses = new byte[Constants.VERTECIES];
         cities = new byte[Constants.VERTECIES];
         roads = new byte[Constants.LINES];
+
+        onTurnIDChange = new ArrayList<>();
 
     }
 
@@ -48,7 +53,7 @@ public class Player {
         this.color = color;
 
         this.materials = new byte[5];
-        this.devCards = new ArrayList<>();
+        this.devcards = new byte[5];
         this.onInventoryChange = new ArrayList<>();
         this.onDevcardChange = null;
     }
@@ -85,10 +90,7 @@ public class Player {
             }
         }
 
-        count += devCards.stream().filter((devcard) -> {
-            // replace to VictoryPointCart
-            return devcard instanceof Runnable;
-        }).toArray().length;
+        count += devcards[1];
 
         return count;
     }
@@ -98,7 +100,12 @@ public class Player {
     }
 
     public byte getDevCardsCount() {
-        return (byte) devCards.size();
+
+        byte sum = 0;
+        for (int i = 0; i < devcards.length; i++) {
+            sum += devcards[i];
+        }
+        return sum;
     }
 
     public Color getColor() {
@@ -107,6 +114,17 @@ public class Player {
 
     public byte[] getMaterials() {
         return this.materials;
+    }
+
+    protected void setMaterials(byte[] materials) {
+        System.out.println("got materials =" + Arrays.toString(materials));
+        this.materials = materials;
+        callOnInventoryChange();
+    }
+
+    protected void setDevelopements(byte[] devcards) {
+        this.devcards = devcards;
+        callOnInventoryChange();
     }
 
     protected void callOnInventoryChange() {
@@ -131,6 +149,14 @@ public class Player {
 
     public void removeOnInventoryChange(Runnable handler) {
         onInventoryChange.remove(handler);
+    }
+
+    public static void addOnTurnIDChange(Action<Byte> handler) {
+        onTurnIDChange.add(handler);
+    }
+
+    public static void removeOnTurnIDChange(Action<Byte> handler) {
+        onTurnIDChange.remove(handler);
     }
 
     public boolean enoughMaterials(byte[] store) {
@@ -168,12 +194,14 @@ public class Player {
     }
 
     static public void setTurnID(byte id) {
-        turnID = id;
+        turnID = (byte) Math.min(Math.max(id, 0), 2);
+
+        for (var event : onTurnIDChange) {
+            event.action(turnID);
+        }
     }
 
     protected static void moveTurn() {
-        turnID++;
-        if (turnID > 2)
-            turnID = 0;
+        setTurnID((byte) (turnID + 1));
     }
 }

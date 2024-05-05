@@ -29,13 +29,16 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.c1t45.view.Constants;
+import com.c1t45.view.LocalPlayer;
 import com.c1t45.view.Interfaces.Action;
+import com.c1t45.view.Interfaces.Condition;
 import com.c1t45.view.Interfaces.Predicate;
 import com.c1t45.view.Packages.ImagePackage;
 import com.c1t45.view.Packages.LinePackage;
 import com.c1t45.view.Utils.DoubleUtils;
 import com.c1t45.view.Utils.ImageUtils;
 import com.c1t45.view.Utils.ShapeUtils;
+import com.c1t45.view.Utils.TimeUtils;
 import com.c1t45.view.Utils.ValueException;
 
 public class CatanBoard {
@@ -74,13 +77,24 @@ public class CatanBoard {
         instance = null;
     }
 
-    public static CatanBoard Initialize(AnchorPane pane, byte[] landsBytes, byte[] harborsBytes)
+    public static CatanBoard Initialize(AnchorPane pane,
+            byte[] landsBytes,
+            byte[] harborsBytes,
+            LocalPlayer player,
+            byte[] edgesByte)
             throws ValueException, IndexOutOfBoundsException {
         if (instance != null) {
             throw new ValueException();
         }
-        CatanBoard board = new CatanBoard(pane, landsBytes, harborsBytes);
+        CatanBoard board = new CatanBoard(pane, landsBytes, harborsBytes, edgesByte);
         instance = board;
+
+        TimeUtils.waitUntil((t) -> {
+            return instance.edgesGroup.getScene() != null;
+        }, null, () -> {
+            player.initialize();
+        });
+
         return board;
     }
 
@@ -92,7 +106,7 @@ public class CatanBoard {
         return harbor.add(harbor.subtract(middle).multiply(0.1));
     }
 
-    private CatanBoard(AnchorPane pane, byte[] landsBytes, byte[] harborsBytes)
+    private CatanBoard(AnchorPane pane, byte[] landsBytes, byte[] harborsBytes, byte[] edgesByte)
             throws IndexOutOfBoundsException, ValueException {
         lastCancel = null;
 
@@ -109,102 +123,38 @@ public class CatanBoard {
         dropShadow.setColor((Color) Paint.valueOf("#1da2d8"));
         pane.setEffect(dropShadow);
 
-        int resourceIndex = 0;
-
-        Comparator<Point2D> doubleComparator = new Comparator<Point2D>() {
-            @Override
-            public int compare(Point2D p1, Point2D p2) {
-                int x1 = DoubleUtils.roundToTwoDecimals(p1.getX());
-                int x2 = DoubleUtils.roundToTwoDecimals(p2.getX());
-                int y1 = DoubleUtils.roundToTwoDecimals(p1.getY());
-                int y2 = DoubleUtils.roundToTwoDecimals(p2.getY());
-                int compareX = Integer.compare(x1, x2);
-                int compareY = Integer.compare(y1, y2);
-                return compareY == 0 ? compareX : compareY;
-            }
-        };
-
-        Set<LinePackage> edgesSet = new TreeSet<>((p1, p2) -> {
-            return doubleComparator.compare(p1.middle, p2.middle);
-        });
-
-        Set<Point2D> verticesSet = new TreeSet<>(doubleComparator);
-        Point2D boardMiddle = new Point2D(0, 0);
-        for (int row = 0; row < rows.length; row++) {
-            int cols = rows[row];
-            for (int col = 0; col < cols; col++) {
-                double x = xOffset + col * size * v * 2;
-                double y = yOffset + row * size * 1.5;
-
-                x -= size * (row <= 2 ? row : 4 - row) * 0.75 / v;
-
-                ImagePackage info = null;
-                Byte landNum = 7;
-
-                double[] hexagonPoints = ShapeUtils.hexagon(x, y, size, v);
-                int mX = 0, mY = 0;
-
-                for (int i = 0; i < hexagonPoints.length; i += 2) {
-                    double vx = hexagonPoints[i];
-                    mX += vx;
-                    double vy = hexagonPoints[i + 1];
-                    mY += vy;
-                    Point2D vertex = new Point2D(vx, vy);
-                    verticesSet.add(vertex);
-
-                    double nx = 0, ny = 0;
-
-                    int j = i < 10 ? i : i - 12;
-                    nx = hexagonPoints[j + 2];
-                    ny = hexagonPoints[j + 3];
-
-                    LinePackage line = new LinePackage(vx, vy, nx, ny);
-
-                    edgesSet.add(line);
-
-                }
-                if (row == 2 && col == 2) {
-                    boardMiddle = new Point2D(mX / 6, mY / 6);
-                }
-                byte landVal = landsBytes[resourceIndex++];
-                landNum = (Byte) (byte) (landVal >> 3);
-                if (landNum != 7)
-                    info = Constants.Packages.materials[landVal & 0x07];
-
-                LandGroup land = new LandGroup(info, landNum, x, y, size, v);
-                landsGroup.getChildren().add(land);
-
-                this.lands.add(land);
-
-            }
-        }
-
-        byte offset = 0;
-        for (LinePackage line : edgesSet) {
-            line.offset = offset++;
-        }
+        Point2D boardMiddle = initGraph(landsBytes, edgesByte);
 
         vertexGroup = new Group();
         harborsGroup = new Group();
         edgesGroup = new Group();
-
         roadsGroup = new Group();
-
-        vertecies = new Point2D[verticesSet.size()];
-        edges = new LinePackage[edgesSet.size()];
 
         edgesRectangles = new Rectangle[edges.length];
         vertexCircles = new Circle[vertecies.length];
 
-        verticesSet.toArray(vertecies);
-        verticesSet = null;
-
-        edgesSet.toArray(edges);
-        edgesSet = null;
-
         settlementsGroup = new Group();
         settlementsMap = new HashMap<>();
 
+        initGraphGraphics(harborsBytes, boardMiddle);
+
+        pane.getChildren().add(harborsGroup);
+        pane.getChildren().add(this.landsGroup);
+
+        pane.getChildren().add(edgesGroup);
+        pane.getChildren().add(roadsGroup);
+
+        pane.getChildren().add(vertexGroup);
+        pane.getChildren().add(settlementsGroup);
+
+        vertexGroup.setOpacity(0);
+        vertexGroup.setMouseTransparent(true);
+
+        edgesGroup.setOpacity(0);
+        edgesGroup.setMouseTransparent(true);
+    }
+
+    private void initGraphGraphics(byte[] harborsBytes, Point2D boardMiddle) {
         for (int vertexOffset = 0; vertexOffset < vertecies.length; vertexOffset++) {
             Point2D vertex = vertecies[vertexOffset];
 
@@ -285,20 +235,123 @@ public class CatanBoard {
             edgesGroup.getChildren().add(rect);
         }
 
-        pane.getChildren().add(harborsGroup);
-        pane.getChildren().add(this.landsGroup);
+    }
 
-        pane.getChildren().add(edgesGroup);
-        pane.getChildren().add(roadsGroup);
+    private Point2D initGraph(byte[] landsByte, byte[] edgesByte) {
 
-        pane.getChildren().add(vertexGroup);
-        pane.getChildren().add(settlementsGroup);
+        Comparator<Point2D> doubleComparator = new Comparator<Point2D>() {
+            @Override
+            public int compare(Point2D p1, Point2D p2) {
+                int x1 = DoubleUtils.roundToTwoDecimals(p1.getX());
+                int x2 = DoubleUtils.roundToTwoDecimals(p2.getX());
+                int y1 = DoubleUtils.roundToTwoDecimals(p1.getY());
+                int y2 = DoubleUtils.roundToTwoDecimals(p2.getY());
+                int compareX = Integer.compare(x1, x2);
+                int compareY = Integer.compare(y1, y2);
+                return compareY == 0 ? compareX : compareY;
+            }
+        };
 
-        vertexGroup.setOpacity(0);
-        vertexGroup.setMouseTransparent(true);
+        Comparator<LinePackage> edgeComparator = new Comparator<LinePackage>() {
+            @Override
+            public int compare(LinePackage p1, LinePackage p2) {
+                return doubleComparator.compare(p1.middle, p2.middle);
+            }
+        };
 
-        edgesGroup.setOpacity(0);
-        edgesGroup.setMouseTransparent(true);
+        Point2D middle = initVerteciesAndHexagons(landsByte, doubleComparator);
+        initEdges(edgesByte, edgeComparator);
+        return middle;
+    }
+
+    private Point2D initVerteciesAndHexagons(byte[] landsBytes, Comparator<Point2D> doubleComparator) {
+
+        int resourceIndex = 0;
+
+        Set<Point2D> verticesSet = new TreeSet<>(doubleComparator);
+        Point2D boardMiddle = new Point2D(0, 0);
+        for (int row = 0; row < rows.length; row++) {
+            int cols = rows[row];
+            for (int col = 0; col < cols; col++) {
+                double x = xOffset + col * size * v * 2;
+                double y = yOffset + row * size * 1.5;
+
+                x -= size * (row <= 2 ? row : 4 - row) * 0.75 / v;
+
+                ImagePackage info = null;
+                Byte landNum = 7;
+
+                double[] hexagonPoints = ShapeUtils.hexagon(x, y, size, v);
+                int mX = 0, mY = 0;
+
+                for (int i = 0; i < hexagonPoints.length; i += 2) {
+                    double vx = hexagonPoints[i];
+                    mX += vx;
+                    double vy = hexagonPoints[i + 1];
+                    mY += vy;
+                    Point2D vertex = new Point2D(vx, vy);
+                    verticesSet.add(vertex);
+
+                    // int j = i < 10 ? i : i - 12;
+                    // nx = hexagonPoints[j + 2];
+                    // ny = hexagonPoints[j + 3];
+
+                    // LinePackage line = new LinePackage(vx, vy, nx, ny);
+
+                    // edgesSet.add(line);
+
+                }
+                if (row == 2 && col == 2) {
+                    boardMiddle = new Point2D(mX / 6, mY / 6);
+                }
+                byte landVal = landsBytes[resourceIndex++];
+                landNum = (Byte) (byte) (landVal >> 3);
+                if (landNum != 7)
+                    info = Constants.Packages.materials[landVal & 0x07];
+
+                LandGroup land = new LandGroup(info, landNum, x, y, size, v);
+                landsGroup.getChildren().add(land);
+
+                this.lands.add(land);
+
+            }
+        }
+
+        vertecies = new Point2D[verticesSet.size()];
+        verticesSet.toArray(vertecies);
+        return boardMiddle;
+    }
+
+    private void initEdges(byte[] edgesByte, Comparator<LinePackage> edgeComparator) {
+        final byte AREAS = 19;
+        Set<LinePackage> edgesSet = new TreeSet<>(edgeComparator);
+
+        int offset = 0;
+
+        // pass the lands to vertecies x area
+        for (; offset < edgesByte.length && Math.min(edgesByte[offset], edgesByte[offset + 1]) < AREAS; offset += 2)
+            ;
+
+        // continue to vertecies x vertecies area
+        for (; offset < edgesByte.length; offset += 2) {
+            byte from = (byte) (edgesByte[offset] - AREAS),
+                    to = (byte) (edgesByte[offset + 1] - AREAS);
+
+            Point2D start = vertecies[from];
+            Point2D end = vertecies[to];
+
+            edgesSet.add(new LinePackage(start.getX(), start.getY(), end.getX(), end.getY(), from, to));
+
+        }
+
+        offset = 0;
+        for (LinePackage line : edgesSet) {
+            line.offset = (byte) (offset++);
+        }
+        edges = new LinePackage[edgesSet.size()];
+        edgesSet.toArray(edges);
+        edgesSet = null;
+
     }
 
     public static void addHouse(byte vertex, Color color) {
@@ -384,7 +437,7 @@ public class CatanBoard {
         return transition;
     }
 
-    public void pickVertex(Predicate<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked) {
+    public void pickVertex(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked) {
 
         Scene scene = vertexGroup.getScene();
         lastCancel = onCancel;
@@ -392,10 +445,8 @@ public class CatanBoard {
             @Override
             public void handle(KeyEvent keyEvent) {
                 if (keyEvent.getCode() == KeyCode.ESCAPE) {
-
                     scene.removeEventHandler(KeyEvent.KEY_PRESSED, this);
                     cancelCurrentPick(true);
-
                 }
             }
         };
@@ -411,7 +462,7 @@ public class CatanBoard {
 
     }
 
-    public void pickEdge(Predicate<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked) {
+    public void pickEdge(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked) {
 
         Scene scene = edgesGroup.getScene();
         lastCancel = onCancel;
@@ -438,7 +489,7 @@ public class CatanBoard {
 
     }
 
-    private void applyPickVertexUI(Predicate<Byte> allowVertex, Action<Byte> action) {
+    private void applyPickVertexUI(Condition<Byte> allowVertex, Action<Byte> action) {
         vertexGroup.setMouseTransparent(false);
         settlementsGroup.setMouseTransparent(false);
 
@@ -447,7 +498,7 @@ public class CatanBoard {
         int index;
         for (index = 0; index < vertexCircles.length; index++) {
             Circle circle = vertexCircles[index];
-            if (allowVertex.condition((byte) index, 0)) {
+            if (allowVertex.condition((byte) index)) {
                 final byte pickedVertex = (byte) index;
                 circle.setOpacity(1);
                 circle.setOnMouseClicked((event) -> {
@@ -481,7 +532,7 @@ public class CatanBoard {
 
     }
 
-    private void applyPickEdgeUI(Predicate<Byte> allowVertex, Action<Byte> action) {
+    private void applyPickEdgeUI(Condition<Byte> allowVertex, Action<Byte> action) {
         edgesGroup.setMouseTransparent(false);
         roadsGroup.setMouseTransparent(false);
 
@@ -491,7 +542,7 @@ public class CatanBoard {
         for (index = 0; index < edgesRectangles.length; index++) {
             Rectangle rect = edgesRectangles[index];
             Byte byteIndex = (byte) index;
-            if (allowVertex.condition(byteIndex, 0)) {
+            if (allowVertex.condition(byteIndex)) {
                 final byte pickedVertex = (byte) index;
                 rect.setOpacity(1);
                 rect.setOnMouseClicked((event) -> {
@@ -528,5 +579,10 @@ public class CatanBoard {
         lastCancel = null;
         cancelPickVertexUI(useFade);
         cancelPickEdgeUI(useFade);
+    }
+
+    public byte[] seperateEdge(Byte picked) {
+        LinePackage line = edges[picked];
+        return new byte[] { line.from, line.to };
     }
 }

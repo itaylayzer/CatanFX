@@ -100,7 +100,7 @@
                   <Group>
                      <children>
                         <Rectangle arcHeight="40.0" arcWidth="40.0" fill="#282828" height="40.0" layoutX="50.0" layoutY="20.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="150.0" />
-                        <Rectangle fx:id="turnRect" arcHeight="40.0" arcWidth="40.0" fill="#242424" height="40.0" layoutX="50.0" layoutY="20.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="150.0" />
+                        <Rectangle fx:id="turnRect"  arcHeight="40.0" arcWidth="40.0" fill="#242424" height="40.0" layoutX="50.0" layoutY="20.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="150.0" />
                         <Rectangle arcHeight="40.0" arcWidth="40.0" fill="#1a1a1a" height="40.0" stroke="BLACK" strokeType="INSIDE" strokeWidth="0.0" width="250.0" />
                         <Label fx:id="turnTime" alignment="CENTER" contentDisplay="CENTER" layoutX="70.0" layoutY="33.0" prefHeight="25.0" prefWidth="110.0" text="&lt;turn_time&gt;" textAlignment="CENTER" textFill="WHITE">
                            <font>

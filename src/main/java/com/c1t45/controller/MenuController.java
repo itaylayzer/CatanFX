@@ -34,7 +34,7 @@ public class MenuController {
 
                 GameController gameController = (GameController) loader.getController();
                 Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                gameController.initialize(stage, playerCount, nameField.getText());
+                gameController.initialize(stage, playerCount, nameField.getText(), null);
                 Scene scene = new Scene(root);
 
                 stage.setTitle("Catan: Trade Build Settle");

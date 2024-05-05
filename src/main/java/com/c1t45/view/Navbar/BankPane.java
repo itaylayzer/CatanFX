@@ -22,6 +22,7 @@ public class BankPane extends VBox {
     private MiniMaterialGroup wheetGroup;
     private MiniMaterialGroup brickGroup;
     private MiniMaterialGroup oreGroup;
+    private MiniMaterialGroup devGroup;
     private Label title;
 
     private FlowPane flowPane;
@@ -38,12 +39,14 @@ public class BankPane extends VBox {
         wheetGroup = new MiniMaterialGroup(Constants.Packages.materials[2]);
         brickGroup = new MiniMaterialGroup(Constants.Packages.materials[3]);
         oreGroup = new MiniMaterialGroup(Constants.Packages.materials[4]);
+        devGroup = new MiniMaterialGroup(Constants.Packages.devcards);
 
         woodGroup.setScaleOnHover(false);
         woolGroup.setScaleOnHover(false);
         wheetGroup.setScaleOnHover(false);
         brickGroup.setScaleOnHover(false);
         oreGroup.setScaleOnHover(false);
+        devGroup.setScaleOnHover(false);
 
         flowPane.setHgap(3.1);
         flowPane.getChildren().add(woodGroup);
@@ -51,6 +54,7 @@ public class BankPane extends VBox {
         flowPane.getChildren().add(wheetGroup);
         flowPane.getChildren().add(brickGroup);
         flowPane.getChildren().add(oreGroup);
+        flowPane.getChildren().add(devGroup);
 
         stackPane = new StackPane();
         stackPane.getChildren().add(flowPane);
@@ -79,6 +83,13 @@ public class BankPane extends VBox {
         return labelGroup;
     }
 
+    public void setMaterials(byte[] materials) {
+
+        for (int matIndex = 0; matIndex < materials.length; matIndex++) {
+            setCount(Materials.values()[matIndex], materials[matIndex]);
+        }
+    }
+
     public void setCount(Materials material, byte count) {
         MiniMaterialGroup[] materialGroups = new MiniMaterialGroup[] {
                 woodGroup,
@@ -88,5 +99,13 @@ public class BankPane extends VBox {
                 oreGroup
         };
         materialGroups[material.getValue()].setCount(count);
+    }
+
+    public void setDevelopements(byte[] devs) {
+        byte sum = 0;
+        for (int i = 0; i < devs.length; i++) {
+            sum += devs[i];
+        }
+        devGroup.setCount(sum);
     }
 }

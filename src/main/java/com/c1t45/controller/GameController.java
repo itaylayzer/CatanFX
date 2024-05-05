@@ -40,7 +40,7 @@ import java.util.function.Function;
 public class GameController {
 
     private static Action<NotificationPackage> notificationHandler;
-    public Player[] players;
+    private AnimationTimer turnTimer;
 
     @FXML
     private AnchorPane catanBoardPane;
@@ -73,19 +73,16 @@ public class GameController {
         return array;
     }
 
-    public void initialize(Window window, byte playerCount, String localeName)
+    public void initialize(Window window, byte playerCount, String localeName, byte[] edges)
             throws Exception, UnknownHostException, IOException {
 
         System.out.println("Locale Player name: " + localeName);
         Color[] colors = shuffleColors();
 
-        turnRect.setFill(colors[0]);
-        turnRect.setOpacity(0.5);
-
         SocketClient sock = new SocketClient();
         LocalPlayer local = new LocalPlayer((byte) 0, localeName, colors[0], sock);
 
-        players = new Player[playerCount];
+        Player[] players = new Player[playerCount];
         players[0] = local;
         EnemyPlayer.fillPlayers(players, colors, playerCount);
 
@@ -103,21 +100,61 @@ public class GameController {
             }
         });
 
-        @SuppressWarnings("unused")
-        UserInterface userInterface = new UserInterface(local, materialsFlow, buttonsFlow, dices, actionsBox);
+        new UserInterface(local, materialsFlow, buttonsFlow, dices, actionsBox);
 
-        @SuppressWarnings("unused")
-        PlayersFlow playersFlow = new PlayersFlow(players, playersHBox);
+        new PlayersFlow(players, playersHBox);
 
         byte[] landsBytes = sock.getLands();
         byte[] harborsBytes = sock.getHarbors();
 
         System.out.println(Arrays.toString(harborsBytes));
 
-        CatanBoard.Initialize(catanBoardPane, landsBytes, harborsBytes);
+        CatanBoard.Initialize(catanBoardPane, landsBytes, harborsBytes, local, edges);
 
         initializeWindowEvents(window);
+        initTurnRect(colors);
 
+    }
+
+    private void initTurnRect(Color[] colors) {
+        turnRect.setOpacity(0.5);
+        turnTimer = null;
+
+        Action<Byte> event = new Action<>() {
+            @Override
+            public void action(Byte param) {
+
+                if (turnTimer != null)
+                    turnTimer.stop();
+
+                try {
+                    turnRect.setFill(colors[param]);
+
+                    Long startTime = System.currentTimeMillis();
+                    ObjectProperty<Duration> timer = new SimpleObjectProperty<>(Duration.seconds(0));
+
+                    turnTime.textProperty().bind(Bindings.createStringBinding(() -> {
+                        return String.format("%02d:%01d%.2f",
+                                (int) (timer.get().toMinutes()),
+                                (int) (timer.get().toSeconds() % 60) / 10,
+                                ((timer.get().toSeconds() % 10)));
+                    }, timer));
+
+                    turnTimer = new AnimationTimer() {
+                        public void handle(long arg0) {
+                            timer.setValue(Duration.millis(System.currentTimeMillis() - startTime));
+                        }
+                    };
+
+                    turnTimer.start();
+                } catch (Exception exp) {
+
+                }
+
+            }
+        };
+        event.action((byte) 0);
+        Player.addOnTurnIDChange(event);
     }
 
     private void restart() {

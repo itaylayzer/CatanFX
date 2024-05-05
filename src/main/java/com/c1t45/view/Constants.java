@@ -88,4 +88,23 @@ public class Constants {
                                 city = { 0, 0, 2, 0, 3 },
                                 developmentCard = { 0, 1, 1, 0, 1 };
         }
+
+        public class Actions {
+                public enum TransferMaterials {
+                        TO((byte) -1),
+                        NONE((byte) 0),
+                        FROM((byte) 1);
+
+                        private byte value;
+
+                        private TransferMaterials(byte value) {
+                                this.value = value;
+                        }
+
+                        public byte getValue() {
+                                return value;
+                        }
+
+                };
+        }
 }
