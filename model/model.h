@@ -37,9 +37,11 @@ unsigned char *inf_player_actionable(unsigned char *size,
                                      const signed char store[TOTAL_STORE][TOTAL_MATERIALS]);
 unsigned char *inf_player_materials(unsigned char *size,
                                     PlayerPtr players,
+                                    signed char *bankMaterials,
                                     unsigned char offset);
 unsigned char *inf_player_devcards(unsigned char *size,
                                    PlayerPtr players,
+                                   signed char *bankDevelopment,
                                    unsigned char offset);
 unsigned char *switch_action_store(unsigned char *size,
                                    signed char *params,

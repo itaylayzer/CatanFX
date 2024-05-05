@@ -24,6 +24,5 @@ void graph_join(GraphPtr graph,
     edge->vertex = graph->vertices + from;
     edge->offset = to;
 
-    void *voidPtr = edge;
-    avl_insert(&graph->vertices[from].edges, voidPtr, edge_compare);
+    avl_insert(&graph->vertices[from].edges, (void *)edge, edge_compare);
 }

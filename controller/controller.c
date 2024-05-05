@@ -14,7 +14,6 @@ void handle_request(
     unsigned char size = 0;
     void *_buff;
     putts("");
-    printt("start handeling request! buffer[0] = %d\n", buffer[0]);
     switch (buffer[0])
     {
     case 0:
@@ -25,15 +24,14 @@ void handle_request(
         break;
     case 10:
         _buff = inf_player_actionable(&size, players, bankDevelopments, store);
-        printt("inf_player_actionable %d\n", *(char *)_buff);
         break;
 
     case 11: // player materials
-        _buff = inf_player_materials(&size, players, buffer[1]);
+        _buff = inf_player_materials(&size, players, bankMaterials, buffer[1]);
         break;
 
     case 12: // developements cards
-        _buff = inf_player_devcards(&size, players, buffer[1]);
+        _buff = inf_player_devcards(&size, players, bankDevelopments, buffer[1]);
         break;
 
     case 13: // victory points
@@ -53,7 +51,6 @@ void handle_request(
                                     store);
         break;
     case 40:
-        printf("got 40!\n");
         handle_rest_turns(socket, turnOffset, players, num_of_players);
         break;
 
@@ -94,11 +91,10 @@ void catan_start(signed char _num_of_players)
     // initialize graph
     graph_init(&graph);
     catan_graph_init(graph, harbors);
-    printt("num_of_players:%d\n", num_of_players);
 
     catab_players_init(players, num_of_players);
-    printt("done:%d\n", num_of_players);
 
+    printt("done initializing catan: %d players\n", num_of_players);
     // initialize server
     server_listen(handle_request,
                   graph,

@@ -1,25 +1,20 @@
 #include "avl_tree.h"
-#include <stdio.h>
-Node make_tree(Node *tree)
-{
-    Node temp = calloc(sizeof(Node), 1);
-    temp->height = 1;
-    *tree = temp;
-    return temp;
-}
 
-// safe get height element of Node
 signed char safe_height(Node N)
 {
     if (N == NULL)
         return 0;
     return N->height;
 }
-signed char balance_factor(Node N)
+
+Node new_mode(void *key)
 {
-    if (N == NULL)
-        return 0;
-    return safe_height(N->left) - safe_height(N->right);
+    Node node = malloc(sizeof(NodeRec));
+    node->data = key;
+    node->left = NULL;
+    node->right = NULL;
+    node->height = 1;
+    return (node);
 }
 
 Node right_rotate(Node y)
@@ -30,8 +25,12 @@ Node right_rotate(Node y)
     x->right = y;
     y->left = T2;
 
-    y->height = bmax(safe_height(y->left), safe_height(y->right)) + 1;
-    x->height = bmax(safe_height(x->left), safe_height(x->right)) + 1;
+    y->height = bmax(safe_height(y->left),
+                     safe_height(y->right)) +
+                1;
+    x->height = bmax(safe_height(x->left),
+                     safe_height(x->right)) +
+                1;
 
     return x;
 }
@@ -44,20 +43,14 @@ Node left_rotate(Node x)
     y->left = x;
     x->right = T2;
 
-    x->height = bmax(safe_height(x->left), safe_height(x->right)) + 1;
-    y->height = bmax(safe_height(y->left), safe_height(y->right)) + 1;
+    x->height = bmax(safe_height(x->left),
+                     safe_height(x->right)) +
+                1;
+    y->height = bmax(safe_height(y->left),
+                     safe_height(y->right)) +
+                1;
 
     return y;
-}
-
-Node new_node(void *data)
-{
-    Node node = (Node)malloc(sizeof(NodeRec));
-    node->data = data;
-    node->left = NULL;
-    node->right = NULL;
-    node->height = 1;
-    return node;
 }
 
 Node right_left_rotate(Node node)
@@ -72,54 +65,66 @@ Node left_right_rotate(Node node)
     return right_rotate(node);
 }
 
-Node avl_insert(Node *root, void *element, signed char (*compare)(const void *, const void *))
+int calc_balance(Node N)
 {
-    if (*root == NULL)
+    if (N == NULL)
+        return 0;
+    return safe_height(N->left) - safe_height(N->right);
+}
+
+Node insert(Node node, void *element, signed char (*cmp)(const void *, const void *))
+{
+    if (node == NULL)
     {
-        *root = new_node(element);
-        return *root;
+        return new_mode(element);
     }
-    signed char cmp_result = compare(element, (*root)->data);
+    signed char cmp_result = cmp(element, node->data);
     if (cmp_result < 0)
     {
-        (*root)->left = avl_insert(&((*root)->left), element, compare);
+        node->left = insert(node->left, element, cmp);
     }
     else if (cmp_result > 0)
     {
-        (*root)->right = avl_insert(&((*root)->right), element, compare);
+        node->right = insert(node->right, element, cmp);
     }
     else
     {
-        return *root;
+        return node;
     }
 
-    (*root)->height = 1 + bmax(safe_height((*root)->left), safe_height((*root)->right));
+    node->height = 1 + bmax(safe_height(node->left),
+                            safe_height(node->right));
 
-    int balance = safe_height((*root)->left) - safe_height((*root)->right);
+    int balance = calc_balance(node);
 
-    if (balance > 1 && compare(element, (*root)->left->data) < 0)
+    if (balance > 1 && cmp(element, node->left->data) < 0)
     {
-        return right_rotate(*root);
+        return right_rotate(node);
     }
 
-    if (balance < -1 && compare(element, (*root)->right->data) > 0)
+    if (balance < -1 && cmp(element, node->right->data) > 0)
     {
-        return left_rotate(*root);
+        return left_rotate(node);
     }
-
-    if (balance > 1 && compare(element, (*root)->left->data) > 0)
+    if (balance > 1 && cmp(element, node->left->data) > 0)
     {
-        return left_right_rotate(*root);
+        return left_right_rotate(node);
     }
 
-    if (balance < -1 && compare(element, (*root)->right->data) < 0)
+    if (balance < -1 && cmp(element, node->right->data) < 0)
     {
-
-        return right_left_rotate(*root);
+        return right_left_rotate(node);
     }
-    return *root;
+
+    return node;
 }
-Node avl_search(Node node, void *element, signed char (*compare)(const void *, const void *))
+
+void avl_insert(Node *root, void *element, signed char cmp(const void *, const void *))
+{
+    *root = insert(*root, element, cmp);
+}
+
+Node avl_search(Node node, void *element, signed char cmp(const void *, const void *))
 {
     if (node == NULL)
     {
@@ -127,19 +132,36 @@ Node avl_search(Node node, void *element, signed char (*compare)(const void *, c
     }
     else
     {
-        signed char cmp_result = compare(element, node->data);
-        if (!cmp_result)
-        {
-            return node;
-        }
+        signed char cmp_result = cmp(node->data, element);
+
         if (cmp_result > 0)
         {
-            return avl_search(node->right, element, compare);
+            return avl_search(node->left, element, cmp);
         }
+
         if (cmp_result < 0)
         {
-            return avl_search(node->right, element, compare);
+            return avl_search(node->right, element, cmp);
         }
-        return NULL;
+
+        return node;
+    }
+}
+
+void avl_inorder(Node node, void printfn(const void *))
+{
+    if (node == NULL)
+    {
+        return;
+    }
+    else
+    {
+        printf("(");
+        avl_inorder(node->left, printfn);
+
+        printfn(node->data);
+
+        avl_inorder(node->right, printfn);
+        printf(")");
     }
 }

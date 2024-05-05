@@ -1,6 +1,17 @@
 
 #include "model.h"
 
+// extract data functions
+unsigned char extract_area_materials(unsigned char material_number)
+{
+    return material_number & 0x07;
+}
+
+unsigned char extract_area_number(unsigned char material_number)
+{
+    return material_number >> 3;
+}
+
 // helper function
 void print_vec(unsigned char *arr, signed char size)
 {
@@ -88,11 +99,22 @@ void catan_harbors(GraphPtr graph, unsigned char harbors[HARBOR_COUNT * 2])
     }
 }
 
+void catan_settle_vertecies(GraphPtr graph)
+{
+    unsigned char offset;
+
+    for (offset = 0; offset < VERTECIES; offset++)
+    {
+        graph->vertices[offset + AREAS].color = BLACK;
+    }
+}
+
 void catan_graph_init(GraphPtr graph, unsigned char harbors[HARBOR_COUNT * 2])
 {
     catan_edges(graph);
     catan_lands(graph);
 
+    catan_settle_vertecies(graph);
     catan_harbors(graph, harbors);
 }
 void catab_players_init(PlayerPtr players, signed char size)
@@ -189,21 +211,33 @@ unsigned char *inf_player_actionable(unsigned char *size,
 unsigned char *inf_players_manip(unsigned char *size,
                                  PlayerPtr players,
                                  unsigned char offset,
+                                 signed char *bank,
                                  unsigned char count,
-                                 unsigned char *(*manipulation)(PlayerPtr))
+                                 unsigned char *(*manip)(PlayerPtr))
 {
     PlayerPtr player = players + offset;
     unsigned char *res;
-    if (offset)
+
+    bool _is_bank = offset == MAX_PLAYERS,
+         _is_local = !offset;
+
+    if (offset == MAX_PLAYERS)
     {
-        // return only the count of the materials
-        res = single_byte(size, vec_sum((signed char *)manipulation(player), count));
+        // is bank
+        res = (unsigned char *)vec_dup(bank, (*size = count));
+    }
+    else if (!offset)
+    {
+        // is local
+        // return every materials
+        res = (unsigned char *)vec_dup((signed char *)manip(player), (*size = count));
     }
     else
     {
-        // return every materials
-        res = (unsigned char *)vec_dup((signed char *)manipulation(player), (*size = count));
+        // return only the count of the materials
+        res = single_byte(size, vec_sum((signed char *)manip(player), count));
     }
+
     return res;
 }
 
@@ -219,21 +253,27 @@ unsigned char *get_player_devcards(PlayerPtr player)
 
 unsigned char *inf_player_materials(unsigned char *size,
                                     PlayerPtr players,
-                                    unsigned char offset)
+                                    signed char *bankMaterials, unsigned char offset)
 {
-    return inf_players_manip(size,
-                             players,
-                             offset,
-                             TOTAL_MATERIALS,
-                             get_player_materials);
+    unsigned char *mats = inf_players_manip(size,
+                                            players,
+                                            offset,
+                                            bankMaterials,
+                                            TOTAL_MATERIALS,
+                                            get_player_materials);
+    printt("player mats = ");
+    print_vec(mats, *size);
+    return mats;
 }
 unsigned char *inf_player_devcards(unsigned char *size,
                                    PlayerPtr players,
+                                   signed char *bankDevelopment,
                                    unsigned char offset)
 {
     return inf_players_manip(size,
                              players,
                              offset,
+                             bankDevelopment,
                              TOTAL_DEVELOPMENT_CARD,
                              get_player_devcards);
 }
@@ -286,30 +326,46 @@ signed char compare_edges_offset(const void *first, const void *second)
 {
     return ((EdgePtr)first)->offset - ((EdgePtr)second)->offset;
 }
-
+void print_edge_offset(const void *ptr)
+{
+    EdgePtr edge = (EdgePtr)ptr;
+    printf(" %d ", edge->offset);
+}
 bool buy_road(PlayerPtr player,
               GraphPtr graph,
               const signed char cost[TOTAL_MATERIALS],
               signed char bank[TOTAL_MATERIALS],
+              bool transferMats,
               unsigned char from,
               unsigned char to)
 {
-    transfer_materials(player, bank, cost, false);
+    if (transferMats)
+        transfer_materials(player, bank, cost, (transferMats));
 
-    EdgePtr tempPtr;
-    EdgeRec tempRec;
+    printt("road from:%hhu to:%hhu\n", from, to);
+    EdgePtr foundPtr;
+    EdgeRec lookRec;
 
-    tempRec.offset = to;
-    tempPtr = avl_search(graph->vertices[from].edges,
-                         &tempRec, compare_edges_offset)
-                  ->data;
-    tempPtr->color = player->color;
+    lookRec.offset = to;
+    putts("\t\tbefore searching!");
+    puts("");
+    avl_inorder(graph->vertices[from].edges, print_edge_offset);
+    puts("\n");
+    foundPtr = avl_search(graph->vertices[from].edges,
+                          &lookRec, compare_edges_offset)
+                   ->data;
+    printt("\tafter searching! foundPtr == null %d \n", foundPtr == NULL);
+    foundPtr->color = player->color;
+    putts("\t\tbefore searching!");
 
-    tempRec.offset = from;
-    tempPtr = avl_search(graph->vertices[from].edges,
-                         &tempRec, compare_edges_offset)
-                  ->data;
-    tempPtr->color = player->color;
+    lookRec.offset = from;
+    foundPtr = avl_search(graph->vertices[to].edges,
+                          &lookRec, compare_edges_offset)
+                   ->data;
+    printt("\tafter searching! foundPtr == null %d \n", foundPtr == NULL);
+
+    foundPtr->color = player->color;
+    putts("\tafter searching!");
 
     // TODO: Now check who has the most longest path
 
@@ -320,13 +376,63 @@ signed char value_compare(const void *first, const void *second)
 {
     return first - second;
 }
+
+unsigned char *svertex_to_materials(GraphPtr graph, signed char index)
+{
+    Queue que;
+    EdgePtr edge;
+    unsigned char size = 0, *mats = calloc(TOTAL_MATERIALS, sizeof(char));
+    Node node = graph->vertices[index].edges;
+
+    queue_init(&que);
+    enqueue(&que, node);
+
+    while (!queue_empty(que))
+    {
+        size++;
+        node = dequeue(&que);
+        edge = (EdgePtr)node->data;
+        if (node->left != NULL)
+        {
+            enqueue(&que, node->left);
+        }
+        if (node->right != NULL)
+        {
+            enqueue(&que, node->right);
+        }
+
+        if (edge->color == GRAY)
+        {
+            printt("\t\t\tedge->color = %d material = %d\n", edge->color, extract_area_materials(edge->vertex->material_number));
+
+            mats[extract_area_materials(edge->vertex->material_number)]++;
+        }
+    }
+    printt("\t\t\tedgessize=%d\n", size);
+    return mats;
+}
+
 bool buy_settlement(PlayerPtr player,
                     GraphPtr graph,
                     const signed char cost[TOTAL_MATERIALS],
                     signed char bank[TOTAL_MATERIALS],
+                    signed char transferMats, // -1 to player 1 from player
                     unsigned char index)
 {
-    transfer_materials(player, bank, cost, false);
+    printt("\t\t transferMats=%d\n", transferMats);
+    switch (transferMats)
+    {
+    case 1:
+        transfer_materials(player, bank, cost, false);
+    case -1:
+    {
+        unsigned char *materials = svertex_to_materials(graph, index);
+        transfer_materials(player, bank, (signed char *)materials, true);
+        printt("\t\t moved materials to player index=%d ", index);
+        print_vec(materials, TOTAL_MATERIALS);
+        free(materials);
+    }
+    }
 
     // change settlement color
     graph->vertices[index].color = player->color;
@@ -396,22 +502,29 @@ unsigned char *switch_action_store(unsigned char *size,
     switch (params[0])
     {
     case 0:
+        putts("buy_road");
         res[0] = buy_road(player,
                           graph,
                           store[ROAD],
                           mat_bank,
-                          params[1] + AREAS,
-                          params[2] + AREAS);
+                          params[1],
+                          params[2] + AREAS,
+                          params[3] + AREAS);
         break;
     case 1:
         res[0] = buy_settlement(player,
                                 graph,
                                 store[SETTLEMENT],
                                 mat_bank,
-                                params[1] + AREAS);
+                                params[1],
+                                params[2] + AREAS);
         break;
     case 2:
-        res[0] = buy_city(player, graph, store[CITY], mat_bank, params[1] + AREAS);
+        res[0] = buy_city(player,
+                          graph,
+                          store[CITY],
+                          mat_bank,
+                          params[2] + AREAS);
         break;
     case 3:
         res[0] = buy_developement(player,
@@ -432,7 +545,7 @@ void collect_materials_area(VertexPtr area, PlayerPtr players, signed char *bank
     Node node;
     EdgePtr edge;
 
-    const unsigned char material = area->material_number & 0x07;
+    const unsigned char material = extract_area_materials(area->material_number);
     unsigned char player_offset, cost[TOTAL_MATERIALS];
 
     bool is_city;
@@ -477,7 +590,7 @@ void collect_materials(unsigned char rolled_num,
 
     for (offset = 0, vertex = 0; offset < AREAS; offset++)
     {
-        if (graph->vertices[offset].material_number >> 3 == rolled_num)
+        if (extract_area_number(graph->vertices[offset].material_number) == rolled_num)
         {
             vertecies[vertex++] = graph->vertices + offset;
         }
@@ -518,10 +631,8 @@ void handle_rest_turns(int socket,
     // while the turn color its not WHITE
     while ((turnColor = (*turnOffset) % num_of_players))
     {
-        printt("\tturnOffset=%d\n", *turnOffset);
 
         bot_plays(players + turnColor, socket);
-        // sleep(1);
 
         // printt("\tbot number %d done playing!", turnColor);
         (*turnOffset)++;
