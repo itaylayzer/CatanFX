@@ -37,6 +37,9 @@ void handle_request(
     case 13: // victory points
         _buff = single_byte(&size, (players + buffer[1])->victoryPoints);
         break;
+    case 14: // player materials
+        _buff = inf_player_amounts(&size, players);
+        break;
 
     case 30:
         _buff = roll_dice(&size, players, graph, bankMaterials);

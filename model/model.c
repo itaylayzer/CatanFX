@@ -126,6 +126,11 @@ void catab_players_init(PlayerPtr players, signed char size)
         players[size].amounts[SETTLEMENT] = 5;
         players[size].amounts[CITY] = 4;
     }
+    players[0].materials[0] = 5;
+    players[0].materials[1] = 5;
+    players[0].materials[2] = 5;
+    players[0].materials[3] = 5;
+    players[0].materials[4] = 5;
 }
 unsigned char *areas_numbers(unsigned char *size, GraphPtr graph)
 {
@@ -276,6 +281,11 @@ unsigned char *inf_player_devcards(unsigned char *size,
                              bankDevelopment,
                              TOTAL_DEVELOPMENT_CARD,
                              get_player_devcards);
+}
+
+unsigned char *inf_player_amounts(unsigned char *size, PlayerPtr player)
+{
+    return (unsigned char *)vec_dup((signed char *)player->amounts, (signed char)(*size = TOTAL_STORE - 1));
 }
 unsigned char *single_byte(unsigned char *size, signed char value)
 {

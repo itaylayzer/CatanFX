@@ -43,6 +43,7 @@ unsigned char *inf_player_devcards(unsigned char *size,
                                    PlayerPtr players,
                                    signed char *bankDevelopment,
                                    unsigned char offset);
+unsigned char *inf_player_amounts(unsigned char *size, PlayerPtr player);
 unsigned char *switch_action_store(unsigned char *size,
                                    signed char *params,
                                    GraphPtr graph,
