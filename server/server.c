@@ -16,14 +16,16 @@ int server_listen(void (*handle_request)(
                       signed char *bankMaterials,
                       const signed char (*store)[TOTAL_MATERIALS],
                       unsigned char *turnOffset,
-                      const unsigned char num_of_players),
+                      const unsigned char num_of_players,
+                      signed char *achievementCards),
                   GraphPtr graph,
                   unsigned char *harbors, PlayerPtr players,
                   signed char *bankDevelopments,
                   signed char *bankMaterials,
                   const signed char (*store)[TOTAL_MATERIALS],
                   unsigned char *turnOffset,
-                  const unsigned char num_of_players)
+                  const unsigned char num_of_players,
+                  signed char *achievementCards)
 {
     int server_fd, new_socket, valread, error_code;
     struct sockaddr_in address;
@@ -107,7 +109,8 @@ int server_listen(void (*handle_request)(
                            bankMaterials,
                            store,
                            turnOffset,
-                           num_of_players);
+                           num_of_players,
+                           achievementCards);
         }
         free(buffer);
     }

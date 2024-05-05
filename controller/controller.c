@@ -9,11 +9,12 @@ void handle_request(
     signed char *bankMaterials,
     const signed char (*store)[TOTAL_MATERIALS],
     unsigned char *turnOffset,
-    const unsigned char num_of_players)
+    const unsigned char num_of_players,
+    signed char *achievementCards)
 {
     unsigned char size = 0;
     void *_buff;
-    putts("");
+
     switch (buffer[0])
     {
     case 0:
@@ -37,13 +38,19 @@ void handle_request(
     case 13: // victory points
         _buff = single_byte(&size, (players + buffer[1])->victoryPoints);
         break;
+
     case 14: // player materials
         _buff = inf_player_amounts(&size, players);
+        break;
+
+    case 15: // achievement cards
+        _buff = vec_dup(achievementCards, (size = TOTAL_ACHIEVEMENTS_CARD));
         break;
 
     case 30:
         _buff = roll_dice(&size, players, graph, bankMaterials);
         break;
+
     case 31:
         _buff = switch_action_store(&size,
                                     buffer + 1,
@@ -51,8 +58,10 @@ void handle_request(
                                     players,
                                     bankMaterials,
                                     bankDevelopments,
-                                    store);
+                                    store,
+                                    achievementCards);
         break;
+
     case 40:
         handle_rest_turns(socket, turnOffset, players, num_of_players);
         break;
@@ -107,5 +116,6 @@ void catan_start(signed char _num_of_players)
                   bankMaterials,
                   store,
                   &turnOffset,
-                  num_of_players);
+                  num_of_players,
+                  achievementCards);
 }

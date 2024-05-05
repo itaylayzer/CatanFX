@@ -350,7 +350,7 @@ bool buy_road(PlayerPtr player,
               unsigned char to)
 {
     if (transferMats)
-        transfer_materials(player, bank, cost, (transferMats));
+        transfer_materials(player, bank, cost, false);
 
     EdgePtr foundPtr;
     EdgeRec lookRec;
@@ -369,8 +369,6 @@ bool buy_road(PlayerPtr player,
                           &lookRec, compare_edges_offset)
                    ->data;
     foundPtr->color = player->color;
-
-    // TODO: Now check who has the most longest path
 
     player->amounts[ROAD]--;
     return true;
@@ -498,13 +496,18 @@ bool buy_developement(PlayerPtr player,
     return true;
 }
 
+void update_achievements(GraphPtr graph, signed char achievements[TOTAL_ACHIEVEMENTS_CARD])
+{
+    
+}
+
 unsigned char *switch_action_store(unsigned char *size,
                                    signed char *params,
                                    GraphPtr graph,
                                    PlayerPtr player,
                                    signed char mat_bank[TOTAL_MATERIALS],
                                    signed char devcard_bank[TOTAL_DEVELOPMENT_CARD],
-                                   const signed char store[TOTAL_STORE][TOTAL_MATERIALS])
+                                   const signed char store[TOTAL_STORE][TOTAL_MATERIALS], signed char achievements[TOTAL_ACHIEVEMENTS_CARD])
 {
     unsigned char *res = calloc((*size = 1), sizeof(unsigned char));
 
@@ -518,6 +521,7 @@ unsigned char *switch_action_store(unsigned char *size,
                           params[1],
                           params[2] + AREAS,
                           params[3] + AREAS);
+        update_achievements(graph, achievements);
         break;
     case 1:
         res[0] = buy_settlement(player,

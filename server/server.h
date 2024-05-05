@@ -35,12 +35,14 @@ int server_listen(void (*handle_request)(
                       signed char *bankMaterials,
                       const signed char (*store)[TOTAL_MATERIALS],
                       unsigned char *turnOffset,
-                      const unsigned char num_of_players),
+                      const unsigned char num_of_players,
+                      signed char *achievementCards),
                   GraphPtr graph,
                   unsigned char *harbors, PlayerPtr players,
                   signed char *bankDevelopments,
                   signed char *bankMaterials,
                   const signed char (*store)[TOTAL_MATERIALS],
                   unsigned char *turnOffset,
-                  const unsigned char num_of_players);
+                  const unsigned char num_of_players,
+                  signed char *achievementCards);
 #endif

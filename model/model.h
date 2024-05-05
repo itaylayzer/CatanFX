@@ -50,7 +50,7 @@ unsigned char *switch_action_store(unsigned char *size,
                                    PlayerPtr player,
                                    signed char mat_bank[TOTAL_MATERIALS],
                                    signed char devcard_bank[TOTAL_DEVELOPMENT_CARD],
-                                   const signed char store[TOTAL_STORE][TOTAL_MATERIALS]);
+                                   const signed char store[TOTAL_STORE][TOTAL_MATERIALS], signed char achievements[TOTAL_ACHIEVEMENTS_CARD]);
 unsigned char *single_byte(unsigned char *size, signed char value);
 void collect_materials(unsigned char rolled_num,
                        PlayerPtr players,
