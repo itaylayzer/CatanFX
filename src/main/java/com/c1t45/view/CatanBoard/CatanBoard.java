@@ -7,6 +7,7 @@ import java.util.List;
 
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
@@ -58,8 +59,15 @@ public class CatanBoard {
     private VertexPackage[] vertecies;
     private Circle[] vertexCircles;
     private Group vertexGroup;
+
+    // hexes
+    private Point2D[] hexes;
+    private Rectangle[] hexesRectangles;
+    private Group hexesGroup;
+
     // harbor
     private Group harborsGroup;
+
     // edges
     private LinePackage[] edges;
     private Rectangle[] edgesRectangles;
@@ -69,13 +77,20 @@ public class CatanBoard {
     private Runnable lastCancel;
     private Group settlementsGroup;
     private Group roadsGroup;
-    // private Group linesGroup;
+
+    // robber
+    private ImageView robberImage;
+    private Group robberGroup;
+    private byte robberHex;
 
     private HashMap<Byte, ImageView> settlementsMap;
+    private AnchorPane pane;
 
     public static void clear() {
         instance = null;
     }
+
+    // initializations
 
     public static CatanBoard Initialize(AnchorPane pane,
             byte[] landsBytes,
@@ -112,7 +127,7 @@ public class CatanBoard {
 
         lands = new ArrayList<>();
         landsGroup = new Group();
-        pane.setPrefHeight(405);
+        (this.pane = pane).setPrefHeight(405);
         pane.setPrefWidth(436);
 
         DropShadow dropShadow = new DropShadow();
@@ -129,14 +144,18 @@ public class CatanBoard {
         harborsGroup = new Group();
         edgesGroup = new Group();
         roadsGroup = new Group();
+        hexesGroup = new Group();
+        robberGroup = new Group();
 
         edgesRectangles = new Rectangle[edges.length];
         vertexCircles = new Circle[vertecies.length];
+        hexesRectangles = new Rectangle[hexes.length];
 
         settlementsGroup = new Group();
         settlementsMap = new HashMap<>();
 
         initGraphGraphics(harborsBytes, boardMiddle);
+        initRobber();
 
         pane.getChildren().add(harborsGroup);
         pane.getChildren().add(this.landsGroup);
@@ -144,23 +163,43 @@ public class CatanBoard {
         pane.getChildren().add(edgesGroup);
         pane.getChildren().add(roadsGroup);
 
+        // add picks groups and change each opacity and mouse transparency
         pane.getChildren().add(vertexGroup);
         pane.getChildren().add(settlementsGroup);
+        pane.getChildren().add(hexesGroup);
+        pane.getChildren().add(robberGroup);
 
         vertexGroup.setOpacity(0);
         vertexGroup.setMouseTransparent(true);
 
         edgesGroup.setOpacity(0);
         edgesGroup.setMouseTransparent(true);
+
+        hexesGroup.setOpacity(0);
+        hexesGroup.setMouseTransparent(true);
+
+    }
+
+    private void initRobber() {
+        robberHex = 9;
+        robberImage = new ImageView(Constants.Images.robber);
+        robberGroup.getChildren().add(robberImage);
+
+        robberImage.setScaleX(0.15);
+        robberImage.setScaleY(0.15);
+        robberGroup.setOpacity(1);
+
+        updateRobberPos();
     }
 
     private void initGraphGraphics(byte[] harborsBytes, Point2D boardMiddle) {
+        Color pickColor = Color.WHITESMOKE;
         for (int vertexOffset = 0; vertexOffset < vertecies.length; vertexOffset++) {
             Point2D vertex = vertecies[vertexOffset].point;
 
             Circle circle = new Circle();
 
-            circle.setFill(Color.WHITE);
+            circle.setFill(pickColor);
             circle.setRadius(5);
 
             circle.setLayoutX(vertex.getX());
@@ -214,7 +253,7 @@ public class CatanBoard {
 
             Rectangle rect = new Rectangle();
 
-            rect.setFill(Color.WHITE);
+            rect.setFill(pickColor);
 
             final double size = 10;
 
@@ -231,6 +270,31 @@ public class CatanBoard {
 
             edgesRectangles[edgeOffset] = rect;
             edgesGroup.getChildren().add(rect);
+        }
+
+        for (int hexOffset = 0; hexOffset < hexes.length; hexOffset++) {
+            Point2D vertex = hexes[hexOffset];
+
+            Rectangle rect = new Rectangle();
+
+            rect.setFill(pickColor);
+
+            final double size = 20;
+
+            rect.setHeight(size);
+            rect.setWidth(size);
+
+            rect.setArcHeight(size / 2);
+            rect.setArcWidth(size / 2);
+
+            rect.setLayoutX(vertex.getX() - size / 2);
+            rect.setLayoutY(vertex.getY() - size / 2);
+            rect.setRotate(45);
+
+            rect.setCursor(Cursor.HAND);
+
+            hexesRectangles[hexOffset] = rect;
+            hexesGroup.getChildren().add(rect);
         }
 
     }
@@ -264,16 +328,18 @@ public class CatanBoard {
             }
         };
 
-        Point2D middle = initVerteciesAndHexagons(landsByte, vertexComparator);
+        Point2D middle = initVerteciesAndHexagons(landsByte, vertexComparator, doubleComparator);
         initEdges(edgesByte, edgeComparator);
         return middle;
     }
 
-    private Point2D initVerteciesAndHexagons(byte[] landsBytes, Comparator<VertexPackage> vertexComparator) {
+    private Point2D initVerteciesAndHexagons(byte[] landsBytes, Comparator<VertexPackage> vertexComparator,
+            Comparator<Point2D> doubleComparator) {
 
         int resourceIndex = 0;
 
         Set<VertexPackage> verticesSet = new TreeSet<>(vertexComparator);
+        Set<Point2D> hexesSet = new TreeSet<>(doubleComparator);
 
         Point2D boardMiddle = new Point2D(0, 0);
 
@@ -300,9 +366,13 @@ public class CatanBoard {
                     verticesSet.add(new VertexPackage(vertex));
 
                 }
+                Point2D hexPoint = new Point2D(mX / 6, mY / 6);
                 if (row == 2 && col == 2) {
-                    boardMiddle = new Point2D(mX / 6, mY / 6);
+                    boardMiddle = hexPoint;
                 }
+
+                hexesSet.add(hexPoint);
+
                 byte landVal = landsBytes[resourceIndex++];
                 landNum = (Byte) (byte) (landVal >> 3);
                 if (landNum != 7)
@@ -323,6 +393,9 @@ public class CatanBoard {
 
         vertecies = new VertexPackage[verticesSet.size()];
         verticesSet.toArray(vertecies);
+
+        hexes = new Point2D[hexesSet.size()];
+        hexesSet.toArray(hexes);
 
         return boardMiddle;
     }
@@ -361,6 +434,7 @@ public class CatanBoard {
 
     }
 
+    // functions
     public static void addHouse(byte vertex, Color color) {
         instance.addSettlement(Constants.Images.house, vertex, color);
     }
@@ -477,11 +551,11 @@ public class CatanBoard {
 
     }
 
-    public void pickEdge(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked) {
-        pickEdge(allowVertex, onCancel, onPicked, true, true);
+    public void pickEdge(Condition<Byte> allowEdge, Runnable onCancel, Action<Byte> onPicked) {
+        pickEdge(allowEdge, onCancel, onPicked, true, true);
     }
 
-    public void pickEdge(Condition<Byte> allowVertex, Runnable onCancel, Action<Byte> onPicked, boolean useFade,
+    public void pickEdge(Condition<Byte> allowEdge, Runnable onCancel, Action<Byte> onPicked, boolean useFade,
             boolean escapeToExit) {
 
         Scene scene = edgesGroup.getScene();
@@ -502,7 +576,7 @@ public class CatanBoard {
             scene.addEventHandler(KeyEvent.KEY_PRESSED, cancelEvent);
         }
 
-        applyPickEdgeUI(useFade, allowVertex, new Action<Byte>() {
+        applyPickEdgeUI(useFade, allowEdge, new Action<Byte>() {
             @Override
             public void action(Byte param) {
                 cancelPickEdgeUI(true);
@@ -514,7 +588,6 @@ public class CatanBoard {
 
     private void applyPickVertexUI(Condition<Byte> allowVertex, Action<Byte> action) {
         vertexGroup.setMouseTransparent(false);
-        settlementsGroup.setMouseTransparent(false);
 
         fade(landsGroup, 0.5);
         fade(vertexGroup, 1);
@@ -557,7 +630,6 @@ public class CatanBoard {
 
     private void applyPickEdgeUI(boolean useFade, Condition<Byte> allowVertex, Action<Byte> action) {
         edgesGroup.setMouseTransparent(false);
-        roadsGroup.setMouseTransparent(false);
 
         if (useFade) {
             fade(landsGroup, 0.5);
@@ -609,6 +681,81 @@ public class CatanBoard {
         cancelPickEdgeUI(useFade);
     }
 
+    public void pickHexagon(Condition<Byte> allowHex, Runnable onCancel, Action<Byte> onPicked) {
+        pickHexagon(allowHex, onCancel, onPicked, true);
+    }
+
+    public void pickHexagon(Condition<Byte> allowHex, Runnable onCancel, Action<Byte> onPicked, boolean escapeToExit) {
+        Scene scene = edgesGroup.getScene();
+        lastCancel = onCancel;
+
+        if (escapeToExit) {
+            EventHandler<KeyEvent> cancelEvent = new EventHandler<>() {
+                @Override
+                public void handle(KeyEvent keyEvent) {
+                    if (keyEvent.getCode() == KeyCode.ESCAPE) {
+
+                        scene.removeEventHandler(KeyEvent.KEY_PRESSED, this);
+                        cancelCurrentPick(true);
+
+                    }
+                }
+            };
+            scene.addEventHandler(KeyEvent.KEY_PRESSED, cancelEvent);
+        }
+
+        applyPickHexUI(allowHex, new Action<Byte>() {
+            @Override
+            public void action(Byte param) {
+                cancelPickHexUI(true);
+                onPicked.action(param);
+            }
+        });
+    }
+
+    private void applyPickHexUI(Condition<Byte> allowHex, Action<Byte> action) {
+        hexesGroup.setMouseTransparent(false);
+
+        fade(landsGroup, 0.5);
+        fade(hexesGroup, 1);
+        int index;
+        for (index = 0; index < hexesRectangles.length; index++) {
+            Rectangle rect = hexesRectangles[index];
+            if (allowHex.condition((byte) index)) {
+                final byte pickedVertex = (byte) index;
+                rect.setOpacity(1);
+                rect.setOnMouseClicked((event) -> {
+                    action.action(pickedVertex);
+                });
+                rect.onMouseClickedProperty().addListener((e, a, b) -> {
+
+                });
+            } else {
+                rect.setOpacity(0);
+                rect.setOnMouseClicked(null);
+            }
+        }
+    }
+
+    private void cancelPickHexUI(boolean useFade) {
+        edgesGroup.setMouseTransparent(true);
+        roadsGroup.setMouseTransparent(true);
+        hexesGroup.setMouseTransparent(true);
+
+        if (useFade) {
+            fade(landsGroup, 1);
+            fade(hexesGroup, 0);
+
+        } else {
+            landsGroup.setOpacity(1);
+            hexesGroup.setOpacity(0);
+        }
+        for (Rectangle rect : hexesRectangles) {
+            rect.setOnMouseClicked(null);
+        }
+    }
+
+    // getters
     public byte[] seperateEdge(Byte picked) {
         LinePackage line = edges[picked];
         return new byte[] { line.from, line.to };
@@ -621,4 +768,30 @@ public class CatanBoard {
     public LinePackage getLine(Byte offset) {
         return edges[offset];
     }
+
+    public byte getRobberPos() {
+        return this.robberHex;
+    }
+
+    private void updateRobberPos() {
+        updateRobberPos(this.robberHex);
+    }
+
+    private void updateRobberPos(byte index) {
+        Platform.runLater(() -> {
+            System.out.println("index=" + index + " x:" + this.hexes[index].getX() + " y:" + this.hexes[index].getY());
+            robberImage.setLayoutX(this.hexes[index].getX() - 150);
+            robberImage.setLayoutY(this.hexes[index].getY() - 150);
+            // robberGroup.getChildren().remove(robberImage);
+            // robberGroup.getChildren().add(robberImage);
+        });
+
+    }
+
+    public void setRobberPos(byte val) {
+        this.robberHex = val;
+
+        updateRobberPos();
+    }
+
 }

@@ -46,7 +46,6 @@ public class DicePane {
         if (current >= end) {
             if (onFinish != null) {
                 byte[] roll_result = this.socketDice.apply(null);
-                System.out.println("roll " + roll_result[0] + " " + roll_result[1] + " ;");
                 onFinish.action(roll_result[0], roll_result[1]);
             }
         } else {

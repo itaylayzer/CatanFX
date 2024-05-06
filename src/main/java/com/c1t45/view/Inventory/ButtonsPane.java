@@ -83,6 +83,22 @@ public class ButtonsPane {
             });
         });
 
+        devcardAction.setOnAction((event) -> {
+            CatanBoard board = CatanBoard.getInstance();
+            devcardAction.setButtonDisabled(true);
+            board.cancelCurrentPick(false);
+
+            board.pickHexagon((value) -> {
+                return value != 9 && board.getRobberPos() != value;
+            }, () -> {
+                devcardAction.setButtonDisabled(false);
+            }, (picked) -> {
+                devcardAction.setButtonDisabled(false);
+                System.out.println("picked-hexagon=" + picked);
+                board.setRobberPos(picked);
+            });
+        });
+
         cityAction.setOnAction((event) -> {
             CatanBoard board = CatanBoard.getInstance();
             cityAction.setButtonDisabled(true);
@@ -110,7 +126,7 @@ public class ButtonsPane {
                 roadAction.setButtonDisabled(false);
             }, (picked) -> {
                 roadAction.setButtonDisabled(false);
-                System.out.println("picked-dot=" + picked);
+                System.out.println("picked-edge=" + picked);
                 byte[] fromto = board.seperateEdge(picked);
                 player.buyRoad(true, picked, fromto[0], fromto[1]);
                 CatanBoard.addRoad(picked, player.getColor());

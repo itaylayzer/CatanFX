@@ -76,9 +76,9 @@ public class SocketClient {
         return this.action(new byte[] { ClientCodes.INFORMATION.PLAYER })[0];
     }
 
-    public boolean storeRoad(boolean transferMaterials, byte from, byte to) throws IOException, Exception {
+    public byte storeRoad(boolean transferMaterials, byte from, byte to) throws IOException, Exception {
         return this.action(
-                new byte[] { ClientCodes.ACTIONS.STORE, 0, (byte) (transferMaterials ? 1 : 0), from, to })[0] != 1;
+                new byte[] { ClientCodes.ACTIONS.STORE, 0, (byte) (transferMaterials ? 1 : 0), from, to })[0];
     }
 
     public boolean storeHouse(TransferMaterials transferMaterials, byte vertex) throws IOException, Exception {
@@ -130,6 +130,10 @@ public class SocketClient {
 
     public byte[] getAmounts() throws IOException, Exception {
         return this.action(new byte[] { ClientCodes.INFORMATION.AMOUNTS });
+    }
+
+    public byte moveRobber(byte robber, boolean knight) throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.ACTIONS.ROBBER, (byte) (knight ? 1 : 0), robber })[0];
     }
 
 }

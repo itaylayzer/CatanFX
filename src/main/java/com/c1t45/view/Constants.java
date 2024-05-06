@@ -45,7 +45,8 @@ public class Constants {
                                 trade = new Image(url("icons/stats/trade.png")),
                                 timer = new Image(url("icons/stats/timer.png")),
                                 rolldice = new Image(url("icons/stats/rolldices.png")),
-                                icon = new Image(url("icons/icon/bircksicon.png"));
+                                icon = new Image(url("icons/icon/bircksicon.png")),
+                                robber = new Image(url("icons/robber.png"));
                 public static final Image[] dices = new Image[] {
                                 new Image(url("icons/dices/c1.png")),
                                 new Image(url("icons/dices/c2.png")),

@@ -1,7 +1,5 @@
 package com.c1t45.view.Inventory;
 
-import java.util.Arrays;
-
 import com.c1t45.view.Constants;
 import com.c1t45.view.LocalPlayer;
 import com.c1t45.view.Components.MaterialGroup;
@@ -26,7 +24,6 @@ public class InventoryPane {
 
         local.addOnInventoryChange(() -> {
             byte[] mats = local.getMaterials();
-            System.out.println("on inventory change happend! " + Arrays.toString(mats));
             for (byte index = (byte) 0; index < mats.length; index++) {
                 materialGroups[index].setCount(mats[index]);
             }

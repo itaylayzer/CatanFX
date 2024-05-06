@@ -76,7 +76,6 @@ public class GameController {
     public void initialize(Window window, byte playerCount, String localeName, byte[] edges)
             throws Exception, UnknownHostException, IOException {
 
-        System.out.println("Locale Player name: " + localeName);
         Color[] colors = shuffleColors();
 
         SocketClient sock = new SocketClient();
@@ -109,8 +108,6 @@ public class GameController {
 
         byte[] landsBytes = sock.getLands();
         byte[] harborsBytes = sock.getHarbors();
-
-        System.out.println(Arrays.toString(harborsBytes));
 
         CatanBoard.Initialize(catanBoardPane, landsBytes, harborsBytes, local, edges);
 
@@ -210,7 +207,6 @@ public class GameController {
                 }));
             }
         };
-        System.out.println("start!");
     }
 
     public void showMemoryMonitor(ActionEvent event) {
