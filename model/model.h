@@ -30,7 +30,8 @@ unsigned char *harbors_numbers(unsigned char *size,
 unsigned char *roll_dice(unsigned char *size,
                          PlayerPtr players,
                          GraphPtr graph,
-                         signed char *bank);
+                         signed char *bank,
+                         const unsigned char robberArea);
 unsigned char *inf_player_actionable(unsigned char *size,
                                      PlayerPtr player,
                                      signed char dev_bank[TOTAL_DEVELOPMENT_CARD],
@@ -50,12 +51,20 @@ unsigned char *switch_action_store(unsigned char *size,
                                    PlayerPtr player,
                                    signed char mat_bank[TOTAL_MATERIALS],
                                    signed char devcard_bank[TOTAL_DEVELOPMENT_CARD],
-                                   const signed char store[TOTAL_STORE][TOTAL_MATERIALS], signed char achievements[TOTAL_ACHIEVEMENTS_CARD]);
+                                   const signed char store[TOTAL_STORE][TOTAL_MATERIALS], signed char *longest_road_achievement);
 unsigned char *single_byte(unsigned char *size, signed char value);
 void collect_materials(unsigned char rolled_num,
                        PlayerPtr players,
                        GraphPtr graph,
-                       signed char *bank);
+                       signed char *bank,
+                       const unsigned char robberArea);
+unsigned char *move_robber(unsigned char *size,
+                           PlayerPtr players,
+                           const unsigned char player_index,
+                           unsigned char *robberArea,
+                           signed char *params,
+                           signed char *biggest_army_achivement,
+                           const unsigned char num_of_players);
 //    bots
 void bot_inits(PlayerPtr players, unsigned char num_of_players);
 void handle_rest_turns(int socket,
@@ -75,6 +84,7 @@ bool vector_any(const signed char *, signed char size, bool (*condition)(signed 
 bool vector_all(const signed char *, signed char size, bool (*condition)(signed char));
 void vector_cpy(signed char *dest, signed char *src, signed char size);
 void vector_val(signed char *dest, signed char size, signed char val);
+unsigned char vector_count(const signed char *, signed char size, signed char val);
 signed char vec_sum(signed char *, signed char size);
 signed char *vec_dup(signed char *, signed char size);
 void vec_shuffle(signed char *, unsigned char size);

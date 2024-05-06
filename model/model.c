@@ -165,7 +165,8 @@ unsigned char *harbors_numbers(unsigned char *size,
 unsigned char *roll_dice(unsigned char *size,
                          PlayerPtr players,
                          GraphPtr graph,
-                         signed char *bank)
+                         signed char *bank,
+                         const unsigned char robberArea)
 {
     unsigned char *arr, dice, sum;
 
@@ -180,7 +181,7 @@ unsigned char *roll_dice(unsigned char *size,
         break;
 
     default:
-        collect_materials(sum, players, graph, bank);
+        collect_materials(sum, players, graph, bank, robberArea);
         break;
     }
 
@@ -266,8 +267,6 @@ unsigned char *inf_player_materials(unsigned char *size,
                                             bankMaterials,
                                             TOTAL_MATERIALS,
                                             get_player_materials);
-    printt("player mats = ");
-    print_vec(mats, *size);
     return mats;
 }
 unsigned char *inf_player_devcards(unsigned char *size,
@@ -357,8 +356,6 @@ bool buy_road(PlayerPtr player,
 
     lookRec.offset = to;
 
-    avl_inorder(graph->vertices[from].edges, print_edge_offset);
-
     foundPtr = avl_search(graph->vertices[from].edges,
                           &lookRec, compare_edges_offset)
                    ->data;
@@ -385,8 +382,6 @@ unsigned char *svertex_to_materials(GraphPtr graph, signed char index)
     unsigned char size = 0, *mats = calloc(TOTAL_MATERIALS, sizeof(char));
     Node node = graph->vertices[index].edges;
 
-    avl_inorder(node, print_edge_offset);
-    puts("");
     queue_init(&que);
     enqueue(&que, node);
 
@@ -406,12 +401,9 @@ unsigned char *svertex_to_materials(GraphPtr graph, signed char index)
 
         if (edge->color == GRAY)
         {
-            printt("\t\t\edge->offset = %d edge->color = %d material = %d index material = %d\n", edge->offset, edge->color, extract_area_materials(edge->vertex->material_number), extract_area_materials(graph->vertices[edge->offset].material_number));
-
             mats[extract_area_materials(edge->vertex->material_number)]++;
         }
     }
-    printt("\t\t\tedgessize=%d\n", size);
     return mats;
 }
 
@@ -422,7 +414,6 @@ bool buy_settlement(PlayerPtr player,
                     signed char transferMats, // -1 to player 1 from player
                     unsigned char index)
 {
-    printt("\t\t transferMats=%d\n", transferMats);
     switch (transferMats)
     {
     case 1:
@@ -432,8 +423,6 @@ bool buy_settlement(PlayerPtr player,
     {
         unsigned char *materials = svertex_to_materials(graph, index);
         transfer_materials(player, bank, (signed char *)materials, true);
-        printt("\t\t moved materials to player index=%d ", index);
-        print_vec(materials, TOTAL_MATERIALS);
         free(materials);
         break;
     }
@@ -496,9 +485,93 @@ bool buy_developement(PlayerPtr player,
     return true;
 }
 
-void update_achievements(GraphPtr graph, signed char achievements[TOTAL_ACHIEVEMENTS_CARD])
+// O(E+V)
+signed char dfs(GraphPtr graph, unsigned char vertex_offset, unsigned char targetColor, bool *visited)
 {
-    
+    VertexPtr vertex = graph->vertices + vertex_offset;
+    if (vertex == NULL || vertex->color == GRAY || (visited && visited[vertex_offset - AREAS]))
+    {
+        return 0;
+    }
+
+    if (visited)
+    {
+        visited[vertex_offset - AREAS] = true;
+    }
+    signed char max_child_length = 0;
+
+    Node node = vertex->edges;
+    Queue que;
+    EdgePtr edge;
+
+    queue_init(&que);
+    enqueue(&que, node);
+
+    while (!queue_empty(que))
+    {
+        node = dequeue(&que);
+
+        edge = node->data;
+
+        if (node->right)
+        {
+            enqueue(&que, node->right);
+        }
+        if (node->left)
+        {
+            enqueue(&que, node->left);
+        }
+
+        if (edge->color == targetColor)
+        {
+            max_child_length = bmax(max_child_length, dfs(graph, edge->offset, targetColor, visited));
+        }
+    }
+
+    return max_child_length + 1;
+}
+
+// O(CE+CVE+C) | C is negligible
+signed char update_longest_road(GraphPtr graph, signed char *longest_road_achievement)
+{
+    unsigned char color_offset, vertex_offset, max_road_color = BLACK;
+    signed char temp_length, max_road_length = 0, max_road_per_color[MAX_PLAYERS] = {0}, old_val;
+
+    for (color_offset = 0; color_offset < MAX_PLAYERS; color_offset++)
+    {
+        for (vertex_offset = 0; vertex_offset < VERTECIES; vertex_offset++)
+        {
+            bool *visited = calloc(VERTECIES, sizeof(bool));
+            max_road_per_color[color_offset] = bmax(max_road_per_color[color_offset],
+                                                    dfs(graph,
+                                                        vertex_offset + AREAS,
+                                                        color_offset,
+                                                        visited) -
+                                                        1);
+            free(visited);
+        }
+
+        if (max_road_per_color[color_offset] > max_road_length)
+        {
+            max_road_length = max_road_per_color[color_offset];
+            max_road_color = color_offset;
+        }
+    }
+
+    if (max_road_length < 5)
+    {
+        *longest_road_achievement = -1;
+    }
+    else if (vector_count(max_road_per_color,
+                          MAX_PLAYERS,
+                          max_road_length) == 1)
+    {
+        *longest_road_achievement = max_road_color;
+    }
+    printt("longest road %d longest %d vec:", *longest_road_achievement, max_road_color);
+    print_vec((unsigned char *)max_road_per_color, MAX_PLAYERS);
+
+    return *longest_road_achievement;
 }
 
 unsigned char *switch_action_store(unsigned char *size,
@@ -507,21 +580,21 @@ unsigned char *switch_action_store(unsigned char *size,
                                    PlayerPtr player,
                                    signed char mat_bank[TOTAL_MATERIALS],
                                    signed char devcard_bank[TOTAL_DEVELOPMENT_CARD],
-                                   const signed char store[TOTAL_STORE][TOTAL_MATERIALS], signed char achievements[TOTAL_ACHIEVEMENTS_CARD])
+                                   const signed char store[TOTAL_STORE][TOTAL_MATERIALS], signed char *longest_road_achievement)
 {
     unsigned char *res = calloc((*size = 1), sizeof(unsigned char));
 
     switch (params[0])
     {
     case 0:
-        res[0] = buy_road(player,
-                          graph,
-                          store[ROAD],
-                          mat_bank,
-                          params[1],
-                          params[2] + AREAS,
-                          params[3] + AREAS);
-        update_achievements(graph, achievements);
+        buy_road(player,
+                 graph,
+                 store[ROAD],
+                 mat_bank,
+                 params[1],
+                 params[2] + AREAS,
+                 params[3] + AREAS);
+        res[0] = update_longest_road(graph, longest_road_achievement);
         break;
     case 1:
         res[0] = buy_settlement(player,
@@ -583,10 +656,6 @@ void collect_materials_area(VertexPtr area, PlayerPtr players, signed char *bank
             enqueue(&que, node->right);
         }
 
-        if (player_offset < MAX_PLAYERS)
-        {
-            printt("player_offset < MAX_PLAYERS! %d\n", player_offset);
-        }
         mats_to_players[player_offset][material] += (player_offset < MAX_PLAYERS) * (1 + is_city);
     }
 
@@ -599,7 +668,8 @@ void collect_materials_area(VertexPtr area, PlayerPtr players, signed char *bank
 void collect_materials(unsigned char rolled_num,
                        PlayerPtr players,
                        GraphPtr graph,
-                       signed char *bank)
+                       signed char *bank,
+                       const unsigned char robberArea)
 {
     // for each rolled num there can be between 1 to 2 vertecies;
     VertexPtr vertecies[2] = {NULL, NULL};
@@ -608,7 +678,7 @@ void collect_materials(unsigned char rolled_num,
 
     for (offset = 0, vertex = 0; offset < AREAS; offset++)
     {
-        if (extract_area_number(graph->vertices[offset].material_number) == rolled_num)
+        if (extract_area_number(graph->vertices[offset].material_number) == rolled_num && robberArea != offset)
         {
             vertecies[vertex++] = graph->vertices + offset;
         }
@@ -619,7 +689,53 @@ void collect_materials(unsigned char rolled_num,
         collect_materials_area(vertecies[vertex], players, bank);
     }
 }
+signed char update_biggest_army(PlayerPtr players,
+                                signed char num_of_players,
+                                signed char *biggest_army_achivement)
+{
+    unsigned char max = 0;
+    while (--num_of_players >= 0)
+    {
+        bmax(max, players[num_of_players].knightUsed);
+    }
 
+    if (max >= 3)
+    {
+        *biggest_army_achivement = num_of_players;
+    }
+    else
+    {
+        *biggest_army_achivement = -1;
+    }
+    return *biggest_army_achivement;
+}
+unsigned char *move_robber(unsigned char *size,
+                           PlayerPtr players,
+                           const unsigned char player_index,
+                           unsigned char *robberArea,
+                           signed char *params,
+                           signed char *biggest_army_achivement,
+                           const unsigned char num_of_players)
+{
+    unsigned char *res = calloc((*size = 1), sizeof(char));
+
+    bool stealMode = params[0]; // if got 7!
+    *robberArea = params[1];
+
+    if (stealMode)
+    {
+        // TODO: steal MODE!
+    }
+    else
+    {
+        players[player_index].knightUsed++;
+        *res = (unsigned char)update_biggest_army(players,
+                                                  num_of_players,
+                                                  biggest_army_achivement);
+    }
+
+    return res;
+}
 // bots
 
 void bot_inits(PlayerPtr players, unsigned char num_of_players)
@@ -745,12 +861,20 @@ void vector_cpy(signed char *dest, signed char *src, signed char size)
 
 void vector_val(signed char *dest, signed char size, signed char val)
 {
-    unsigned char offset;
 
     while (--size >= 0)
     {
-        dest[offset] = val;
+        dest[size] = val;
     }
+}
+unsigned char vector_count(const signed char *dest, signed char size, signed char val)
+{
+    unsigned char count = 0;
+    while (--size >= 0)
+    {
+        count += dest[size] == val;
+    }
+    return count;
 }
 signed char vec_sum(signed char *arr, signed char size)
 {

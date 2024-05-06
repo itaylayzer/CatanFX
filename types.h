@@ -42,7 +42,7 @@ typedef enum
 typedef enum
 {
     BIGGEST_ARMY,
-    LOGEST_PATH
+    LONGEST_PATH
 } ACHIEVEMENTS;
 typedef enum
 {
@@ -86,6 +86,7 @@ typedef struct playerType
     signed char harbors;
     Node settlements; // התיישבויות
     unsigned char amounts[TOTAL_STORE - 1];
+    unsigned char knightUsed;
 
 } PlayerRec, *PlayerPtr;
 

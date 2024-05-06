@@ -4,13 +4,15 @@ void handle_request(
     signed char *buffer,
     int socket,
     GraphPtr graph,
-    unsigned char *harbors, PlayerPtr players,
+    unsigned char *harbors,
+    PlayerPtr players,
     signed char *bankDevelopments,
     signed char *bankMaterials,
     const signed char (*store)[TOTAL_MATERIALS],
     unsigned char *turnOffset,
     const unsigned char num_of_players,
-    signed char *achievementCards)
+    signed char *achievementCards,
+    unsigned char *robberArea)
 {
     unsigned char size = 0;
     void *_buff;
@@ -47,11 +49,11 @@ void handle_request(
         _buff = vec_dup(achievementCards, (size = TOTAL_ACHIEVEMENTS_CARD));
         break;
 
-    case 30:
-        _buff = roll_dice(&size, players, graph, bankMaterials);
+    case 30: // roll dice
+        _buff = roll_dice(&size, players, graph, bankMaterials, *robberArea);
         break;
 
-    case 31:
+    case 31: // buy from store
         _buff = switch_action_store(&size,
                                     buffer + 1,
                                     graph,
@@ -59,17 +61,26 @@ void handle_request(
                                     bankMaterials,
                                     bankDevelopments,
                                     store,
-                                    achievementCards);
+                                    achievementCards + LONGEST_PATH);
         break;
+    case 32: // move robber
+        _buff = move_robber(&size,
+                            players,
+                            0,
+                            robberArea,
+                            buffer + 1,
+                            achievementCards + BIGGEST_ARMY,
+                            num_of_players);
 
     case 40:
         handle_rest_turns(socket, turnOffset, players, num_of_players);
+        size = 1;
+        _buff = calloc(1, sizeof(char));
         break;
 
     default:
         return;
     }
-    printt("action %d size=%d\n", buffer[0], size);
     send(socket, &size, 1, 0);
     send(socket, _buff, size, 0);
     free(_buff);
@@ -117,5 +128,6 @@ void catan_start(signed char _num_of_players)
                   store,
                   &turnOffset,
                   num_of_players,
-                  achievementCards);
+                  achievementCards,
+                  &robberArea);
 }
