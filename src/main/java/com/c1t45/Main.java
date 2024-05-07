@@ -21,8 +21,8 @@ public class Main extends Application {
 
     private void open(Stage primaryStage) throws Exception, UnknownHostException, IOException {
         startGame(primaryStage);
-        primaryStage.setMinHeight(100);
-        primaryStage.setMinWidth(1203);
+        primaryStage.setMinHeight(720);
+        primaryStage.setMinWidth(1330);
     }
 
     @Override

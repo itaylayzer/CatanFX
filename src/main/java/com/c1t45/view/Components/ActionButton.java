@@ -47,12 +47,11 @@ public class ActionButton extends ImageButton {
             this.scale(1);
             setScaleOnHover(true);
         });
-
         this.onAction = null;
 
         ActionButton self = this;
         setOnMouseClicked((event) -> {
-            if (!self.getDisabled() && onAction != null)
+            if (!self.getDisabled() && count != 0 && onAction != null)
                 onAction.handle(event);
         });
     }
@@ -74,4 +73,5 @@ public class ActionButton extends ImageButton {
         setTooltip(pack.name.toUpperCase());
         setImage(ImageUtils.colorChange(pack.image));
     }
+
 }

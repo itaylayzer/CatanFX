@@ -26,20 +26,20 @@ public class ButtonsPane {
     public ButtonsPane(FlowPane buttonsFlow, LocalPlayer player) {
         this.onDice = null;
 
+        rollAction = new ActionButton(Constants.Packages.rolldice);
+        roadAction = new ActionButton(Constants.Packages.roads, (byte) 15);
         houseAction = new ActionButton(Constants.Packages.house, (byte) 5);
         cityAction = new ActionButton(Constants.Packages.city, (byte) 4);
-        roadAction = new ActionButton(Constants.Packages.roads, (byte) 15);
         devcardAction = new ActionButton(Constants.Packages.devcard);
         tradeAction = new ActionButton(Constants.Packages.trade);
-        rollAction = new ActionButton(Constants.Packages.rolldice);
 
         ObjectProperty<Boolean> doRolls = new SimpleObjectProperty<Boolean>(true);
 
         buttonsFlow.getChildren().add(tradeAction);
         buttonsFlow.getChildren().add(devcardAction);
-        buttonsFlow.getChildren().add(roadAction);
-        buttonsFlow.getChildren().add(houseAction);
         buttonsFlow.getChildren().add(cityAction);
+        buttonsFlow.getChildren().add(houseAction);
+        buttonsFlow.getChildren().add(roadAction);
         buttonsFlow.getChildren().add(rollAction);
 
         rollAction.setOnAction((event) -> {
@@ -83,22 +83,6 @@ public class ButtonsPane {
             });
         });
 
-        devcardAction.setOnAction((event) -> {
-            CatanBoard board = CatanBoard.getInstance();
-            devcardAction.setButtonDisabled(true);
-            board.cancelCurrentPick(false);
-
-            board.pickHexagon((value) -> {
-                return value != 9 && board.getRobberPos() != value;
-            }, () -> {
-                devcardAction.setButtonDisabled(false);
-            }, (picked) -> {
-                devcardAction.setButtonDisabled(false);
-                System.out.println("picked-hexagon=" + picked);
-                board.setRobberPos(picked);
-            });
-        });
-
         cityAction.setOnAction((event) -> {
             CatanBoard board = CatanBoard.getInstance();
             cityAction.setButtonDisabled(true);
@@ -131,6 +115,9 @@ public class ButtonsPane {
                 player.buyRoad(true, picked, fromto[0], fromto[1]);
                 CatanBoard.addRoad(picked, player.getColor());
             });
+        });
+        devcardAction.setOnAction((event) -> {
+            player.buyDevCard();
         });
 
         player.addOnAmountsChange((amounts) -> {

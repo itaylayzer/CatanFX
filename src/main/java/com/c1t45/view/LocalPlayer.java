@@ -1,6 +1,7 @@
 package com.c1t45.view;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -124,7 +125,7 @@ public class LocalPlayer extends Player {
         try {
             setActionable(client.getActionable());
             setMaterials(client.getMaterials(this.id));
-            setDevelopements(client.getDevelopments((byte) 5));
+            setDevelopements(client.getDevelopments(this.id));
             setAmounts(client.getAmounts());
             if (bank == null)
                 return;
@@ -255,5 +256,29 @@ public class LocalPlayer extends Player {
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
         }
+    }
+
+    public byte[] getDevelopments() {
+        return this.devcards;
+    }
+
+    public void usedDevCard(byte offset) {
+        try {
+            System.out.println(Arrays.toString(client.usedDevCard(offset, (byte) 1)));
+        } catch (Exception ex) {
+
+        }
+        update();
+    }
+
+    public void buyDevCard() {
+        try {
+
+            client.storeDevCard();
+        } catch (Exception ex) {
+            ex.printStackTrace(System.err);
+        }
+        update();
+
     }
 }

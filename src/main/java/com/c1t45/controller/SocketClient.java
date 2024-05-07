@@ -90,6 +90,10 @@ public class SocketClient {
         return this.action(new byte[] { ClientCodes.ACTIONS.STORE, 2, vertex })[0] != 1;
     }
 
+    public boolean storeDevCard() throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.ACTIONS.STORE, 3 })[0] != 1;
+    }
+
     public void endTurn(Condition<Void> condition, Action<Void> onDone) throws IOException, Exception {
         this.send(new byte[] { ClientCodes.ACTIONS.END_TURN });
 
@@ -134,6 +138,10 @@ public class SocketClient {
 
     public byte moveRobber(byte robber, boolean knight) throws IOException, Exception {
         return this.action(new byte[] { ClientCodes.ACTIONS.ROBBER, (byte) (knight ? 1 : 0), robber })[0];
+    }
+
+    public byte[] usedDevCard(byte offset, byte amount) throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.ACTIONS.USE_DEV_CARD, offset, amount });
     }
 
 }

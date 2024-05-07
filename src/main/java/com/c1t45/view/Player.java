@@ -1,6 +1,7 @@
 package com.c1t45.view;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.c1t45.view.Interfaces.Action;
@@ -15,10 +16,11 @@ public class Player {
     protected byte id;
     protected String name;
     protected byte[] materials;
+    protected byte[] devcards;
+
     private Color color;
     private static byte turnID;
 
-    private byte[] devcards;
     private static byte houses[];
     private static byte roads[];
 
@@ -49,6 +51,7 @@ public class Player {
 
         this.materials = new byte[Constants.TOTAL_MATERIALS];
         this.devcards = new byte[Constants.TOTAL_DEVELOPMENT_CARD];
+
         this.onInventoryChange = new ArrayList<>();
         this.onDevcardChange = null;
     }
@@ -121,6 +124,7 @@ public class Player {
 
     protected void setDevelopements(byte[] devcards) {
         this.devcards = devcards;
+        System.out.println("devcards = " + Arrays.toString(devcards));
         callOnInventoryChange();
     }
 
@@ -142,6 +146,7 @@ public class Player {
 
     public void addOnInventoryChange(Runnable handler) {
         onInventoryChange.add(handler);
+
     }
 
     public void removeOnInventoryChange(Runnable handler) {

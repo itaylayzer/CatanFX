@@ -8,7 +8,7 @@ public class Constants {
         }
 
         public static class ACTIONS {
-            public static final byte DICE = 30, STORE = 31, END_TURN = 40, ROBBER = 32;
+            public static final byte DICE = 30, STORE = 31, END_TURN = 40, ROBBER = 32, USE_DEV_CARD = 33;
         }
     }
 

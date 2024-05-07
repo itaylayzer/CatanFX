@@ -1,70 +1,21 @@
 package com.c1t45.view.Components;
 
+import com.c1t45.view.Interfaces.Action;
 import com.c1t45.view.Packages.ImagePackage;
-import com.c1t45.view.Utils.ImageUtils;
-
-import javafx.event.EventHandler;
-import javafx.scene.Cursor;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Paint;
 
-public class DevelopmentGroup extends ImageButton {
-    private byte count;
-    private EventHandler<MouseEvent> onAction;
+public class DevelopmentGroup extends ActionButton {
 
     public DevelopmentGroup(ImagePackage pack) {
-        this(pack, 50, 90, 5);
-        setFontSize(0);
-        setText(" ");
-        this.count = -1;
-        translateImageX(10);
+        super(new ImagePackage(pack.name, Paint.valueOf("#101010"), pack.image), (byte) 0);
+        super.setButtonDisabled(true);
     }
 
-    private DevelopmentGroup(ImagePackage pack, double width, double height, double gap) {
-        super(width, height, gap);
-        setTooltip(pack.name.toUpperCase());
-        setFill(Paint.valueOf("#101010"));
-        setInnerFill(Paint.valueOf("#101010"));
-        setImage(ImageUtils.colorChange(pack.image));
-        super.setCursor(Cursor.HAND);
-        setOnDisabled((event) -> {
-            super.setCursor(Cursor.DEFAULT);
-            this.scale(0.9);
-            this.fade(0.6);
-            ;
-            setScaleOnHover(false);
+    public DevelopmentGroup(ImagePackage pack, Action<DevelopmentGroup> event) {
+        super(new ImagePackage(pack.name, Paint.valueOf("#101010"), pack.image), (byte) 0);
+        super.setButtonDisabled(false);
+        super.setOnAction((eve) -> {
+            event.action(this);
         });
-        setOnEnabled((event) -> {
-            super.setCursor(Cursor.HAND);
-            this.fade(1);
-            this.scale(1);
-            setScaleOnHover(true);
-        });
-
-        this.onAction = null;
-
-        DevelopmentGroup self = this;
-        setOnMouseClicked((event) -> {
-            if (!self.getDisabled() && onAction != null)
-                onAction.handle(event);
-        });
-    }
-
-    public void setOnAction(EventHandler<MouseEvent> handler) {
-        this.onAction = handler;
-    }
-
-    public void setCount(byte _count) {
-        setText(Byte.toString((this.count = _count)));
-    }
-
-    @Override
-    public void setButtonDisabled(boolean value) {
-        super.setButtonDisabled(value || count == 0);
-    }
-
-    public void setPackage(ImagePackage pack) {
-        setTooltip(pack.name.toUpperCase());
-        setImage(ImageUtils.colorChange(pack.image));
     }
 }

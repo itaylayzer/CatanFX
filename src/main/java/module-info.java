@@ -3,6 +3,7 @@ module com.c1t45 {
     requires javafx.fxml;
     requires javafx.base;
     requires javafx.graphics;
+    requires java.desktop;
 
     opens com.c1t45 to javafx.fxml;
     opens com.c1t45.controller to javafx.fxml;
