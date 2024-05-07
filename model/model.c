@@ -259,7 +259,8 @@ unsigned char *get_player_devcards(PlayerPtr player)
 
 unsigned char *inf_player_materials(unsigned char *size,
                                     PlayerPtr players,
-                                    signed char *bankMaterials, unsigned char offset)
+                                    signed char *bankMaterials,
+                                    unsigned char offset)
 {
     unsigned char *mats = inf_players_manip(size,
                                             players,
@@ -691,7 +692,7 @@ void collect_materials(unsigned char rolled_num,
 }
 signed char update_biggest_army(PlayerPtr players,
                                 signed char num_of_players,
-                                signed char *biggest_army_achivement)
+                                signed char *biggest_army_achievement)
 {
     unsigned char max = 0;
     while (--num_of_players >= 0)
@@ -701,20 +702,21 @@ signed char update_biggest_army(PlayerPtr players,
 
     if (max >= 3)
     {
-        *biggest_army_achivement = num_of_players;
+        *biggest_army_achievement = num_of_players;
     }
     else
     {
-        *biggest_army_achivement = -1;
+        *biggest_army_achievement = -1;
     }
-    return *biggest_army_achivement;
+
+    return *biggest_army_achievement;
 }
 unsigned char *move_robber(unsigned char *size,
                            PlayerPtr players,
                            const unsigned char player_index,
                            unsigned char *robberArea,
                            signed char *params,
-                           signed char *biggest_army_achivement,
+                           signed char *biggest_army_achievement,
                            const unsigned char num_of_players)
 {
     unsigned char *res = calloc((*size = 1), sizeof(char));
@@ -731,7 +733,7 @@ unsigned char *move_robber(unsigned char *size,
         players[player_index].knightUsed++;
         *res = (unsigned char)update_biggest_army(players,
                                                   num_of_players,
-                                                  biggest_army_achivement);
+                                                  biggest_army_achievement);
     }
 
     return res;

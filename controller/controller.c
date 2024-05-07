@@ -1,5 +1,16 @@
 #include "controller.h"
 
+unsigned char *use_dev_card(unsigned char *size,
+                            PlayerPtr player,
+                            unsigned char offset,
+                            unsigned char amount)
+{
+    player->developmentCards[offset] -= amount;
+    return (unsigned char *)vec_dup(
+        (signed char *)player->developmentCards,
+        (*size = TOTAL_DEVELOPMENT_CARD));
+}
+
 void handle_request(
     signed char *buffer,
     int socket,
@@ -71,6 +82,10 @@ void handle_request(
                             buffer + 1,
                             achievementCards + BIGGEST_ARMY,
                             num_of_players);
+        break;
+    case 33: // use dev card
+        _buff = use_dev_card(&size, players, buffer[1], buffer[2]);
+        break;
 
     case 40:
         handle_rest_turns(socket, turnOffset, players, num_of_players);
@@ -81,6 +96,7 @@ void handle_request(
     default:
         return;
     }
+
     send(socket, &size, 1, 0);
     send(socket, _buff, size, 0);
     free(_buff);
