@@ -84,7 +84,6 @@ public class CatanBoard {
     private byte robberHex;
 
     private HashMap<Byte, ImageView> settlementsMap;
-    private AnchorPane pane;
 
     public static void clear() {
         instance = null;
@@ -127,7 +126,7 @@ public class CatanBoard {
 
         lands = new ArrayList<>();
         landsGroup = new Group();
-        (this.pane = pane).setPrefHeight(405);
+        pane.setPrefHeight(405);
         pane.setPrefWidth(436);
 
         DropShadow dropShadow = new DropShadow();
@@ -177,7 +176,6 @@ public class CatanBoard {
 
         hexesGroup.setOpacity(0);
         hexesGroup.setMouseTransparent(true);
-
     }
 
     private void initRobber() {
@@ -591,6 +589,7 @@ public class CatanBoard {
 
         fade(landsGroup, 0.5);
         fade(vertexGroup, 1);
+
         int index;
         for (index = 0; index < vertexCircles.length; index++) {
             Circle circle = vertexCircles[index];
@@ -613,7 +612,6 @@ public class CatanBoard {
 
     private void cancelPickVertexUI(boolean useFade) {
         vertexGroup.setMouseTransparent(true);
-        settlementsGroup.setMouseTransparent(true);
 
         if (useFade) {
             fade(landsGroup, 1);
@@ -622,6 +620,7 @@ public class CatanBoard {
             landsGroup.setOpacity(1);
             vertexGroup.setOpacity(0);
         }
+
         for (Circle circle : vertexCircles) {
             circle.setOnMouseClicked(null);
         }
@@ -638,6 +637,7 @@ public class CatanBoard {
             landsGroup.setOpacity(0.5);
             edgesGroup.setOpacity(1);
         }
+
         int index;
         for (index = 0; index < edgesRectangles.length; index++) {
             Rectangle rect = edgesRectangles[index];
@@ -658,7 +658,6 @@ public class CatanBoard {
 
     private void cancelPickEdgeUI(boolean useFade) {
         edgesGroup.setMouseTransparent(true);
-        roadsGroup.setMouseTransparent(true);
 
         if (useFade) {
             fade(landsGroup, 1);
@@ -679,6 +678,7 @@ public class CatanBoard {
         lastCancel = null;
         cancelPickVertexUI(useFade);
         cancelPickEdgeUI(useFade);
+        cancelPickHexUI(useFade);
     }
 
     public void pickHexagon(Condition<Byte> allowHex, Runnable onCancel, Action<Byte> onPicked) {
@@ -738,8 +738,6 @@ public class CatanBoard {
     }
 
     private void cancelPickHexUI(boolean useFade) {
-        edgesGroup.setMouseTransparent(true);
-        roadsGroup.setMouseTransparent(true);
         hexesGroup.setMouseTransparent(true);
 
         if (useFade) {

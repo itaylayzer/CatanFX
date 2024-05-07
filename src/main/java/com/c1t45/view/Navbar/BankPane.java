@@ -39,7 +39,7 @@ public class BankPane extends VBox {
         wheetGroup = new MiniMaterialGroup(Constants.Packages.materials[2]);
         brickGroup = new MiniMaterialGroup(Constants.Packages.materials[3]);
         oreGroup = new MiniMaterialGroup(Constants.Packages.materials[4]);
-        devGroup = new MiniMaterialGroup(Constants.Packages.devcards);
+        devGroup = new MiniMaterialGroup(Constants.Packages.devcard);
 
         woodGroup.setScaleOnHover(false);
         woolGroup.setScaleOnHover(false);

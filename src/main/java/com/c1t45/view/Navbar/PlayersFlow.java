@@ -16,14 +16,7 @@ public class PlayersFlow {
         bank = new BankPane();
 
         playersVBox.getChildren().add(bank);
-
         LocalPlayer.setBank(bank);
-
-        // Rectangle rectangle = new Rectangle();
-        // rectangle.setWidth(230);
-        // rectangle.setHeight(2);
-        // rectangle.setFill(Paint.valueOf("#656565"));
-        // playersVBox.getChildren().add(rectangle);
 
         for (byte index = (byte) (players.length - 1); index > -1; index--) {
             Player player = players[index];
@@ -31,6 +24,13 @@ public class PlayersFlow {
             playersVBox.getChildren().add(playerPane);
             panes[index] = playerPane;
         }
+
+        Player.addOnAchievementsChange((bigestArmy, longestRoad) -> {
+            for (byte index = 0; index < players.length; index++) {
+                panes[index].setLongestRoad(longestRoad == index);
+                panes[index].setBigestArmy(bigestArmy == index);
+            }
+        });
 
         playersVBox.setPadding(new Insets(10, 7, 10, 7));
         playersVBox.setSpacing(10);

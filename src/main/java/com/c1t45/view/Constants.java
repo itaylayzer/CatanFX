@@ -7,9 +7,13 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.Paint;
 
 public class Constants {
-        static public final byte AREAS = 19;
-        static public final byte VERTECIES = 54;
-        static public final byte LINES = 72;
+
+        static public final byte TOTAL_MATERIALS = 5, // כמות מצרכים
+                        TOTAL_DEVELOPMENT_CARD = 5, // כמות קלפי פיתוח
+                        TOTAL_ACHIEVEMENTS_CARD = 2, // כמות קלפי הישג
+                        AREAS = 19, // כמות קודקודי אזור
+                        VERTECIES = 54, // כמות קודקודי התיישבות
+                        LINES = 72;
 
         public enum Materials {
                 wood((byte) 0),
@@ -46,7 +50,11 @@ public class Constants {
                                 timer = new Image(url("icons/stats/timer.png")),
                                 rolldice = new Image(url("icons/stats/rolldices.png")),
                                 icon = new Image(url("icons/icon/bircksicon.png")),
-                                robber = new Image(url("icons/robber.png"));
+                                robber = new Image(url("icons/robber.png")),
+                                knight = new Image(url("icons/developments/knight.png")),
+                                year_of_plant = new Image(url("icons/developments/year_of_plant.png")),
+                                monopol = new Image(url("icons/developments/monopol.png"));
+
                 public static final Image[] dices = new Image[] {
                                 new Image(url("icons/dices/c1.png")),
                                 new Image(url("icons/dices/c2.png")),
@@ -71,8 +79,16 @@ public class Constants {
                                 new ImagePackage("ore", Paint.valueOf("#d0d0d0"), Images.ore),
                 };
 
+                public static final ImagePackage[] devcards = new ImagePackage[] {
+                                new ImagePackage("knight", Paint.valueOf("#4a1087"), Images.knight),
+                                new ImagePackage("victory point", Paint.valueOf("#FFD700"), Images.points),
+                                new ImagePackage("roads", Paint.valueOf("#f0f0f0"), Images.roads),
+                                new ImagePackage("year of plant", Paint.valueOf("#75d9a7"), Images.year_of_plant),
+                                new ImagePackage("monopol", Paint.valueOf("#4287f5"), Images.monopol),
+                };
+
                 public static final ImagePackage material = new ImagePackage("materials", Images.mat),
-                                devcards = new ImagePackage("development cards", Images.devcards),
+                                devcard = new ImagePackage("development cards", Images.devcards),
                                 settlements = new ImagePackage("settlements", Images.house),
                                 points = new ImagePackage("victory points", Images.points),
                                 roads = new ImagePackage("roads", Images.roads),

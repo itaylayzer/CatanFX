@@ -29,7 +29,6 @@ public class LocalPlayer extends Player {
     private BankPane bank;
 
     private byte[] amounts;
-    private byte[] achievements;
 
     public LocalPlayer(byte id, String localeName, Color color, SocketClient client) {
         super(id, localeName, color);
@@ -42,7 +41,6 @@ public class LocalPlayer extends Player {
         this.onActionableChange = new ArrayList<>();
         onAmountsChange = new ArrayList<>();
         amounts = new byte[3];
-        achievements = new byte[2];
         this.roads = new ArrayList<>();
 
         this.update();
@@ -162,7 +160,7 @@ public class LocalPlayer extends Player {
     public void buyRoad(boolean transferMaterials, byte offset, byte from, byte to) {
         try {
             super.buyRoad(offset);
-            achievements[1] = client.storeRoad(transferMaterials, from, to);
+            setAchivementIDS((byte) 1, client.storeRoad(transferMaterials, from, to));
             roads.add(offset);
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
@@ -253,7 +251,7 @@ public class LocalPlayer extends Player {
 
     public void moveRobber(byte robber, boolean knight) {
         try {
-            achievements[0] = client.moveRobber(robber, knight);
+            setAchivementIDS((byte) 0, client.moveRobber(robber, knight));
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
         }

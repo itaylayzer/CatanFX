@@ -27,13 +27,15 @@ public class Player {
     private List<Runnable> onInventoryChange;
 
     private static List<Action<Byte>> onTurnIDChange;
+    private static List<Action2<Byte, Byte>> onAchivementChange;
+    private static byte[] achievements;
 
     static {
         houses = new byte[Constants.VERTECIES];
         roads = new byte[Constants.LINES];
-
+        achievements = new byte[2];
         onTurnIDChange = new ArrayList<>();
-
+        onAchivementChange = new ArrayList<>();
     }
 
     public static byte[] getHouses() {
@@ -45,8 +47,8 @@ public class Player {
         this.name = localeName;
         this.color = color;
 
-        this.materials = new byte[5];
-        this.devcards = new byte[5];
+        this.materials = new byte[Constants.TOTAL_MATERIALS];
+        this.devcards = new byte[Constants.TOTAL_DEVELOPMENT_CARD];
         this.onInventoryChange = new ArrayList<>();
         this.onDevcardChange = null;
     }
@@ -84,6 +86,9 @@ public class Player {
         }
 
         count += devcards[1];
+
+        count += getBiggerArmyID() == id ? 2 : 0;
+        count += getLongestRoadID() == id ? 2 : 0;
 
         return count;
     }
@@ -211,5 +216,24 @@ public class Player {
 
     protected static void moveTurn() {
         setTurnID((byte) (turnID + 1));
+    }
+
+    protected static void setAchivementIDS(byte index, byte value) {
+        achievements[index] = value;
+        for (var event : onAchivementChange) {
+            event.action(achievements[0], achievements[1]);
+        }
+    }
+
+    public static byte getBiggerArmyID() {
+        return (byte) (achievements[0] + 1);
+    }
+
+    public static byte getLongestRoadID() {
+        return (byte) (achievements[1] + 1);
+    }
+
+    public static void addOnAchievementsChange(Action2<Byte, Byte> eve) {
+        onAchivementChange.add(eve);
     }
 }

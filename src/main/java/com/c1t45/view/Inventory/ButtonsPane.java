@@ -29,7 +29,7 @@ public class ButtonsPane {
         houseAction = new ActionButton(Constants.Packages.house, (byte) 5);
         cityAction = new ActionButton(Constants.Packages.city, (byte) 4);
         roadAction = new ActionButton(Constants.Packages.roads, (byte) 15);
-        devcardAction = new ActionButton(Constants.Packages.devcards);
+        devcardAction = new ActionButton(Constants.Packages.devcard);
         tradeAction = new ActionButton(Constants.Packages.trade);
         rollAction = new ActionButton(Constants.Packages.rolldice);
 
