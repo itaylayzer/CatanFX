@@ -25,6 +25,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -62,6 +63,10 @@ public class GameController {
     private VBox actionsBox;
     @FXML
     private VBox notificationBar;
+    @FXML
+    private HBox inventoryBox;
+    @FXML
+    private VBox selectionBox;
 
     private Color[] shuffleColors() {
         var list = Arrays.asList(Color.RED, Color.WHITE, Color.GREEN, Color.ORANGE);
@@ -102,14 +107,23 @@ public class GameController {
             }
         });
 
-        new UserInterface(local, materialsFlow, buttonsFlow, dices, actionsBox);
+        UserInterface userInterface = new UserInterface(local, materialsFlow, buttonsFlow, inventoryBox, dices,
+                actionsBox);
 
         new PlayersFlow(players, playersHBox);
 
         byte[] landsBytes = sock.getLands();
         byte[] harborsBytes = sock.getHarbors();
 
-        CatanBoard.Initialize(catanBoardPane, landsBytes, harborsBytes, local, edges);
+        CatanBoard.Initialize(catanBoardPane,
+                userInterface,
+                selectionBox,
+                colors,
+                players,
+                landsBytes,
+                harborsBytes,
+                local,
+                edges);
 
         initializeWindowEvents(window);
         initTurnRect(colors);
@@ -169,8 +183,8 @@ public class GameController {
         final double smoothness = 0.2;
 
         ChangeListener<? super Number> windowScaleListener = (obs, oldVal, newVal) -> {
-            final double calculation = window.getHeight() / 735;
-            final double scale = Math.min(1.5, Math.max(calculation, 0.5));
+            final double calculation = window.getHeight() / 700;
+            final double scale = Math.min(1.5, Math.max(calculation, 0.4));
             ScaleTransition scaleTo = new ScaleTransition(Duration.seconds(smoothness), catanBoardPane);
             scaleTo.setToX(scale);
             scaleTo.setToY(scale);

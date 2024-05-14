@@ -48,7 +48,7 @@ public class ImageButton extends Group {
         this.width = width;
         this.height = height;
         this.gap = gap;
-        this.fontSize = 30;
+        this.fontSize = 25;
         this.tooltipFontSize = 14;
         this.scaleOnHover = true;
 

@@ -64,8 +64,8 @@ public class Main extends Application {
             primaryStage.getIcons().add(Constants.Images.icon);
             primaryStage.show();
 
-            primaryStage.setMinHeight(639);
-            primaryStage.setMinWidth(816);
+            primaryStage.setMinHeight(739);
+            primaryStage.setMinWidth(1356);
 
         } catch (Exception e) {
             e.printStackTrace(System.err);

@@ -28,7 +28,7 @@ public class ActionButton extends ImageButton {
     }
 
     private ActionButton(ImagePackage pack, double width, double height, double gap) {
-        super(width, height, gap);
+        super(width * 0.8, height * 0.8, gap * 0.8);
         setTooltip(pack.name.toUpperCase());
         setFill(Paint.valueOf("#101010"));
         setInnerFill(Paint.valueOf("#101010"));
@@ -61,6 +61,12 @@ public class ActionButton extends ImageButton {
     }
 
     public void setCount(byte _count) {
+        if (_count != this.count) {
+            super.scale(1.3, 0.3).setOnFinished((a) -> {
+                super.scale(1, 1);
+            });
+
+        }
         setText(Byte.toString((this.count = _count)));
     }
 

@@ -35,7 +35,7 @@ public class Player {
     static {
         houses = new byte[Constants.VERTECIES];
         roads = new byte[Constants.LINES];
-        achievements = new byte[2];
+        achievements = new byte[] { (byte) -1, (byte) -1 };
         onTurnIDChange = new ArrayList<>();
         onAchivementChange = new ArrayList<>();
     }
@@ -225,6 +225,8 @@ public class Player {
 
     protected static void setAchivementIDS(byte index, byte value) {
         achievements[index] = value;
+        if (index == 0)
+            System.out.println("change robber " + value);
         for (var event : onAchivementChange) {
             event.action(achievements[0], achievements[1]);
         }

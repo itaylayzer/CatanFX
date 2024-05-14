@@ -17,11 +17,10 @@ public class SocketClient {
     private Socket socket;
 
     static private final String ip = "127.0.0.1";
-    static private final int port = 5900;
+    static private final int port = 5173;
 
     public SocketClient() throws UnknownHostException, IOException {
         this.socket = new Socket(ip, port);
-
     }
 
     private void send(byte[] msg) {
@@ -140,8 +139,16 @@ public class SocketClient {
         return this.action(new byte[] { ClientCodes.ACTIONS.ROBBER, (byte) (knight ? 1 : 0), robber })[0];
     }
 
-    public byte[] usedDevCard(byte offset, byte amount) throws IOException, Exception {
-        return this.action(new byte[] { ClientCodes.ACTIONS.USE_DEV_CARD, offset, amount });
+    public byte[] usedDevCard(byte offset) throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.ACTIONS.USE_DEV_CARD, offset });
+    }
+
+    public byte[] yearOfPlant(Byte firstMat, Byte secondMat) throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.ACTIONS.USE_DEV_CARD, 3, firstMat, secondMat });
+    }
+
+    public byte[] monopol(Byte matIndex) throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.ACTIONS.USE_DEV_CARD, 4, matIndex });
     }
 
 }

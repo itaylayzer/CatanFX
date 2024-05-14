@@ -264,7 +264,7 @@ public class LocalPlayer extends Player {
 
     public void usedDevCard(byte offset) {
         try {
-            System.out.println(Arrays.toString(client.usedDevCard(offset, (byte) 1)));
+            System.out.println(Arrays.toString(client.usedDevCard(offset)));
         } catch (Exception ex) {
 
         }
@@ -280,5 +280,23 @@ public class LocalPlayer extends Player {
         }
         update();
 
+    }
+
+    public void yearOfPlant(Byte firstMat, Byte secondMat) {
+        try {
+            client.yearOfPlant(firstMat, secondMat);
+        } catch (Exception ex) {
+            ex.printStackTrace(System.err);
+        }
+        update();
+    }
+
+    public void monopol(Byte matIndex) {
+        try {
+            client.monopol(matIndex);
+        } catch (Exception ex) {
+            ex.printStackTrace(System.err);
+        }
+        update();
     }
 }

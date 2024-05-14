@@ -37,4 +37,18 @@ public class ImageUtils {
 
         return writableImage;
     }
+
+    public static Color colorOpacity(Color color, double colorOpacity) {
+        double red = color.getRed() * colorOpacity;
+        double green = color.getGreen() * colorOpacity;
+        double blue = color.getBlue() * colorOpacity;
+
+        // Ensure values are within the valid range [0, 1]
+        red = Math.min(Math.max(red, 0.0), 1.0);
+        green = Math.min(Math.max(green, 0.0), 1.0);
+        blue = Math.min(Math.max(blue, 0.0), 1.0);
+
+        return new Color(red, green, blue, color.getOpacity());
+
+    }
 }

@@ -9,7 +9,7 @@ public class MaterialGroup extends ImageButton {
     private byte count;
 
     public MaterialGroup(ImagePackage pack) {
-        super(50, 90, 5);
+        super(50 * 0.8, 90 * 0.8, 5 * 0.8);
 
         setTooltip(pack.name.toUpperCase());
         setFill(Paint.valueOf("#101010"));
@@ -25,7 +25,7 @@ public class MaterialGroup extends ImageButton {
             });
 
         }
-        this.count = _count;
-        super.setText(Byte.toString(_count));
+
+        super.setText(Byte.toString((this.count = _count)));
     }
 }

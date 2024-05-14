@@ -53,7 +53,9 @@ public class Constants {
                                 robber = new Image(url("icons/robber.png")),
                                 knight = new Image(url("icons/developments/knight.png")),
                                 year_of_plant = new Image(url("icons/developments/year_of_plant.png")),
-                                monopol = new Image(url("icons/developments/monopol.png"));
+                                monopol = new Image(url("icons/developments/monopol.png")),
+                                cancel = new Image(url("icons/icons/cancel.png")),
+                                player = new Image(url("icons/icons/player.png"));
 
                 public static final Image[] dices = new Image[] {
                                 new Image(url("icons/dices/c1.png")),
@@ -96,7 +98,8 @@ public class Constants {
                                 house = new ImagePackage("house", Images.house),
                                 trade = new ImagePackage("trade", Images.trade),
                                 endturn = new ImagePackage("end turn", Images.timer),
-                                rolldice = new ImagePackage("Roll Dices", Images.rolldice);
+                                rolldice = new ImagePackage("Roll Dices", Images.rolldice),
+                                cancel = new ImagePackage("Cancel", Images.cancel);
         }
 
         public class Store {

@@ -42,6 +42,7 @@ public class InventoryPane {
                         System.out.println("picked-hexagon=" + picked);
                         board.setRobberPos(picked);
                         localPlayer.usedDevCard((byte) 0);
+                        localPlayer.moveRobber(picked, false);
                     });
                 }),
                 new DevelopmentGroup(Constants.Packages.devcards[1]),
@@ -78,13 +79,35 @@ public class InventoryPane {
                 }),
                 // year of plant
                 new DevelopmentGroup(Constants.Packages.devcards[3], (card) -> {
-                    // TODO: two selection alert! of mats!
-                    localPlayer.usedDevCard((byte) 3);
+                    CatanBoard board = CatanBoard.getInstance();
+                    card.setButtonDisabled(true);
+                    board.cancelCurrentPick(false);
+                    board.materialSelect((firstMat) -> {
+                        if (firstMat < 0) {
+                            card.setButtonDisabled(false);
+
+                        } else
+                            board.materialSelect((secondMat) -> {
+                                if (secondMat >= 0) {
+                                    localPlayer.yearOfPlant(firstMat, secondMat);
+                                }
+                                card.setButtonDisabled(false);
+
+                            }, true);
+                    }, true);
+
                 }),
                 // monopol
                 new DevelopmentGroup(Constants.Packages.devcards[4], (card) -> {
-                    // TODO: selection alert! of mats!
-                    localPlayer.usedDevCard((byte) 4);
+                    CatanBoard board = CatanBoard.getInstance();
+                    card.setButtonDisabled(true);
+                    board.cancelCurrentPick(false);
+                    board.materialSelect((matIndex) -> {
+                        if (matIndex >= 0) {
+                            localPlayer.monopol(matIndex);
+                        }
+                        card.setButtonDisabled(false);
+                    }, true);
                 }),
         };
 

@@ -19,6 +19,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
@@ -31,6 +32,11 @@ import java.util.TreeSet;
 
 import com.c1t45.view.Constants;
 import com.c1t45.view.LocalPlayer;
+import com.c1t45.view.Player;
+import com.c1t45.view.UserInterface;
+import com.c1t45.view.CatanBoard.Selection.AbstractSelection;
+import com.c1t45.view.CatanBoard.Selection.MaterialSelection;
+import com.c1t45.view.CatanBoard.Selection.PlayerSelection;
 import com.c1t45.view.Interfaces.Action;
 import com.c1t45.view.Interfaces.Condition;
 import com.c1t45.view.Packages.ImagePackage;
@@ -85,6 +91,12 @@ public class CatanBoard {
 
     private HashMap<Byte, ImageView> settlementsMap;
 
+    // selection box
+    private VBox selectionBox;
+    private UserInterface userInterface;
+    private Color[] playerColors;
+    private Player[] players;
+
     public static void clear() {
         instance = null;
     }
@@ -92,6 +104,10 @@ public class CatanBoard {
     // initializations
 
     public static CatanBoard Initialize(AnchorPane pane,
+            UserInterface userInterface,
+            VBox selectionBox,
+            Color[] playerColors,
+            Player[] players,
             byte[] landsBytes,
             byte[] harborsBytes,
             LocalPlayer player,
@@ -100,7 +116,9 @@ public class CatanBoard {
         if (instance != null) {
             throw new ValueException();
         }
-        CatanBoard board = new CatanBoard(pane, landsBytes, harborsBytes, edgesByte);
+        CatanBoard board = new CatanBoard(pane, userInterface, selectionBox, playerColors, players, landsBytes,
+                harborsBytes,
+                edgesByte);
         instance = board;
 
         TimeUtils.waitUntil((t) -> {
@@ -120,9 +138,20 @@ public class CatanBoard {
         return harbor.add(harbor.subtract(middle).multiply(0.1));
     }
 
-    private CatanBoard(AnchorPane pane, byte[] landsBytes, byte[] harborsBytes, byte[] edgesByte)
+    private CatanBoard(AnchorPane pane,
+            UserInterface userInterface,
+            VBox selectionBox,
+            Color[] playerColors,
+            Player[] players,
+            byte[] landsBytes,
+            byte[] harborsBytes,
+            byte[] edgesByte)
             throws IndexOutOfBoundsException, ValueException {
         lastCancel = null;
+        this.selectionBox = selectionBox;
+        this.userInterface = userInterface;
+        this.playerColors = playerColors;
+        this.players = players;
 
         lands = new ArrayList<>();
         landsGroup = new Group();
@@ -540,11 +569,13 @@ public class CatanBoard {
         }
 
         applyPickVertexUI(allowVertex, new Action<Byte>() {
+
             @Override
             public void action(Byte param) {
                 cancelPickVertexUI(useFade);
                 onPicked.action(param);
             }
+
         });
 
     }
@@ -575,11 +606,13 @@ public class CatanBoard {
         }
 
         applyPickEdgeUI(useFade, allowEdge, new Action<Byte>() {
+
             @Override
             public void action(Byte param) {
                 cancelPickEdgeUI(true);
                 onPicked.action(param);
             }
+
         });
 
     }
@@ -705,11 +738,13 @@ public class CatanBoard {
         }
 
         applyPickHexUI(allowHex, new Action<Byte>() {
+
             @Override
             public void action(Byte param) {
                 cancelPickHexUI(true);
                 onPicked.action(param);
             }
+
         });
     }
 
@@ -792,4 +827,20 @@ public class CatanBoard {
         updateRobberPos();
     }
 
+    private void abstractSelect(AbstractSelection selection, Action<Byte> onFinish, boolean cancellable) {
+        this.userInterface.setDisabled(true);
+        selection.selection(this.selectionBox, (matIndex) -> {
+            this.userInterface.setDisabled(false);
+            if (onFinish != null)
+                onFinish.action(matIndex);
+        }, cancellable);
+    }
+
+    public void materialSelect(Action<Byte> onFinish, boolean cancellable) {
+        abstractSelect(new MaterialSelection(), onFinish, cancellable);
+    }
+
+    public void playerSelect(Action<Byte> onFinish, boolean cancellable) {
+        abstractSelect(new PlayerSelection(players, playerColors), onFinish, cancellable);
+    }
 }
