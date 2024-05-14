@@ -1,8 +1,8 @@
 CC=clang
 CFLAGS=-g -I.
 LDFLAGS=
-SRC_DIR=.
-OBJ_DIR=obj
+SRC_DIR=src
+OBJ_DIR=bin
 EXE=main
 
 SRCS=$(wildcard $(SRC_DIR)/*.c) \

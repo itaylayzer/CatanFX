@@ -1,1 +1,0 @@
-{ "dependencies": { "@types/cannon": "^0.1.12", "@types/firebase": "^3.2.1", "@types/three": "^0.164.0", "cannon": "^0.6.2", "firebase": "^10.11.1", "three": "^0.164.1" } }

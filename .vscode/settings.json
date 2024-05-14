@@ -24,6 +24,9 @@
         "printt.h": "c",
         "typedef.h": "c",
         "sock.h": "c",
-        "avl_tree.h": "c"
+        "avl_tree.h": "c",
+        "assert.h": "c",
+        "chrono": "c",
+        "limits": "c"
     }
 }
