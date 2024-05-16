@@ -50,7 +50,7 @@ public class UserInterface {
             this.inventoryBox.setEffect(null);
 
         }
-        this.inventoryBox.setOpacity(isDisabled ? 0.2 : 1);
+        this.inventoryBox.setOpacity(isDisabled ? 0.5 : 1);
     }
 
 }

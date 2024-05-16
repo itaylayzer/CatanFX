@@ -64,7 +64,15 @@ public class Constants {
                                 new Image(url("icons/dices/c4.png")),
                                 new Image(url("icons/dices/c5.png")),
                                 new Image(url("icons/dices/c6.png"))
-                };
+                },
+                                harbors = new Image[] {
+                                                new Image(url("icons/materials/wood2.png")),
+                                                new Image(url("icons/materials/wool2.png")),
+                                                new Image(url("icons/materials/wheet2.png")),
+                                                new Image(url("icons/materials/brick2.png")),
+                                                new Image(url("icons/materials/ore2.png")),
+                                                new Image(url("icons/materials/any.png")),
+                                };
 
                 private static String url(String local) {
                         return Main.class.getResource(local).toString();

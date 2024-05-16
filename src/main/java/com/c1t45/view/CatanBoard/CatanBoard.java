@@ -221,6 +221,15 @@ public class CatanBoard {
 
     private void initGraphGraphics(byte[] harborsBytes, Point2D boardMiddle) {
         Color pickColor = Color.WHITESMOKE;
+        Image[] harborImages = { Constants.Images.harbors[0],
+                Constants.Images.harbors[1],
+                Constants.Images.harbors[2],
+                Constants.Images.harbors[3],
+                Constants.Images.harbors[4],
+                Constants.Images.harbors[5],
+                Constants.Images.harbors[5],
+                Constants.Images.harbors[5],
+                Constants.Images.harbors[5] };
         for (int vertexOffset = 0; vertexOffset < vertecies.length; vertexOffset++) {
             Point2D vertex = vertecies[vertexOffset].point;
 
@@ -249,30 +258,38 @@ public class CatanBoard {
             Paint color = harborOffset < Constants.Packages.materials.length
                     ? Constants.Packages.materials[harborOffset].color
                     : Color.WHITE;
-
+            Color lostColor = ImageUtils.colorOpacity((Color) color, 0);
             Circle circle = new Circle();
 
-            circle.setFill(color);
-            circle.setRadius(5);
+            circle.setFill(lostColor);
+            circle.setRadius(12);
 
             circle.setLayoutX(harbPoint.getX());
             circle.setLayoutY(harbPoint.getY());
 
-            circle.setCursor(Cursor.HAND);
-
             Line line = new Line(vertexA.getX(), vertexA.getY(), harbPoint.getX(), harbPoint.getY());
 
-            line.setStroke(color);
+            line.setStroke(lostColor);
             line.setStrokeWidth(3);
             harborsGroup.getChildren().add(line);
 
             line = new Line(vertexB.getX(), vertexB.getY(), harbPoint.getX(), harbPoint.getY());
 
-            line.setStroke(color);
+            line.setStroke(lostColor);
             line.setStrokeWidth(3);
 
             harborsGroup.getChildren().add(line);
+
             harborsGroup.getChildren().add(circle);
+            Image image = harborImages[harborOffset];
+            circle.setFill(ImageUtils.colorOpacity((Color) color, 0.1));
+
+            ImageView imageView = new ImageView(ImageUtils.colorChange(image, (Color) color));
+            imageView.setLayoutX(harbPoint.getX() - 7.5);
+            imageView.setLayoutY(harbPoint.getY() - 7.5);
+            imageView.setFitWidth(15);
+            imageView.setFitHeight(15);
+            harborsGroup.getChildren().add(imageView);
         }
 
         for (int edgeOffset = 0; edgeOffset < edges.length; edgeOffset++) {
