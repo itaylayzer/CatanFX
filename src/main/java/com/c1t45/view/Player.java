@@ -1,7 +1,6 @@
 package com.c1t45.view;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.c1t45.view.Interfaces.Action;
@@ -124,7 +123,6 @@ public class Player {
 
     protected void setDevelopements(byte[] devcards) {
         this.devcards = devcards;
-        System.out.println("devcards = " + Arrays.toString(devcards));
         callOnInventoryChange();
     }
 

@@ -97,6 +97,24 @@ public class GameController {
                     byte[] rolls = sock.rollDice();
                     local.update();
 
+                    if (rolls[0] + rolls[1] == 7) {
+                        CatanBoard board = CatanBoard.getInstance();
+                        board.cancelCurrentPick(false);
+
+                        board.pickHexagon((value) -> {
+                            return value != 9 && board.getRobberPos() != value;
+                        }, () -> {
+                        }, (picked) -> {
+                            board.setRobberPos(picked);
+                            local.usedDevCard((byte) 0);
+                            board.playerSelect((player) -> {
+                                local.moveRobber(picked, player);
+                            }, false);
+
+                        });
+
+                    }
+
                     return rolls;
                 } catch (Exception e) {
                     e.printStackTrace(System.err);

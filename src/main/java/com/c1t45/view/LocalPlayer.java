@@ -250,9 +250,9 @@ public class LocalPlayer extends Player {
         local.bank = bank;
     }
 
-    public void moveRobber(byte robber, boolean knight) {
+    public void moveRobber(byte robber, byte playerIndex) {
         try {
-            setAchivementIDS((byte) 0, client.moveRobber(robber, knight));
+            setAchivementIDS((byte) 0, client.moveRobber(robber, playerIndex));
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
         }

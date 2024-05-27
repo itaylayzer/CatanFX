@@ -135,8 +135,8 @@ public class SocketClient {
         return this.action(new byte[] { ClientCodes.INFORMATION.AMOUNTS });
     }
 
-    public byte moveRobber(byte robber, boolean knight) throws IOException, Exception {
-        return this.action(new byte[] { ClientCodes.ACTIONS.ROBBER, (byte) (knight ? 1 : 0), robber })[0];
+    public byte moveRobber(byte robber, byte playerIndex) throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.ACTIONS.ROBBER, playerIndex, robber })[0];
     }
 
     public byte[] usedDevCard(byte offset) throws IOException, Exception {

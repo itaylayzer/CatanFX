@@ -858,6 +858,10 @@ public class CatanBoard {
     }
 
     public void playerSelect(Action<Byte> onFinish, boolean cancellable) {
+        abstractSelect(new PlayerSelection(this.players, playerColors), onFinish, cancellable);
+    }
+
+    public void playerSelect(Player[] players, Action<Byte> onFinish, boolean cancellable) {
         abstractSelect(new PlayerSelection(players, playerColors), onFinish, cancellable);
     }
 }

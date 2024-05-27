@@ -42,7 +42,7 @@ public class InventoryPane {
                         System.out.println("picked-hexagon=" + picked);
                         board.setRobberPos(picked);
                         localPlayer.usedDevCard((byte) 0);
-                        localPlayer.moveRobber(picked, false);
+                        localPlayer.moveRobber(picked, (byte) 0);
                     });
                 }),
                 new DevelopmentGroup(Constants.Packages.devcards[1]),
@@ -56,12 +56,12 @@ public class InventoryPane {
                         return Player.roadDontBelong(value) && localPlayer.validRoadsToBuy().contains(value);
                     }, () -> {
                         card.setButtonDisabled(false);
-                    }, (picked) -> {
+                    }, (picked_first) -> {
 
-                        System.out.println("picked-edge=" + picked);
-                        byte[] fromto = board.seperateEdge(picked);
-                        localPlayer.buyRoad(false, picked, fromto[0], fromto[1]);
-                        CatanBoard.addRoad(picked, localPlayer.getColor());
+                        System.out.println("picked-edge=" + picked_first);
+                        byte[] fromto = board.seperateEdge(picked_first);
+                        localPlayer.buyRoad(false, picked_first, fromto[0], fromto[1]);
+                        CatanBoard.addRoad(picked_first, localPlayer.getColor());
                         card.setButtonDisabled(true);
                         // second pick
                         board.pickEdge((value) -> {
@@ -71,8 +71,8 @@ public class InventoryPane {
                         }, (picked_second) -> {
                             System.out.println("picked-edge=" + picked_second);
                             byte[] fromto2 = board.seperateEdge(picked_second);
-                            localPlayer.buyRoad(false, picked, fromto2[0], fromto2[1]);
-                            CatanBoard.addRoad(picked, localPlayer.getColor());
+                            localPlayer.buyRoad(false, picked_second, fromto2[0], fromto2[1]);
+                            CatanBoard.addRoad(picked_second, localPlayer.getColor());
                             localPlayer.usedDevCard((byte) 2);
                         }, true, false);
                     }, true, true);
