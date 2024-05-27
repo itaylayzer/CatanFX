@@ -4,11 +4,11 @@ import com.c1t45.view.EnemyPlayer;
 import com.c1t45.view.LocalPlayer;
 import com.c1t45.view.Player;
 import com.c1t45.view.UserInterface;
-import com.c1t45.view.CatanBoard.CatanBoard;
-import com.c1t45.view.CatanBoard.DicePane;
-import com.c1t45.view.CatanBoard.NotificationGroup;
+import com.c1t45.view.Components.CatanBoard.CatanBoard;
+import com.c1t45.view.Components.CatanBoard.DicePane;
+import com.c1t45.view.Components.CatanBoard.NotificationGroup;
+import com.c1t45.view.Components.Navbar.PlayersFlow;
 import com.c1t45.view.Interfaces.Action;
-import com.c1t45.view.Navbar.PlayersFlow;
 import com.c1t45.view.Packages.NotificationPackage;
 import com.c1t45.view.Windows.StoreWindow;
 
@@ -106,9 +106,25 @@ public class GameController {
                         }, () -> {
                         }, (picked) -> {
                             board.setRobberPos(picked);
-                            local.usedDevCard((byte) 0);
+
+                            // TODO: get from the server available players!!
                             board.playerSelect((player) -> {
+                                // TODO: available players!!
                                 local.moveRobber(picked, player);
+                                byte counts = local.getMaterialsCount();
+                                byte[] mats = local.getMaterials();
+                                if (counts >= 7) {
+                                    byte amountToDrop = (byte) (counts / 2);
+
+                                    board.materialCounts((a) -> {
+                                        // byte index;
+                                        for (int index = 0; index < a.length; index++) {
+                                            mats[index] -= a[index];
+                                        }
+                                        // TODO: need to update server!
+                                        local.callOnInventoryChange();
+                                    }, amountToDrop, mats);
+                                }
                             }, false);
 
                         });

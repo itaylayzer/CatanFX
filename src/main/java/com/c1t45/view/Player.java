@@ -126,7 +126,7 @@ public class Player {
         callOnInventoryChange();
     }
 
-    protected void callOnInventoryChange() {
+    public void callOnInventoryChange() {
 
         for (Runnable event : onInventoryChange) {
             event.run();

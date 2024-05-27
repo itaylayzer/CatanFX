@@ -7,10 +7,10 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.c1t45.controller.SocketClient;
+import com.c1t45.view.Components.CatanBoard.CatanBoard;
+import com.c1t45.view.Components.Navbar.BankPane;
 import com.c1t45.view.Constants.Actions.TransferMaterials;
-import com.c1t45.view.CatanBoard.CatanBoard;
 import com.c1t45.view.Interfaces.Action;
-import com.c1t45.view.Navbar.BankPane;
 import com.c1t45.view.Packages.LinePackage;
 import com.c1t45.view.Packages.VertexPackage;
 

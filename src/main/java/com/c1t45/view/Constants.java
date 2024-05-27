@@ -55,7 +55,8 @@ public class Constants {
                                 year_of_plant = new Image(url("icons/developments/year_of_plant.png")),
                                 monopol = new Image(url("icons/developments/monopol.png")),
                                 cancel = new Image(url("icons/icons/cancel.png")),
-                                player = new Image(url("icons/icons/player.png"));
+                                player = new Image(url("icons/icons/player.png")),
+                                approve = new Image(url("icons/icons/approve.png"));
 
                 public static final Image[] dices = new Image[] {
                                 new Image(url("icons/dices/c1.png")),
@@ -107,7 +108,8 @@ public class Constants {
                                 trade = new ImagePackage("trade", Images.trade),
                                 endturn = new ImagePackage("end turn", Images.timer),
                                 rolldice = new ImagePackage("Roll Dices", Images.rolldice),
-                                cancel = new ImagePackage("Cancel", Images.cancel);
+                                cancel = new ImagePackage("Cancel", Images.cancel),
+                                approve = new ImagePackage("Approve", Images.approve);
         }
 
         public class Store {

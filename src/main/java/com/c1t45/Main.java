@@ -8,7 +8,7 @@ import java.util.Scanner;
 import com.c1t45.controller.GameController;
 import com.c1t45.view.Constants;
 import com.c1t45.view.LocalPlayer;
-import com.c1t45.view.CatanBoard.CatanBoard;
+import com.c1t45.view.Components.CatanBoard.CatanBoard;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;

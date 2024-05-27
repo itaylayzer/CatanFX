@@ -1,7 +1,7 @@
 package com.c1t45.view.Windows;
 
 import com.c1t45.view.Constants;
-import com.c1t45.view.Components.ImageButton;
+import com.c1t45.view.Components.Buttons.ImageButton;
 import com.c1t45.view.Packages.ImagePackage;
 import com.c1t45.view.Utils.ImageUtils;
 

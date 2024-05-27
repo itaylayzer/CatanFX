@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import com.c1t45.view.Interfaces.Generatable;
+
 public class NameGenerator implements Generatable<String> {
 
     private static String[] constantNames = { "Eizenberg", "Trumer", "Huffman", "Oppenhiemer" };

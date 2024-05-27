@@ -1,8 +1,8 @@
 package com.c1t45.view;
 
-import com.c1t45.view.CatanBoard.DicePane;
-import com.c1t45.view.Inventory.ButtonsPane;
-import com.c1t45.view.Inventory.InventoryPane;
+import com.c1t45.view.Components.CatanBoard.DicePane;
+import com.c1t45.view.Components.Inventory.ButtonsPane;
+import com.c1t45.view.Components.Inventory.InventoryPane;
 
 import javafx.scene.effect.BoxBlur;
 import javafx.scene.effect.Effect;
