@@ -13,12 +13,14 @@
 #include <windows.h>
 #endif
 
-#include "../utils/printt/printt.h"
-#include "../types.h"
-#include "../structures/graph/graph.h"
-#include "../structures/queue/queue.h"
-#include "../utils/math/compare.h"
-#include "../server/sock.h"
+#include "../../utils/printt/printt.h"
+#include "../../controller/types.h"
+#include "../../structures/graph/graph.h"
+#include "../../structures/queue/queue.h"
+#include "../../utils/math/compare.h"
+#include "../../server/sock.h"
+#include "../../utils/math/rand.h"
+#include "./vec_utils.h"
 
 // game logic
 void catan_graph_init(GraphPtr graph, unsigned char harbors[HARBOR_COUNT * 2]);
@@ -76,7 +78,7 @@ void handle_rest_turns(int socket,
                        unsigned char *turnOffset,
                        PlayerPtr players,
                        const unsigned num_of_players);
-// mathematical
+
 signed char *vector_join(const signed char *first,
                          const signed char *second,
                          signed char size,

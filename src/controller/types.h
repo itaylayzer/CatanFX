@@ -2,7 +2,8 @@
 
 #define _INC_TYPES
 
-#include "structures/avl_tree/typedef.h"
+#include <stdbool.h>
+#include "../structures/avl_tree/typedef.h"
 
 #define TOTAL_MATERIALS 5         // כמות מצרכים
 #define TOTAL_DEVELOPMENT_CARD 5  // כמות קלפי פיתוח
@@ -12,6 +13,7 @@
 #define TOTAL_STORE 4             // כמות המפתחות בחנות
 #define HARBOR_COUNT 9
 #define MAX_PLAYERS 4
+#define MAX_VALUE 255
 
 typedef enum
 {
@@ -54,11 +56,14 @@ typedef enum
 
 typedef struct vertexType
 {
+    struct vertexType *father;
+    bool visited;
+    char weight;
     unsigned char color;
     Node edges;
     union
     {
-        signed char harbor;
+        char harbor;
         unsigned char material_number;
     };
 } VertexRec, *VertexPtr;
@@ -83,11 +88,11 @@ typedef struct playerType
     // קלפי פיתוח
     unsigned char developmentCards[TOTAL_DEVELOPMENT_CARD];
     // כל ביט יסמן האם העסקת נמל בבעלות השחקן
-    signed char harbors;
-    Node settlements; // התיישבויות
-    unsigned char amounts[TOTAL_STORE - 1];
-    unsigned char knightUsed;
-
+    char harbors;
+    Node settlements;                       // התיישבויות
+    Node roads;                             // דרכים
+    unsigned char knightUsed;               // כמות שימושים של אבירים
+    unsigned char amounts[TOTAL_STORE - 1]; // כמות של פריטים נותרים
 } PlayerRec, *PlayerPtr;
 
 #endif

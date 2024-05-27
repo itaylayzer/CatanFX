@@ -113,11 +113,7 @@ void catan_start(signed char _num_of_players)
     signed char achievementCards[TOTAL_ACHIEVEMENTS_CARD] = {-1, -1};
     unsigned char turnOffset = 0, robberArea = 9;
     GraphPtr graph;
-    const signed char store[TOTAL_STORE][TOTAL_MATERIALS] = {
-        {1, 0, 0, 1, 0},
-        {1, 1, 1, 1, 0},
-        {0, 0, 2, 0, 3},
-        {0, 1, 1, 0, 1}};
+
     unsigned char harbors[HARBOR_COUNT * 2] = {0, 3, 1, 5, 10, 15, 26, 32, 42, 46, 49, 52, 47, 51, 33, 38, 11, 16};
 
     // change random seed to current time

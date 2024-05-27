@@ -8,13 +8,19 @@ EXE=main
 SRCS=$(wildcard $(SRC_DIR)/*.c) \
      $(wildcard $(SRC_DIR)/controller/*.c) \
      $(wildcard $(SRC_DIR)/model/*.c) \
+     $(wildcard $(SRC_DIR)/model/headers/*.c) \
+     $(wildcard $(SRC_DIR)/model/source/*.c) \
      $(wildcard $(SRC_DIR)/server/*.c) \
      $(wildcard $(SRC_DIR)/structures/avl_tree/*.c) \
      $(wildcard $(SRC_DIR)/structures/graph/*.c) \
 	 $(wildcard $(SRC_DIR)/utils/math/*.c) \
+	 $(wildcard $(SRC_DIR)/utils/convert/*.c) \
 	 $(wildcard $(SRC_DIR)/structures/linked_list/*.c) \
+	 $(wildcard $(SRC_DIR)/structures/heap/*.c) \
 	 $(wildcard $(SRC_DIR)/structures/linked_list/circular/*.c) \
+	 $(wildcard $(SRC_DIR)/structures/linked_list/linear/*.c) \
 	 $(wildcard $(SRC_DIR)/structures/queue/*.c) \
+	 $(wildcard $(SRC_DIR)/structures/stack/*.c) \
 	 $(wildcard $(SRC_DIR)/utils/printt/*.c)
 
 WRITE_SRCS=$(wildcard $(SRC_DIR)/utils/math/*.c) \

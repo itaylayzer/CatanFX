@@ -20,7 +20,7 @@
 #include <stdlib.h>
 
 #include "sock.h"
-#include "../types.h"
+#include "../controller/types.h"
 #include "../utils/printt/printt.h"
 
 #define PORT 5173

@@ -1,5 +1,5 @@
 
-#include "model.h"
+#include "../headers/model.h"
 
 // extract data functions
 unsigned char extract_area_materials(unsigned char material_number)
@@ -24,11 +24,6 @@ void print_vec(unsigned char *arr, signed char size)
     }
 
     printf("]\n");
-}
-
-unsigned char brand(unsigned char min, unsigned char max)
-{
-    return (babs(rand()) % (max - min)) + min;
 }
 
 void catan_edges(GraphPtr graph)
@@ -178,8 +173,9 @@ unsigned char *roll_dice(unsigned char *size,
 {
     unsigned char *arr, dice, sum;
 
-    sum = dice = brand(1, 7);
-    sum += (dice = brand(1, 7));
+    // FIXME: switch back
+    sum = dice = 4;    // brand(1, 7);
+    sum += (dice = 3); // brand(1, 7));
     arr = single_byte(size, (dice << 4) | (sum - dice));
 
     printt("\trolled number %hhu while arr %hhd (%hhd, %hhd)\n", sum, arr[0], sum - dice, dice);
@@ -349,6 +345,10 @@ void print_edge_offset(const void *ptr)
     EdgePtr edge = (EdgePtr)ptr;
     printf(" %d ", edge->offset);
 }
+signed char value_compare(const void *first, const void *second)
+{
+    return first - second;
+}
 bool buy_road(PlayerPtr player,
               GraphPtr graph,
               const signed char cost[TOTAL_MATERIALS],
@@ -369,19 +369,17 @@ bool buy_road(PlayerPtr player,
                           &lookRec, compare_edges_offset)
                    ->data;
     foundPtr->color = player->color;
+    avl_insert(&player->roads, foundPtr, value_compare);
 
     lookRec.offset = from;
     foundPtr = avl_search(graph->vertices[to].edges,
                           &lookRec, compare_edges_offset)
                    ->data;
     foundPtr->color = player->color;
+    avl_insert(&player->roads, foundPtr, value_compare);
 
     player->amounts[ROAD]--;
     return true;
-}
-signed char value_compare(const void *first, const void *second)
-{
-    return first - second;
 }
 
 unsigned char *svertex_to_materials(GraphPtr graph, signed char index)
@@ -773,22 +771,24 @@ unsigned char *move_robber(unsigned char *size,
                            signed char *biggest_army_achievement,
                            const unsigned char num_of_players)
 {
-    unsigned char *res;
-    bool stealMode = params[0]; // if got 7!
+    unsigned char *res = calloc(3, sizeof(unsigned char));
+    unsigned char playerIndex = params[0]; // if got 7!
     *robberArea = params[1];
 
-    if (stealMode)
+    if (playerIndex)
     {
-        // TODO: steal MODE!
+        // remove cards per player whos his cards >= 7
+        // steal random card from player `playerIndex`
+
+        printt("steal mode player index: %d\n", playerIndex);
     }
     else
     {
         players[player_index].knightUsed++;
         printt("pullin up knight!! %d\n", players[player_index].knightUsed);
     }
-    res = single_byte(size, (unsigned char)update_biggest_army(players,
-                                                               num_of_players,
-                                                               biggest_army_achievement));
+    res[0] = update_biggest_army(players, num_of_players,
+                                 biggest_army_achievement);
     printt("returning %hhd\n", *res);
     return res;
 }
@@ -833,135 +833,5 @@ void handle_rest_turns(int socket,
 
         send(socket, &size, 1, 0);
         send(socket, _buff, size, 0);
-    }
-}
-// math
-signed char *vector_join(const signed char *first,
-                         const signed char *second,
-                         signed char size,
-                         signed char (*func)(signed char first, signed char second))
-{
-    signed char *arr = calloc(size, sizeof(signed char));
-
-    while (--size >= 0)
-    {
-        arr[size] = func(first[size], second[size]);
-    }
-
-    return arr;
-}
-signed char *vector_map(const signed char *first,
-                        signed char size,
-                        signed char (*func)(signed char))
-{
-    signed char *arr = calloc(size, sizeof(signed char));
-
-    while (--size >= 0)
-    {
-        arr[size] = func(first[size]);
-    }
-
-    return arr;
-}
-signed char badd(signed char x, signed char y)
-{
-    return x + y;
-}
-signed char bminus(signed char x, signed char y)
-{
-    return x - y;
-}
-signed char bnegative(signed char x)
-{
-    return -x;
-}
-signed char *vector_add(const signed char *first,
-                        const signed char *second,
-                        signed char size)
-{
-    return vector_join(first, second, size, badd);
-}
-
-signed char *vector_sub(const signed char *first,
-                        const signed char *second,
-                        signed char size)
-{
-    return vector_join(first, second, size, bminus);
-}
-signed char *vector_neg(const signed char *arr,
-                        signed char size)
-{
-    return vector_map(arr, size, bnegative);
-}
-bool vector_any(const signed char *arr, signed char size, bool (*condition)(signed char))
-{
-    while (--size >= 0 && !condition(arr[size]))
-        ;
-
-    return size >= 0;
-}
-bool vector_all(const signed char *arr, signed char size, bool (*condition)(signed char))
-{
-    while (--size >= 0 && condition(arr[size]))
-        ;
-
-    return size < 0;
-}
-void vector_cpy(signed char *dest, signed char *src, signed char size)
-{
-    while (--size >= 0)
-    {
-        dest[size] = src[size];
-    }
-}
-
-void vector_val(signed char *dest, signed char size, signed char val)
-{
-
-    while (--size >= 0)
-    {
-        dest[size] = val;
-    }
-}
-unsigned char vector_count(const signed char *dest, signed char size, signed char val)
-{
-    unsigned char count = 0;
-    while (--size >= 0)
-    {
-        count += dest[size] == val;
-    }
-    return count;
-}
-signed char vec_sum(signed char *arr, signed char size)
-{
-    unsigned char val;
-
-    while (--size >= 0)
-    {
-        val += arr[size];
-    }
-    return val;
-}
-signed char *vec_dup(signed char *arr, signed char size)
-{
-    signed char *new = malloc(sizeof(signed char) * size);
-    while (--size >= 0)
-    {
-        new[size] = arr[size];
-    }
-    return new;
-}
-void bswap(signed char *x, signed char *y)
-{
-    signed char temp = *y;
-    *y = *x;
-    *x = temp;
-}
-void vec_shuffle(signed char *arr, unsigned char size)
-{
-    unsigned char offset;
-    for (offset = 0; offset < size; offset++)
-    {
-        bswap(arr + offset, arr + brand(0, size));
     }
 }
