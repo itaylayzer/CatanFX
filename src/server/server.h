@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sock.h"
+#include "./sock.h"
 #include "../controller/types.h"
 #include "../utils/printt/printt.h"
 

@@ -175,35 +175,21 @@ unsigned char *players_around_area(unsigned char *size,
 
     VertexPtr area = graph->vertices + vertex_area;
     VertexPtr dest = graph->vertices + vertex_area;
-    Queue queue;
+
     EdgePtr edge;
     Node node;
 
-    queue_init(&queue);
-    enqueue(&queue, area->edges);
+    QUEUE_TRAVARSE(area->edges, node);
 
-    while (!queue_empty(queue))
+    edge = node->data;
+    dest = edge->vertex;
+
+    if (dest->color < BLACK)
     {
-        node = dequeue(&queue);
-
-        if (node->left != NULL)
-        {
-            enqueue(&queue, node->left);
-        }
-
-        if (node->right != NULL)
-        {
-            enqueue(&queue, node->right);
-        }
-
-        edge = node->data;
-        dest = edge->vertex;
-
-        if (dest->color < BLACK)
-        {
-            playerBits |= 1 << dest->color;
-        }
+        playerBits |= 1 << dest->color;
     }
+
+    QUEUE_TRAVARSE_FINISH;
 
     return single_byte(size, playerBits);
 }
@@ -215,9 +201,8 @@ unsigned char *roll_dice(unsigned char *size,
 {
     unsigned char *arr, dice, sum;
 
-    // FIXME: switch back
-    sum = dice = 4;    // brand(1, 7);
-    sum += (dice = 3); // brand(1, 7));
+    sum = dice = brand(1, 7);
+    sum += (dice = brand(1, 7));
     arr = single_byte(size, (dice << 4) | (sum - dice));
 
     printt("\trolled number %hhu while arr %hhd (%hhd, %hhd)\n", sum, arr[0], sum - dice, dice);
@@ -431,28 +416,15 @@ unsigned char *svertex_to_materials(GraphPtr graph, signed char index)
     unsigned char size = 0, *mats = calloc(TOTAL_MATERIALS, sizeof(char));
     Node node = graph->vertices[index].edges;
 
-    queue_init(&que);
-    enqueue(&que, node);
+    QUEUE_TRAVARSE(node, node);
+    size++;
+    edge = (EdgePtr)node->data;
 
-    while (!queue_empty(que))
+    if (edge->color == GRAY)
     {
-        size++;
-        node = dequeue(&que);
-        edge = (EdgePtr)node->data;
-        if (node->left != NULL)
-        {
-            enqueue(&que, node->left);
-        }
-        if (node->right != NULL)
-        {
-            enqueue(&que, node->right);
-        }
-
-        if (edge->color == GRAY)
-        {
-            mats[extract_area_materials(edge->vertex->material_number)]++;
-        }
+        mats[extract_area_materials(edge->vertex->material_number)]++;
     }
+    QUEUE_TRAVARSE_FINISH;
     return mats;
 }
 
@@ -552,32 +524,17 @@ signed char dfs(GraphPtr graph, unsigned char vertex_offset, unsigned char targe
     signed char max_child_length = 0;
 
     Node node = vertex->edges;
-    Queue que;
+
     EdgePtr edge;
 
-    queue_init(&que);
-    enqueue(&que, node);
+    QUEUE_TRAVARSE(node, node);
+    edge = node->data;
 
-    while (!queue_empty(que))
+    if (edge->color == targetColor)
     {
-        node = dequeue(&que);
-
-        edge = node->data;
-
-        if (node->right)
-        {
-            enqueue(&que, node->right);
-        }
-        if (node->left)
-        {
-            enqueue(&que, node->left);
-        }
-
-        if (edge->color == targetColor)
-        {
-            max_child_length = bmax(max_child_length, dfs(graph, edge->offset, targetColor, visited));
-        }
+        max_child_length = bmax(max_child_length, dfs(graph, edge->offset, targetColor, visited));
     }
+    QUEUE_TRAVARSE_FINISH;
 
     return max_child_length + 1;
 }
@@ -719,7 +676,6 @@ unsigned char *switch_dev_card(unsigned char *size,
 }
 void collect_materials_area(VertexPtr area, PlayerPtr players, signed char *bank)
 {
-    Queue que;
     Node node;
     EdgePtr edge;
 
@@ -730,32 +686,20 @@ void collect_materials_area(VertexPtr area, PlayerPtr players, signed char *bank
     unsigned char player_offset;
 
     bool is_city;
-    queue_init(&que);
 
-    enqueue(&que, area->edges);
-    while (!queue_empty(que))
-    {
-        node = dequeue(&que);
-        edge = node->data;
-        player_offset = edge->vertex->color & 0x0F;
-        is_city = (edge->vertex->color >> 6) & 0x01;
+    QUEUE_TRAVARSE(area->edges, node);
 
-        if (node->left != NULL)
-        {
-            enqueue(&que, node->left);
-        }
-        if (node->right != NULL)
-        {
-            enqueue(&que, node->right);
-        }
+    edge = node->data;
+    player_offset = edge->vertex->color & 0x0F;
+    is_city = (edge->vertex->color >> 6) & 0x01;
+    mats_to_players[player_offset][material] += (player_offset < MAX_PLAYERS) * (1 + is_city);
 
-        mats_to_players[player_offset][material] += (player_offset < MAX_PLAYERS) * (1 + is_city);
-    }
+    QUEUE_TRAVARSE_FINISH;
 
     for (player_offset = 0; player_offset < MAX_PLAYERS; player_offset++)
     {
         transfer_materials(players + player_offset, bank, mats_to_players[player_offset], true);
-        }
+    }
 }
 
 void collect_materials(unsigned char rolled_num,
@@ -866,8 +810,9 @@ void bot_inits(PlayerPtr players, unsigned char num_of_players)
 
 void bot_plays(PlayerPtr player, int socket)
 {
+
     // TODO: play by selected approach and update client player!
-    usleep(300000);
+    usleep(500000);
 }
 
 void handle_rest_turns(int socket,

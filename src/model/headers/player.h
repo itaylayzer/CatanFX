@@ -10,6 +10,7 @@
 #include "../../controller/constants.h"
 #include "../../utils/convert/convert.h"
 #include "./vec_utils.h"
+#include "./macro.h"
 
 VertexPtr moveRobberTo(PlayerPtr player, GraphPtr graph);
 

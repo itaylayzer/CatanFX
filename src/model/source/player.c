@@ -12,35 +12,22 @@ bool above_equal_zero(signed char x)
 Stack areaSettlements(VertexPtr vertex)
 {
     Stack stk;
-    Queue queue;
+
     Node node;
     VertexPtr dest;
     EdgePtr edge;
 
     stack_init(&stk);
-    queue_init(&queue);
-    enqueue(&queue, vertex->edges);
 
-    while (!queue_empty(queue))
+    QUEUE_TRAVARSE(vertex->edges, node);
+    edge = node->data;
+    dest = edge->vertex;
+    if (edge->color == GRAY)
     {
-        node = dequeue(&queue);
-        if (node->left != NULL)
-        {
-            enqueue(&queue, node->left);
-        }
-
-        if (node->right != NULL)
-        {
-            enqueue(&queue, node->right);
-        }
-
-        edge = node->data;
-        dest = edge->vertex;
-        if (edge->color == GRAY)
-        {
-            stack_push(&stk, dest);
-        }
+        stack_push(&stk, dest);
     }
+    QUEUE_TRAVARSE_FINISH;
+
     return stk;
 }
 VertexPtr moveRobberTo(PlayerPtr player, GraphPtr graph)
@@ -94,45 +81,20 @@ Stack buyableRoads(PlayerPtr player)
 
     enqueue(&sourceQ, player->roads);
 
-    while (!queue_empty(sourceQ))
+    QUEUE_TRAVARSE_BODY(sourceQ, node);
+    dest = ((EdgePtr)node->data)->vertex;
+    enqueue(&destQ, dest->edges);
+
+    QUEUE_TRAVARSE_BODY(destQ, node);
+
+    dest_edge = node->data;
+
+    if (dest_edge->color == BLACK)
     {
-        node = dequeue(&sourceQ);
-
-        if (node->right != NULL)
-        {
-            enqueue(&sourceQ, node->right);
-        }
-
-        if (node->left != NULL)
-        {
-            enqueue(&sourceQ, node->left);
-        }
-
-        dest = ((EdgePtr)node->data)->vertex;
-        enqueue(&destQ, dest->edges);
-
-        while (!queue_empty(destQ))
-        {
-            node = dequeue(&destQ);
-
-            if (node->right != NULL)
-            {
-                enqueue(&destQ, node->right);
-            }
-
-            if (node->left != NULL)
-            {
-                enqueue(&destQ, node->left);
-            }
-
-            dest_edge = node->data;
-
-            if (dest_edge->color == BLACK)
-            {
-                stack_push(&stk, dest_edge);
-            }
-        }
+        stack_push(&stk, dest_edge);
     }
+    QUEUE_TRAVARSE_FINISH;
+    QUEUE_TRAVARSE_FINISH;
 
     return stk;
 }
@@ -141,39 +103,23 @@ bool buyableSettlement(PlayerPtr player, VertexPtr source, bool needRoad)
     bool dontHaveHouseNear = true;
     bool connectedByRoad = !needRoad;
 
-    Queue queue;
     Node node;
     EdgePtr edge;
     VertexPtr dest;
 
-    queue_init(&queue);
-    enqueue(&queue, source->edges);
+    QUEUE_TRAVARSE(source->edges, node);
 
-    while (!queue_empty(queue))
+    edge = node->data;
+    dest = edge->vertex;
+    if ((dest->color & 0x0F) != BLACK)
     {
-        node = dequeue(&queue);
-
-        if (node->right != NULL)
-        {
-            enqueue(&queue, node->right);
-        }
-
-        if (node->left != NULL)
-        {
-            enqueue(&queue, node->left);
-        }
-
-        edge = node->data;
-        dest = edge->vertex;
-        if ((dest->color & 0x0F) != BLACK)
-        {
-            dontHaveHouseNear = false;
-        }
-        if (needRoad && edge->color == player->color)
-        {
-            connectedByRoad = true;
-        }
+        dontHaveHouseNear = false;
     }
+    if (needRoad && edge->color == player->color)
+    {
+        connectedByRoad = true;
+    }
+    QUEUE_TRAVARSE_FINISH;
 
     return connectedByRoad && dontHaveHouseNear;
 }
@@ -204,33 +150,18 @@ Stack upgradeableSettlements(PlayerPtr player, GraphPtr graph)
     Stack stk;
     stack_init(&stk);
 
-    Queue queue;
     Node node;
-    queue_init(&queue);
 
-    enqueue(&queue, player->settlements);
+    QUEUE_TRAVARSE(player->settlements, node);
 
-    while (!queue_empty(queue))
+    v = (unsigned char)node->data;
+
+    // if settlement vertex and dont have house
+    if (v >= AREAS && graph->vertices[v].color >> 6 == 0)
     {
-        node = dequeue(&queue);
-
-        if (node->right != NULL)
-        {
-            enqueue(&queue, node->right);
-        }
-
-        if (node->left != NULL)
-        {
-            enqueue(&queue, node->left);
-        }
-        v = (unsigned char)node->data;
-
-        // if settlement vertex and dont have house
-        if (v >= AREAS && graph->vertices[v].color >> 6 == 0)
-        {
-            stack_push(&stk, graph->vertices + v);
-        }
+        stack_push(&stk, graph->vertices + v);
     }
+    QUEUE_TRAVARSE_FINISH;
 
     return stk;
 }

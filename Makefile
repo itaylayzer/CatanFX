@@ -1,5 +1,5 @@
 CC=clang
-CFLAGS=-g -I.
+CFLAGS=-g -I. 
 LDFLAGS=
 SRC_DIR=src
 OBJ_DIR=bin
@@ -46,7 +46,7 @@ all:
 		$(CC) $(CFLAGS) -c $$src -o $${obj}/$$(basename $$src .c).o;  \
 	done
 
-	clang $(OBJS) -o $(EXE) $(LDFLAGS)
+	$(CC) $(OBJS) -o $(EXE) $(LDFLAGS)
 
 run: all
 	./$(EXE)

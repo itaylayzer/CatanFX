@@ -1,4 +1,4 @@
-#include "server.h"
+#include "./server.h"
 
 void print_error(const char *type, const int code)
 {

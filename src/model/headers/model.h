@@ -21,6 +21,7 @@
 #include "../../server/sock.h"
 #include "../../utils/math/rand.h"
 #include "./vec_utils.h"
+#include "./macro.h"
 
 // initializations
 void catan_graph_init(GraphPtr graph, unsigned char harbors[HARBOR_COUNT * 2]);
