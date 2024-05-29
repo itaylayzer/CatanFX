@@ -121,7 +121,7 @@ void catab_players_init(PlayerPtr players, signed char size)
         players[size].amounts[SETTLEMENT] = 5;
         players[size].amounts[CITY] = 4;
 
-        // TODO: remove
+        // FIXME: remove
         players[size].materials[0] = 10;
         players[size].materials[1] = 10;
         players[size].materials[2] = 10;
@@ -164,6 +164,48 @@ unsigned char *harbors_numbers(unsigned char *size,
     }
     print_vec(harbors_numbs, HARBOR_COUNT * 2);
     return harbors_numbs;
+}
+
+unsigned char *players_around_area(unsigned char *size,
+                                   unsigned char vertex_area,
+                                   GraphPtr graph)
+{
+    // each bit represent if the player is around the area or not
+    unsigned char playerBits = 0;
+
+    VertexPtr area = graph->vertices + vertex_area;
+    VertexPtr dest = graph->vertices + vertex_area;
+    Queue queue;
+    EdgePtr edge;
+    Node node;
+
+    queue_init(&queue);
+    enqueue(&queue, area->edges);
+
+    while (!queue_empty(queue))
+    {
+        node = dequeue(&queue);
+
+        if (node->left != NULL)
+        {
+            enqueue(&queue, node->left);
+        }
+
+        if (node->right != NULL)
+        {
+            enqueue(&queue, node->right);
+        }
+
+        edge = node->data;
+        dest = edge->vertex;
+
+        if (dest->color < BLACK)
+        {
+            playerBits |= 1 << dest->color;
+        }
+    }
+
+    return single_byte(size, playerBits);
 }
 unsigned char *roll_dice(unsigned char *size,
                          PlayerPtr players,
@@ -469,6 +511,17 @@ bool buy_city(PlayerPtr player,
     return true;
 }
 
+unsigned char random_index_by_vals(unsigned char size, signed char *arr)
+{
+    signed char offset = -1, rand = brand(0, vec_sum(arr, size));
+
+    while (rand > 0)
+    {
+        offset++;
+        rand -= arr[offset];
+    }
+    return offset;
+}
 bool buy_developement(PlayerPtr player,
                       signed char bank[TOTAL_MATERIALS],
                       signed char dev_bank[TOTAL_DEVELOPMENT_CARD],
@@ -476,17 +529,8 @@ bool buy_developement(PlayerPtr player,
 {
 
     signed char *how_many = calloc(TOTAL_DEVELOPMENT_CARD, sizeof(signed char));
-    signed char card_offset = -1, rand = brand(0, vec_sum(dev_bank, TOTAL_DEVELOPMENT_CARD));
-
+    how_many[random_index_by_vals(TOTAL_DEVELOPMENT_CARD, dev_bank)] = 1;
     transfer_materials(player, bank, cost, false);
-
-    while (rand > 0)
-    {
-        card_offset++;
-        rand -= dev_bank[card_offset];
-    }
-    how_many[card_offset] = 1;
-
     transfer_dev_card(player, dev_bank, how_many, true);
 
     return true;
@@ -711,7 +755,7 @@ void collect_materials_area(VertexPtr area, PlayerPtr players, signed char *bank
     for (player_offset = 0; player_offset < MAX_PLAYERS; player_offset++)
     {
         transfer_materials(players + player_offset, bank, mats_to_players[player_offset], true);
-    }
+        }
 }
 
 void collect_materials(unsigned char rolled_num,
@@ -771,26 +815,44 @@ unsigned char *move_robber(unsigned char *size,
                            signed char *biggest_army_achievement,
                            const unsigned char num_of_players)
 {
-    unsigned char *res = calloc(3, sizeof(unsigned char));
-    unsigned char playerIndex = params[0]; // if got 7!
+    unsigned char *res = single_byte(size, -1);
+    unsigned char target_index = params[0]; // if got 7!
     *robberArea = params[1];
 
-    if (playerIndex)
+    switch (target_index)
     {
-        // remove cards per player whos his cards >= 7
-        // steal random card from player `playerIndex`
-
-        printt("steal mode player index: %d\n", playerIndex);
+    case 4:
+        break;
+    case 3:
+    case 2:
+    case 1:
+    {
+        unsigned char cost[TOTAL_MATERIALS] = {0};
+        cost[random_index_by_vals(TOTAL_MATERIALS, (signed char *)cost)]++;
+        transfer_materials(players + player_index,
+                           (signed char *)players[target_index].materials,
+                           (signed char *)cost, true);
+        printt("steal mode player index: %d\n", target_index);
     }
-    else
-    {
+    break;
+
+    case 0:
         players[player_index].knightUsed++;
         printt("pullin up knight!! %d\n", players[player_index].knightUsed);
+        break;
     }
+
     res[0] = update_biggest_army(players, num_of_players,
                                  biggest_army_achievement);
     printt("returning %hhd\n", *res);
     return res;
+}
+unsigned char *drop_materials(unsigned char *size, PlayerPtr player, signed char *mats)
+{
+    signed char *sub = vector_sub((signed char *)player->materials,
+                                  mats, TOTAL_MATERIALS);
+    vector_cpy((signed char *)player->materials, sub, TOTAL_MATERIALS);
+    return single_byte(size, 0);
 }
 // bots
 
@@ -805,7 +867,7 @@ void bot_inits(PlayerPtr players, unsigned char num_of_players)
 void bot_plays(PlayerPtr player, int socket)
 {
     // TODO: play by selected approach and update client player!
-    sleep(0);
+    usleep(300000);
 }
 
 void handle_rest_turns(int socket,

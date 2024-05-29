@@ -77,6 +77,8 @@
         "queue.h": "c",
         "constants.h": "c",
         "rand.h": "c",
-        "convert.h": "c"
+        "convert.h": "c",
+        "time.h": "c",
+        "time64.h": "c"
     }
 }

@@ -12,7 +12,7 @@ unsigned char *use_dev_card(unsigned char *size,
 }
 
 void handle_request(
-    signed char *buffer,
+    signed char *input_buffer,
     int socket,
     GraphPtr graph,
     unsigned char *harbors,
@@ -26,71 +26,82 @@ void handle_request(
     unsigned char *robberArea)
 {
     unsigned char size = 0;
-    void *_buff;
+    void *send_buffer;
 
-    switch (buffer[0])
+    switch (input_buffer[0])
     {
     case 0:
-        _buff = areas_numbers(&size, graph);
+        send_buffer = areas_numbers(&size, graph);
         break;
     case 1:
-        _buff = harbors_numbers(&size, graph, harbors);
+        send_buffer = harbors_numbers(&size, graph, harbors);
         break;
-    case 10:
-        _buff = inf_player_actionable(&size, players, bankDevelopments, store);
+
+    case 2: // TODO: what players are around an area vertex
+        send_buffer = players_around_area(&size, input_buffer[1], graph);
+        break;
+
+    case 10: // player actionable
+        send_buffer = inf_player_actionable(&size, players, bankDevelopments, store);
         break;
 
     case 11: // player materials
-        _buff = inf_player_materials(&size, players, bankMaterials, buffer[1]);
+        send_buffer = inf_player_materials(&size, players, bankMaterials, input_buffer[1]);
         break;
 
     case 12: // developements cards
-        _buff = inf_player_devcards(&size, players, bankDevelopments, buffer[1]);
+        send_buffer = inf_player_devcards(&size, players, bankDevelopments,
+                                          input_buffer[1]);
+
         break;
 
     case 13: // victory points
-        _buff = single_byte(&size, (players + buffer[1])->victoryPoints);
+        send_buffer = single_byte(&size, (players + input_buffer[1])->victoryPoints);
         break;
 
     case 14: // player materials
-        _buff = inf_player_amounts(&size, players);
+        send_buffer = inf_player_amounts(&size, players);
         break;
 
     case 15: // achievement cards
-        _buff = vec_dup(achievementCards, (size = TOTAL_ACHIEVEMENTS_CARD));
+        send_buffer = vec_dup(achievementCards, (size = TOTAL_ACHIEVEMENTS_CARD));
         break;
 
     case 30: // roll dice
-        _buff = roll_dice(&size, players, graph, bankMaterials, *robberArea);
+        send_buffer = roll_dice(&size, players, graph, bankMaterials, *robberArea);
         break;
 
     case 31: // buy from store
-        _buff = switch_action_store(&size,
-                                    buffer + 1,
-                                    graph,
-                                    players,
-                                    bankMaterials,
-                                    bankDevelopments,
-                                    store,
-                                    achievementCards + LONGEST_PATH);
+        send_buffer = switch_action_store(&size,
+                                          input_buffer + 1,
+                                          graph,
+                                          players,
+                                          bankMaterials,
+                                          bankDevelopments,
+                                          store,
+                                          achievementCards + LONGEST_PATH);
         break;
     case 32: // move robber
-        _buff = move_robber(&size,
-                            players,
-                            0,
-                            robberArea,
-                            buffer + 1,
-                            achievementCards + BIGGEST_ARMY,
-                            num_of_players);
+        send_buffer = move_robber(&size,
+                                  players,
+                                  0,
+                                  robberArea,
+                                  input_buffer + 1,
+                                  achievementCards + BIGGEST_ARMY,
+                                  num_of_players);
         break;
     case 33: // use dev card
-        _buff = switch_dev_card(&size, players, num_of_players, bankMaterials, buffer + 1);
+        send_buffer = switch_dev_card(&size, players, num_of_players, bankMaterials, input_buffer + 1);
+        break;
+
+    case 34: // drop materials
+        send_buffer = drop_materials(&size, players, (signed char *)(input_buffer + 1));
         break;
 
     case 40:
         handle_rest_turns(socket, turnOffset, players, num_of_players);
         size = 1;
-        _buff = calloc(1, sizeof(char));
+        send_buffer = calloc(1, sizeof(char));
         break;
 
     default:
@@ -98,8 +109,8 @@ void handle_request(
     }
 
     send(socket, &size, 1, 0);
-    send(socket, _buff, size, 0);
-    free(_buff);
+    send(socket, send_buffer, size, 0);
+    free(send_buffer);
 }
 
 void catan_start(signed char _num_of_players)

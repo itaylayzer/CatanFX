@@ -22,13 +22,18 @@
 #include "../../utils/math/rand.h"
 #include "./vec_utils.h"
 
-// game logic
+// initializations
 void catan_graph_init(GraphPtr graph, unsigned char harbors[HARBOR_COUNT * 2]);
 void catab_players_init(PlayerPtr players, signed char size);
+// information
 unsigned char *areas_numbers(unsigned char *size, GraphPtr graph);
 unsigned char *harbors_numbers(unsigned char *size,
                                GraphPtr graph,
                                unsigned char harbors[HARBOR_COUNT * 2]);
+unsigned char *players_around_area(unsigned char *size,
+                                   unsigned char vertex_area,
+                                   GraphPtr graph);
+// actions
 unsigned char *roll_dice(unsigned char *size,
                          PlayerPtr players,
                          GraphPtr graph,
@@ -72,6 +77,8 @@ unsigned char *move_robber(unsigned char *size,
                            signed char *params,
                            signed char *biggest_army_achivement,
                            const unsigned char num_of_players);
+
+unsigned char *drop_materials(unsigned char *size, PlayerPtr player, signed char *mats);
 //    bots
 void bot_inits(PlayerPtr players, unsigned char num_of_players);
 void handle_rest_turns(int socket,
@@ -79,20 +86,4 @@ void handle_rest_turns(int socket,
                        PlayerPtr players,
                        const unsigned num_of_players);
 
-signed char *vector_join(const signed char *first,
-                         const signed char *second,
-                         signed char size,
-                         signed char (*func)(signed char first, signed char second));
-signed char *vector_map(const signed char *, signed char size, signed char (*func)(signed char));
-signed char *vector_add(const signed char *first, const signed char *second, signed char size);
-signed char *vector_sub(const signed char *first, const signed char *second, signed char size);
-signed char *vector_neg(const signed char *, signed char size);
-bool vector_any(const signed char *, signed char size, bool (*condition)(signed char));
-bool vector_all(const signed char *, signed char size, bool (*condition)(signed char));
-void vector_cpy(signed char *dest, signed char *src, signed char size);
-void vector_val(signed char *dest, signed char size, signed char val);
-unsigned char vector_count(const signed char *, signed char size, signed char val);
-signed char vec_sum(signed char *, signed char size);
-signed char *vec_dup(signed char *, signed char size);
-void vec_shuffle(signed char *, unsigned char size);
 #endif
