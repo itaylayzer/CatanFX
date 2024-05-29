@@ -34,13 +34,12 @@ public class MaterialCounts {
         };
 
         SelectButton approveButton = new SelectButton(Constants.Packages.approve, true);
-
+        approveButton.setButtonDisabled(true);
         Label label = new Label(count + " LEFT");
         label.setFont(Font.font("consolas", FontWeight.LIGHT, FontPosture.ITALIC, 20));
         children.add(label);
 
         propertyMaterials.addListener((obs, old, newValue) -> {
-            System.out.println("propertyMaterials.addListener");
             byte sum = 0;
             for (byte c : newValue) {
                 sum += c;
@@ -50,7 +49,6 @@ public class MaterialCounts {
         });
 
         amount.addListener((obs, old, newValue) -> {
-            System.out.println("amount" + newValue);
             label.setText((count - newValue) + " LEFT");
             approveButton.setButtonDisabled(count != newValue);
         });

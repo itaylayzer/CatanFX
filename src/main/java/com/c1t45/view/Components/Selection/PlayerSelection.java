@@ -18,10 +18,12 @@ public class PlayerSelection extends AbstractSelection {
 
     private Color[] colors;
     private Player[] players;
+    private byte allowed;
 
-    public PlayerSelection(Player[] players, Color[] colors) {
+    public PlayerSelection(byte allowed, Player[] players, Color[] colors) {
         this.colors = colors;
         this.players = players;
+        this.allowed = allowed;
     }
 
     @Override
@@ -51,6 +53,8 @@ public class PlayerSelection extends AbstractSelection {
 
         for (int index = 1; index < this.players.length; index++) {
 
+            if ((this.allowed >> index & 0x01) == 0)
+                continue;
             ObjectProperty<Integer> integerIndex = new SimpleObjectProperty<>(index);
             SelectButton materialButton = new SelectButton(
                     new ImagePackage(players[index].getName(), colors[index], Constants.Images.player), 0.5);

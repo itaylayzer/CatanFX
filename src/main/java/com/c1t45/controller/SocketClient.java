@@ -151,4 +151,19 @@ public class SocketClient {
         return this.action(new byte[] { ClientCodes.ACTIONS.USE_DEV_CARD, 4, matIndex });
     }
 
+    public byte nearbyPlayers(byte picked) throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.INFORMATION.NEARBY, picked })[0];
+    }
+
+    public void removeMats(Byte[] matsToDrop) {
+
+        try {
+            this.action(new byte[] { ClientCodes.ACTIONS.DROP, matsToDrop[0], matsToDrop[1], matsToDrop[2],
+                    matsToDrop[3], matsToDrop[4] });
+        } catch (Exception exp) {
+            exp.printStackTrace(System.err);
+        }
+
+    }
+
 }

@@ -101,33 +101,43 @@ public class GameController {
                         CatanBoard board = CatanBoard.getInstance();
                         board.cancelCurrentPick(false);
 
-                        board.pickHexagon((value) -> {
-                            return value != 9 && board.getRobberPos() != value;
-                        }, () -> {
-                        }, (picked) -> {
-                            board.setRobberPos(picked);
+                        byte counts = local.getMaterialsCount();
+                        byte[] mats = local.getMaterials();
+                        if (counts >= 7) {
+                            try {
+                                byte amountToDrop = (byte) (counts / 2);
 
-                            // TODO: get from the server available players!!
-                            board.playerSelect((player) -> {
-                                // TODO: available players!!
-                                local.moveRobber(picked, player);
-                                byte counts = local.getMaterialsCount();
-                                byte[] mats = local.getMaterials();
-                                if (counts >= 7) {
-                                    byte amountToDrop = (byte) (counts / 2);
+                                board.materialCounts((a) -> {
+                                    sock.removeMats(a);
+                                    board.pickHexagon((value) -> {
+                                        return value != 9 && board.getRobberPos() != value;
+                                    }, () -> {
+                                    }, (picked) -> {
+                                        board.setRobberPos(picked);
 
-                                    board.materialCounts((a) -> {
-                                        // byte index;
-                                        for (int index = 0; index < a.length; index++) {
-                                            mats[index] -= a[index];
+                                        try {
+                                            byte allowed = sock.nearbyPlayers(picked);
+                                            if ((allowed & 0x0F) == 0) {
+                                                board.playerSelect(allowed, (player) -> {
+                                                    local.moveRobber(picked, player);
+                                                    local.update();
+
+                                                }, false);
+                                            } else {
+                                                local.moveRobber(picked, (byte) 4);
+                                                local.update();
+                                            }
+                                        } catch (Exception exp) {
+                                            exp.printStackTrace(System.err);
                                         }
-                                        // TODO: need to update server!
-                                        local.callOnInventoryChange();
-                                    }, amountToDrop, mats);
-                                }
-                            }, false);
 
-                        });
+                                    });
+
+                                }, amountToDrop, mats);
+                            } catch (Exception exp) {
+                                exp.printStackTrace(System.err);
+                            }
+                        }
 
                     }
 
