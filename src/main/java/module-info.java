@@ -1,12 +1,12 @@
-module com.c1t45 {
+module com.itayl {
     requires javafx.controls;
     requires javafx.fxml;
     requires javafx.base;
     requires javafx.graphics;
     requires java.desktop;
 
-    opens com.c1t45 to javafx.fxml;
-    opens com.c1t45.controller to javafx.fxml;
+    opens com.itayl to javafx.fxml;
+    opens com.itayl.controller to javafx.fxml;
 
-    exports com.c1t45;
+    exports com.itayl;
 }
