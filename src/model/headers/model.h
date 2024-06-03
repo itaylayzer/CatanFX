@@ -20,12 +20,13 @@
 #include "../../utils/math/compare.h"
 #include "../../server/sock.h"
 #include "../../utils/math/rand.h"
+#include "../../utils/convert/convert.h"
 #include "./vec_utils.h"
 #include "./macro.h"
 
 // initializations
 void catan_graph_init(GraphPtr graph, unsigned char harbors[HARBOR_COUNT * 2]);
-void catab_players_init(PlayerPtr players, signed char size);
+void catan_players_init(PlayerPtr players, signed char size);
 // information
 unsigned char *areas_numbers(unsigned char *size, GraphPtr graph);
 unsigned char *harbors_numbers(unsigned char *size,
@@ -83,8 +84,15 @@ unsigned char *drop_materials(unsigned char *size, PlayerPtr player, signed char
 //    bots
 void bot_inits(PlayerPtr players, unsigned char num_of_players);
 void handle_rest_turns(int socket,
-                       unsigned char *turnOffset,
+                       GraphPtr graph,
                        PlayerPtr players,
-                       const unsigned num_of_players);
+                       signed char *bankDevelopments,
+                       signed char *bankMaterials,
+                       unsigned char *turnOffset,
+                       const unsigned char num_of_players,
+                       signed char *achievementCards,
+                       unsigned char *robberArea,
+                       Heap astHeaps[TOTAL_ASTRATEGIES],
+                       unsigned char *astIndexes);
 
 #endif

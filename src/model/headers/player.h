@@ -12,16 +12,38 @@
 #include "./vec_utils.h"
 #include "./macro.h"
 
-VertexPtr moveRobberTo(PlayerPtr player, GraphPtr graph);
+// astrategies scores
+float woodScore(float[TOTAL_MATERIALS]);
+float wheatScore(float[TOTAL_MATERIALS]);
+float cardsStore(float[TOTAL_MATERIALS]);
 
-Stack buyableRoads(PlayerPtr player);
+// picking astrategies
+unsigned char *astrategies_init(GraphPtr graph, Heap heaps[TOTAL_ASTRATEGIES]);
 
-Stack buyableSettlements(PlayerPtr player, GraphPtr graph, bool needRoad);
+// astrategies prioritise functions
+void prioritiseWoodRoad();
+void prioritiseWheatCardsRoad();
+void prioritiseWoodSettlement();
+void prioritiseWheatCardsSettlement();
+unsigned char *woodMatsOrder(PlayerPtr, GraphPtr);
+unsigned char *wheatMatsOrder(PlayerPtr, GraphPtr);
+unsigned char *cardsMatsOrder(PlayerPtr, GraphPtr);
 
-Stack upgradeableSettlements(PlayerPtr player, GraphPtr graph);
+// astrategies play function
+// TODO:
 
-bool buyable_product(signed char playerMats[TOTAL_MATERIALS],
-                     signed char playerHarbors,
-                     unsigned char productMats[TOTAL_MATERIALS],
-                     StackPtr actionsStack);
+// generic functions
+unsigned char prioritiseUpgradeableSettlement(PlayerPtr player, GraphPtr graph,
+                                              float (*)(float[TOTAL_MATERIALS]));
+unsigned char moveRobberTo(PlayerPtr player, GraphPtr graph);
+unsigned char buyableRoads(StackPtr, PlayerPtr player);
+unsigned char buyableSettlements(StackPtr, PlayerPtr player, GraphPtr graph, bool needRoad);
+unsigned char upgradeableSettlements(StackPtr, PlayerPtr player, GraphPtr graph);
+bool buyableProduct(unsigned char astrategy,
+                    PlayerPtr player,
+                    GraphPtr graph,
+                    signed char playerMats[TOTAL_MATERIALS],
+                    signed char playerHarbors,
+                    unsigned char productMats[TOTAL_MATERIALS],
+                    QueuePtr actionsQ)
 #endif

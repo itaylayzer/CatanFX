@@ -60,13 +60,13 @@ void catan_edges(GraphPtr graph)
 
 void catan_lands(GraphPtr graph)
 {
-    unsigned char offset, rand, temp, materials[AREAS - 1] = {WOOD, WOOD, WOOD, WOOD, WOOL, WOOL, WOOL, WOOL, WHEET, WHEET, WHEET, WHEET, BRICK, BRICK, BRICK, ORE, ORE, ORE},
+    unsigned char offset, rand, temp, materials[AREAS - 1] = {WOOD, WOOD, WOOD, WOOD, WOOL, WOOL, WOOL, WOOL, WHEAT, WHEAT, WHEAT, WHEAT, BRICK, BRICK, BRICK, ORE, ORE, ORE},
                                                         numbers[AREAS - 1] = {2, 3, 3, 4, 4, 5, 5, 6, 6, 8, 8, 9, 9, 10, 10, 11, 11, 12};
     bool middle_or_after;
 
     // shuffle numbers and materials
-    vec_shuffle((signed char *)materials, AREAS - 1);
-    vec_shuffle((signed char *)numbers, AREAS - 1);
+    vector_shuffle((signed char *)materials, AREAS - 1);
+    vector_shuffle((signed char *)numbers, AREAS - 1);
 
     for (offset = 0; offset < AREAS - 1; offset++)
     {
@@ -82,9 +82,9 @@ void catan_lands(GraphPtr graph)
 
 void catan_harbors(GraphPtr graph, unsigned char harbors[HARBOR_COUNT * 2])
 {
-    unsigned char offset, mats[HARBOR_COUNT] = {WOOD, WOOL, WHEET, BRICK, ORE, GENERAL_DEAL, GENERAL_DEAL, GENERAL_DEAL, GENERAL_DEAL};
+    unsigned char offset, mats[HARBOR_COUNT] = {WOOD, WOOL, WHEAT, BRICK, ORE, GENERAL_DEAL, GENERAL_DEAL, GENERAL_DEAL, GENERAL_DEAL};
 
-    vec_shuffle((signed char *)mats, HARBOR_COUNT);
+    vector_shuffle((signed char *)mats, HARBOR_COUNT);
 
     for (offset = 0; offset < HARBOR_COUNT; offset++)
     {
@@ -112,7 +112,7 @@ void catan_graph_init(GraphPtr graph, unsigned char harbors[HARBOR_COUNT * 2])
     catan_settle_vertecies(graph);
     catan_harbors(graph, harbors);
 }
-void catab_players_init(PlayerPtr players, signed char size)
+void catan_players_init(PlayerPtr players, signed char size)
 {
     while (--size >= 0)
     {
@@ -235,7 +235,7 @@ unsigned char *inf_player_actionable(unsigned char *size,
                                           store[offset], TOTAL_MATERIALS);
         bool not_neg = !vector_any(arr_res, TOTAL_MATERIALS, bis_neg);
         bool has_amount = offset == DEVELOPMENT_CARD
-                              ? vec_sum(dev_bank, TOTAL_DEVELOPMENT_CARD)
+                              ? vector_sum(dev_bank, TOTAL_DEVELOPMENT_CARD)
                               : player->amounts[offset];
 
         arr[0] |= (not_neg && has_amount) << offset;
@@ -261,18 +261,18 @@ unsigned char *inf_players_manip(unsigned char *size,
     if (offset == MAX_PLAYERS)
     {
         // is bank
-        res = (unsigned char *)vec_dup(bank, (*size = count));
+        res = (unsigned char *)vector_dup(bank, (*size = count));
     }
     else if (!offset)
     {
         // is local
         // return every materials
-        res = (unsigned char *)vec_dup((signed char *)manip(player), (*size = count));
+        res = (unsigned char *)vector_dup((signed char *)manip(player), (*size = count));
     }
     else
     {
         // return only the count of the materials
-        res = single_byte(size, vec_sum((signed char *)manip(player), count));
+        res = single_byte(size, vector_sum((signed char *)manip(player), count));
     }
 
     return res;
@@ -316,7 +316,7 @@ unsigned char *inf_player_devcards(unsigned char *size,
 
 unsigned char *inf_player_amounts(unsigned char *size, PlayerPtr player)
 {
-    return (unsigned char *)vec_dup((signed char *)player->amounts, (signed char)(*size = TOTAL_STORE - 1));
+    return (unsigned char *)vector_dup((signed char *)player->amounts, (signed char)(*size = TOTAL_STORE - 1));
 }
 unsigned char *single_byte(unsigned char *size, signed char value)
 {
@@ -455,12 +455,13 @@ bool buy_settlement(PlayerPtr player,
     graph->vertices[index].color = player->color;
     player->victoryPoints++;
 
-    void *void_val = NULL;
-    *(unsigned char *)&void_val = index;
-    avl_insert(&player->settlements, void_val, value_compare);
+    avl_insert(&player->settlements, convert_unsigned_char_to_void_ptr(index), value_compare);
 
     player->victoryPoints++;
     player->amounts[SETTLEMENT]--;
+
+    if (graph->vertices[index].harbor)
+        player->harbors |= (1 << (graph->vertices[index].harbor - 1));
 
     return true;
 }
@@ -485,7 +486,7 @@ bool buy_city(PlayerPtr player,
 
 unsigned char random_index_by_vals(unsigned char size, signed char *arr)
 {
-    signed char offset = -1, rand = brand(0, vec_sum(arr, size));
+    signed char offset = -1, rand = brand(0, vector_sum(arr, size));
 
     while (rand > 0)
     {
@@ -816,9 +817,16 @@ void bot_plays(PlayerPtr player, int socket)
 }
 
 void handle_rest_turns(int socket,
-                       unsigned char *turnOffset,
+                       GraphPtr graph,
                        PlayerPtr players,
-                       const unsigned num_of_players)
+                       signed char *bankDevelopments,
+                       signed char *bankMaterials,
+                       unsigned char *turnOffset,
+                       const unsigned char num_of_players,
+                       signed char *achievementCards,
+                       unsigned char *robberArea,
+                       Heap astHeaps[TOTAL_ASTRATEGIES],
+                       unsigned char *astIndexes)
 {
     (*turnOffset)++;
     signed char *_buff = malloc(sizeof(char) * 1000);

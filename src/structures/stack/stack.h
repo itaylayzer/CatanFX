@@ -16,4 +16,6 @@ bool stack_empty(Stack);
 
 void *stack_pop(StackPtr);
 
+void stack_destroy(StackPtr);
+
 #endif

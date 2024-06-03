@@ -1,16 +1,5 @@
 #include "controller.h"
 
-unsigned char *use_dev_card(unsigned char *size,
-                            PlayerPtr player,
-                            unsigned char offset,
-                            unsigned char amount)
-{
-    player->developmentCards[offset] -= amount;
-    return (unsigned char *)vec_dup(
-        (signed char *)player->developmentCards,
-        (*size = TOTAL_DEVELOPMENT_CARD));
-}
-
 void handle_request(
     signed char *input_buffer,
     int socket,
@@ -19,11 +8,12 @@ void handle_request(
     PlayerPtr players,
     signed char *bankDevelopments,
     signed char *bankMaterials,
-    const signed char (*store)[TOTAL_MATERIALS],
     unsigned char *turnOffset,
     const unsigned char num_of_players,
     signed char *achievementCards,
-    unsigned char *robberArea)
+    unsigned char *robberArea,
+    Heap astHeaps[TOTAL_ASTRATEGIES],
+    unsigned char *astIndexes)
 {
     unsigned char size = 0;
     void *send_buffer;
@@ -37,7 +27,7 @@ void handle_request(
         send_buffer = harbors_numbers(&size, graph, harbors);
         break;
 
-    case 2: // TODO: what players are around an area vertex
+    case 2:
         send_buffer = players_around_area(&size, input_buffer[1], graph);
         break;
 
@@ -64,7 +54,7 @@ void handle_request(
         break;
 
     case 15: // achievement cards
-        send_buffer = vec_dup(achievementCards, (size = TOTAL_ACHIEVEMENTS_CARD));
+        send_buffer = vector_dup(achievementCards, (size = TOTAL_ACHIEVEMENTS_CARD));
         break;
 
     case 30: // roll dice
@@ -98,8 +88,18 @@ void handle_request(
         send_buffer = drop_materials(&size, players, (signed char *)(input_buffer + 1));
         break;
 
-    case 40:
-        handle_rest_turns(socket, turnOffset, players, num_of_players);
+    case 40: // computer player play
+        handle_rest_turns(socket,
+                          graph,
+                          players,
+                          bankDevelopments,
+                          bankMaterials,
+                          turnOffset,
+                          num_of_players,
+                          achievementCards,
+                          robberArea,
+                          astHeaps,
+                          astIndexes);
         size = 1;
         send_buffer = calloc(1, sizeof(char));
         break;
@@ -122,7 +122,8 @@ void catan_start(signed char _num_of_players)
     signed char bankMaterials[TOTAL_MATERIALS] = {19, 19, 19, 19, 19};
     signed char bankDevelopments[TOTAL_DEVELOPMENT_CARD] = {14, 5, 2, 2, 2};
     signed char achievementCards[TOTAL_ACHIEVEMENTS_CARD] = {-1, -1};
-    unsigned char turnOffset = 0, robberArea = 9;
+    unsigned char turnOffset = 0, robberArea = 9, *astIndexes;
+    Heap astHeaps[TOTAL_ASTRATEGIES];
     GraphPtr graph;
 
     unsigned char harbors[HARBOR_COUNT * 2] = {0, 3, 1, 5, 10, 15, 26, 32, 42, 46, 49, 52, 47, 51, 33, 38, 11, 16};
@@ -130,7 +131,6 @@ void catan_start(signed char _num_of_players)
     // change random seed to current time
     srand(time(NULL));
 
-    puts("\n");
     // num of players
     players = malloc((num_of_players = _num_of_players) * sizeof(PlayerRec));
 
@@ -138,9 +138,9 @@ void catan_start(signed char _num_of_players)
     graph_init(&graph);
     catan_graph_init(graph, harbors);
 
-    catab_players_init(players, num_of_players);
+    catan_players_init(players, num_of_players);
+    astIndexes = astrategies_init(graph, astHeaps);
 
-    printt("done initializing catan: %d players\n", num_of_players);
     // initialize server
     server_listen(handle_request,
                   graph,
@@ -148,9 +148,11 @@ void catan_start(signed char _num_of_players)
                   players,
                   bankDevelopments,
                   bankMaterials,
-                  store,
+
                   &turnOffset,
                   num_of_players,
                   achievementCards,
-                  &robberArea);
+                  &robberArea,
+                  astHeaps,
+                  astIndexes);
 }

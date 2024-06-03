@@ -23,9 +23,11 @@ void heap_init(Heap *, unsigned char);
 void heap_insert(Heap *, void *data, signed char score,
                  signed char (*)(signed char, signed char));
 
-void *heap_extract(Heap *, signed char (*)(signed char, signed char));
-
+void *heap_extract(Heap *heap,
+                   signed char (*cmp)(signed char, signed char),
+                   signed char *scoreptr);
 void *heap_top(Heap *);
+signed char heap_top_score(Heap *);
 
 bool heap_empty(Heap);
 signed char heap_min(signed char, signed char);

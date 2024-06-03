@@ -22,7 +22,7 @@
 #include "./sock.h"
 #include "../controller/types.h"
 #include "../utils/printt/printt.h"
-
+#include "../structures/heap/heap.h"
 #define PORT 5173
 #define BUFFER_SIZE 256
 
@@ -33,18 +33,20 @@ int server_listen(void (*handle_request)(
                       unsigned char *harbors, PlayerPtr players,
                       signed char *bankDevelopments,
                       signed char *bankMaterials,
-                      const signed char (*store)[TOTAL_MATERIALS],
                       unsigned char *turnOffset,
                       const unsigned char num_of_players,
                       signed char *achievementCards,
-                      unsigned char *robberArea),
+                      unsigned char *robberArea,
+                      Heap heaps[TOTAL_ASTRATEGIES],
+                      unsigned char *astIndexes),
                   GraphPtr graph,
                   unsigned char *harbors, PlayerPtr players,
                   signed char *bankDevelopments,
                   signed char *bankMaterials,
-                  const signed char (*store)[TOTAL_MATERIALS],
                   unsigned char *turnOffset,
                   const unsigned char num_of_players,
                   signed char *achievementCards,
-                  unsigned char *robberArea);
+                  unsigned char *robberArea,
+                  Heap heaps[TOTAL_ASTRATEGIES],
+                  unsigned char *astIndexes);
 #endif

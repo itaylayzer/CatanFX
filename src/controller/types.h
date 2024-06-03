@@ -14,12 +14,13 @@
 #define HARBOR_COUNT 9
 #define MAX_PLAYERS 4
 #define MAX_VALUE 255
+#define S_MIN_VALUE -128
 
 typedef enum
 {
     WOOD,
     WOOL,
-    WHEET,
+    WHEAT,
     BRICK,
     ORE,
     GENERAL_DEAL
@@ -94,5 +95,13 @@ typedef struct playerType
     unsigned char knightUsed;               // כמות שימושים של אבירים
     unsigned char amounts[TOTAL_STORE - 1]; // כמות של פריטים נותרים
 } PlayerRec, *PlayerPtr;
+
+#define TOTAL_ASTRATEGIES 3
+typedef enum
+{
+    AST_WOOD,
+    AST_WHEAT,
+    AST_CARDS
+} AST_KEYS;
 
 #endif

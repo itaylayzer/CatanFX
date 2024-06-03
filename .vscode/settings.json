@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "atomic": "c",
+        "cstdint": "c",
+        "convert.h": "c",
+        "printt.h": "c",
+        "graph.h": "c",
+        "player.h": "c",
+        "server.h": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c"
+    }
+}

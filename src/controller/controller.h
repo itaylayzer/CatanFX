@@ -4,6 +4,7 @@
 
 #include "./types.h"
 #include "../model/headers/model.h"
+#include "../model/headers/player.h"
 #include "../structures/graph/graph.h"
 #include "../server/server.h"
 #include "../utils/printt/printt.h"

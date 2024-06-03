@@ -96,7 +96,7 @@ unsigned char vector_count(const signed char *dest, signed char size, signed cha
     }
     return count;
 }
-signed char vec_sum(signed char *arr, signed char size)
+signed char vector_sum(signed char *arr, signed char size)
 {
     unsigned char val;
 
@@ -106,7 +106,7 @@ signed char vec_sum(signed char *arr, signed char size)
     }
     return val;
 }
-signed char *vec_dup(signed char *arr, signed char size)
+signed char *vector_dup(signed char *arr, signed char size)
 {
     signed char *new = malloc(sizeof(signed char) * size);
     while (--size >= 0)
@@ -121,7 +121,7 @@ void bswap(signed char *x, signed char *y)
     *y = *x;
     *x = temp;
 }
-void vec_shuffle(signed char *arr, unsigned char size)
+void vector_shuffle(signed char *arr, unsigned char size)
 {
     unsigned char offset;
     for (offset = 0; offset < size; offset++)
@@ -142,4 +142,16 @@ unsigned char vector_min_index(const signed char *arr, signed char size)
         }
     }
     return min_index;
+}
+void vector_reverse(signed char *arr, unsigned char size)
+{
+    unsigned char offset;
+    signed char temp;
+
+    for (offset = 0; offset * 2 < size; offset++)
+    {
+        temp = arr[offset];
+        arr[offset] = arr[size - 1 - offset];
+        arr[size - 1 - offset] = temp;
+    }
 }

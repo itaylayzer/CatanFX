@@ -14,20 +14,22 @@ int server_listen(void (*handle_request)(
                       unsigned char *harbors, PlayerPtr players,
                       signed char *bankDevelopments,
                       signed char *bankMaterials,
-                      const signed char (*store)[TOTAL_MATERIALS],
                       unsigned char *turnOffset,
                       const unsigned char num_of_players,
                       signed char *achievementCards,
-                      unsigned char *robberArea),
+                      unsigned char *robberArea,
+                      Heap heaps[TOTAL_ASTRATEGIES],
+                      unsigned char *astIndexes),
                   GraphPtr graph,
                   unsigned char *harbors, PlayerPtr players,
                   signed char *bankDevelopments,
                   signed char *bankMaterials,
-                  const signed char (*store)[TOTAL_MATERIALS],
                   unsigned char *turnOffset,
                   const unsigned char num_of_players,
                   signed char *achievementCards,
-                  unsigned char *robberArea)
+                  unsigned char *robberArea,
+                  Heap heaps[TOTAL_ASTRATEGIES],
+                  unsigned char *astIndexes)
 {
     int server_fd, new_socket, valread, error_code;
     struct sockaddr_in address;
@@ -109,11 +111,12 @@ int server_listen(void (*handle_request)(
                            players,
                            bankDevelopments,
                            bankMaterials,
-                           store,
                            turnOffset,
                            num_of_players,
                            achievementCards,
-                           robberArea);
+                           robberArea,
+                           heaps,
+                           astIndexes);
         }
         free(buffer);
     }

@@ -59,7 +59,7 @@ void graph_dijkstra(GraphPtr graph, unsigned char source, unsigned char color)
 
     while (!heap_empty(scores))
     {
-        vertex = heap_extract(&scores, heap_min);
+        vertex = heap_extract(&scores, heap_min, NULL);
 
         Queue queue;
         Node node;

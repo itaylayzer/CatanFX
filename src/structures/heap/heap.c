@@ -64,19 +64,34 @@ void heap_insert(Heap *heap, void *data, signed char score,
     heapify_up(heap, heap->length++, cmp);
 }
 
-void *heap_extract(Heap *heap, signed char (*cmp)(signed char, signed char))
+void *heap_extract(Heap *heap,
+                   signed char (*cmp)(signed char, signed char),
+                   signed char *scoreptr)
 {
     void *data = heap->data[0].data;
+    signed char score = heap->data[0].score;
+
     heap->data[0].data = NULL;
+
     swap(heap, 0, --heap->length);
+
     if (heap->length)
         heapify_down(heap, 0, cmp);
+
+    if (scoreptr)
+        *scoreptr = score;
+
     return data;
 }
 
 void *heap_top(Heap *heap)
 {
     return heap->data[0].data;
+}
+
+signed char heap_top_score(Heap *heap)
+{
+    return heap->data[0].score;
 }
 
 signed char heap_min(signed char x, signed char y)

@@ -19,3 +19,11 @@ void *stack_pop(StackPtr stk)
 {
     return linear_pop(stk);
 }
+
+void stack_destroy(StackPtr stk)
+{
+    while (!stack_empty(*stk))
+    {
+        stack_pop(stk);
+    }
+}
