@@ -44,6 +44,6 @@ bool buyableProduct(unsigned char astrategy,
                     GraphPtr graph,
                     signed char playerMats[TOTAL_MATERIALS],
                     signed char playerHarbors,
-                    unsigned char productMats[TOTAL_MATERIALS],
-                    QueuePtr actionsQ)
+                    signed char productMats[TOTAL_MATERIALS],
+                    QueuePtr actionsQ);
 #endif

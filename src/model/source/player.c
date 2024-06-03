@@ -100,7 +100,7 @@ void initScoreHeaps(GraphPtr graph, Heap heaps[TOTAL_ASTRATEGIES])
 unsigned char getMissingMaterial(signed char playerMaterials[TOTAL_MATERIALS],
                                  signed char productMats[TOTAL_MATERIALS])
 {
-    const signed char *sub = vector_sub(playerMaterials, productMats, TOTAL_MATERIALS);
+    signed char *sub = vector_sub(playerMaterials, productMats, TOTAL_MATERIALS);
     const unsigned char min_index = vector_min_index(sub, TOTAL_MATERIALS);
     free(sub);
     return min_index;
@@ -113,10 +113,10 @@ unsigned char *leastImportent(unsigned char astrategy, PlayerPtr player, GraphPt
                                                       cardsMatsOrder};
 
     unsigned char *res = func[astrategy](player, graph);
-    signed char *mats = vector_dup((signed char *)res + TOTAL_MATERIALS, TOTAL_MATERIALS);
+    unsigned char *mats = (unsigned char *)vector_dup((signed char *)res + TOTAL_MATERIALS, TOTAL_MATERIALS);
     free(res);
 
-    vector_reverse(mats, TOTAL_MATERIALS);
+    vector_reverse((signed char *)mats, TOTAL_MATERIALS);
 
     return mats;
 }
@@ -152,7 +152,7 @@ unsigned char buyableMaterial(unsigned char astrategy,
         {
             playerMaterials[harborOffset] -= take;
             playerMaterials[missingMaterial]++;
-            result = harborOffset + 1 + (take - 2) >> 3;
+            result = harborOffset + 1 + ((take - 2) >> 3);
         }
     }
 
@@ -235,7 +235,7 @@ unsigned char *woodMatsOrder(PlayerPtr player, GraphPtr graph)
          {store[DEVELOPMENT_CARD][0], store[DEVELOPMENT_CARD][1], store[DEVELOPMENT_CARD][2], store[DEVELOPMENT_CARD][3], store[DEVELOPMENT_CARD][4], ORE, WHEAT, WOOL, BRICK, WOOD}};
 
     unsigned char index = find_first_true_index(states, TOTAL_STORE);
-    unsigned char *res = vector_dup(values[index], TOTAL_MATERIALS * 2);
+    unsigned char *res = (unsigned char *)vector_dup((signed char *)values[index], TOTAL_MATERIALS * 2);
     stack_destroy(&temp);
 
     return res;
@@ -257,7 +257,7 @@ unsigned char *wheatMatsOrder(PlayerPtr player, GraphPtr graph)
          {store[DEVELOPMENT_CARD][0], store[DEVELOPMENT_CARD][1], store[DEVELOPMENT_CARD][2], store[DEVELOPMENT_CARD][3], store[DEVELOPMENT_CARD][4], ORE, WHEAT, WOOL, BRICK, WOOD}};
 
     unsigned char index = find_first_true_index(states, TOTAL_STORE - 1);
-    unsigned char *res = vector_dup(values[index], TOTAL_MATERIALS * 2);
+    unsigned char *res = (unsigned char *)vector_dup((signed char *)values[index], TOTAL_MATERIALS * 2);
     stack_destroy(&temp);
 
     return res;
@@ -270,7 +270,7 @@ unsigned char *cardsMatsOrder(PlayerPtr player, GraphPtr graph)
                                                 store[DEVELOPMENT_CARD][3],
                                                 store[DEVELOPMENT_CARD][4],
                                                 ORE < WHEAT, WOOL, BRICK, WOOD};
-    return vector_dup(value, TOTAL_MATERIALS * 2);
+    return (unsigned char *)vector_dup((signed char *)value, TOTAL_MATERIALS * 2);
 }
 
 // astrategies play function
@@ -427,7 +427,7 @@ bool buyableProduct(unsigned char astrategy,
                     GraphPtr graph,
                     signed char playerMats[TOTAL_MATERIALS],
                     signed char playerHarbors,
-                    unsigned char productMats[TOTAL_MATERIALS],
+                    signed char productMats[TOTAL_MATERIALS],
                     QueuePtr actionsQ)
 {
 
