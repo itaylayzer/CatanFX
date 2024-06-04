@@ -11,6 +11,7 @@
 #include "../../utils/convert/convert.h"
 #include "./vec_utils.h"
 #include "./macro.h"
+#include "../../structures/graph/graph.h"
 
 // astrategies scores
 float woodScore(float[TOTAL_MATERIALS]);
@@ -20,14 +21,15 @@ float cardsStore(float[TOTAL_MATERIALS]);
 // picking astrategies
 unsigned char *astrategies_init(GraphPtr graph, Heap heaps[TOTAL_ASTRATEGIES]);
 
-// astrategies prioritise functions
-void prioritiseWoodRoad();
-void prioritiseWheatCardsRoad();
-void prioritiseWoodSettlement();
-void prioritiseWheatCardsSettlement();
-unsigned char *woodMatsOrder(PlayerPtr, GraphPtr);
-unsigned char *wheatMatsOrder(PlayerPtr, GraphPtr);
-unsigned char *cardsMatsOrder(PlayerPtr, GraphPtr);
+// astrategies prioritise functionsת TODO:
+void prioritiseWoodRoad(GraphPtr, PlayerPtr, Heap[TOTAL_ASTRATEGIES]);
+unsigned short prioritiseWheatCardsRoad(GraphPtr, PlayerPtr, Heap[TOTAL_ASTRATEGIES]);
+void prioritiseWoodSettlement(GraphPtr, PlayerPtr, Heap[TOTAL_ASTRATEGIES]);
+unsigned char prioritiseWheatCardsSettlement(GraphPtr, PlayerPtr, Heap[TOTAL_ASTRATEGIES]);
+
+unsigned char *woodMatsOrder(GraphPtr, PlayerPtr);
+unsigned char *wheatMatsOrder(GraphPtr, PlayerPtr);
+unsigned char *cardsMatsOrder(GraphPtr, PlayerPtr);
 
 // astrategies play function
 // TODO:

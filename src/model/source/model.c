@@ -135,18 +135,18 @@ void catan_players_init(PlayerPtr players, signed char size)
         players[size].developmentCards[4] = 10;
     }
 }
-unsigned char *areas_numbers(unsigned char *size, GraphPtr graph)
+unsigned char *areas_numbers(unsigned char *size, signed char *params,
+                             int socket, GameState state)
 {
     unsigned char *arr = malloc(sizeof(signed char) * (*size = AREAS)), offset;
 
     for (offset = 0; offset < AREAS; offset++)
-        arr[offset] = graph->vertices[offset].material_number;
+        arr[offset] = state->graph->vertices[offset].material_number;
 
     return arr;
 }
-unsigned char *harbors_numbers(unsigned char *size,
-                               GraphPtr graph,
-                               unsigned char harbors[HARBOR_COUNT * 2])
+unsigned char *harbors_numbers(unsigned char *size, signed char *params,
+                               int socket, GameState state)
 {
 
     unsigned char offset, general_deal_counter, mat, mat_index,
@@ -154,27 +154,26 @@ unsigned char *harbors_numbers(unsigned char *size,
 
     for (offset = 0, general_deal_counter = 0; offset < HARBOR_COUNT; offset++)
     {
-        mat = mat_index = graph->vertices[harbors[offset * 2] + AREAS].harbor - 1;
+        mat = mat_index = state->graph->vertices[state->harbors[offset * 2] + AREAS].harbor - 1;
 
         if (mat == GENERAL_DEAL)
             mat_index += general_deal_counter++;
 
-        harbors_numbs[mat_index * 2] = harbors[offset * 2];
-        harbors_numbs[mat_index * 2 + 1] = harbors[offset * 2 + 1];
+        harbors_numbs[mat_index * 2] = state->harbors[offset * 2];
+        harbors_numbs[mat_index * 2 + 1] = state->harbors[offset * 2 + 1];
     }
     print_vec(harbors_numbs, HARBOR_COUNT * 2);
     return harbors_numbs;
 }
 
-unsigned char *players_around_area(unsigned char *size,
-                                   unsigned char vertex_area,
-                                   GraphPtr graph)
+unsigned char *players_around_area(unsigned char *size, signed char *params,
+                                   int socket, GameState state)
 {
     // each bit represent if the player is around the area or not
     unsigned char playerBits = 0;
 
-    VertexPtr area = graph->vertices + vertex_area;
-    VertexPtr dest = graph->vertices + vertex_area;
+    VertexPtr area = state->graph->vertices + params[0];
+    VertexPtr dest = state->graph->vertices + params[0];
 
     EdgePtr edge;
     Node node;
@@ -193,16 +192,13 @@ unsigned char *players_around_area(unsigned char *size,
 
     return single_byte(size, playerBits);
 }
-unsigned char *roll_dice(unsigned char *size,
-                         PlayerPtr players,
-                         GraphPtr graph,
-                         signed char *bank,
-                         const unsigned char robberArea)
+unsigned char *roll_dice(unsigned char *size, signed char *params,
+                         int socket, GameState state)
 {
     unsigned char *arr, dice, sum;
 
-    sum = dice = brand(1, 7);
-    sum += (dice = brand(1, 7));
+    sum = dice = 3;    // brand(1, 7);
+    sum += (dice = 4); // brand(1, 7));
     arr = single_byte(size, (dice << 4) | (sum - dice));
 
     printt("\trolled number %hhu while arr %hhd (%hhd, %hhd)\n", sum, arr[0], sum - dice, dice);
@@ -212,7 +208,7 @@ unsigned char *roll_dice(unsigned char *size,
         break;
 
     default:
-        collect_materials(sum, players, graph, bank, robberArea);
+        collect_materials(sum, state->players, state->graph, state->bankMaterials, state->robberArea);
         break;
     }
 
@@ -222,21 +218,19 @@ bool bis_neg(signed char x)
 {
     return x < 0;
 }
-unsigned char *inf_player_actionable(unsigned char *size,
-                                     PlayerPtr player,
-                                     signed char dev_bank[TOTAL_DEVELOPMENT_CARD],
-                                     const signed char store[TOTAL_STORE][TOTAL_MATERIALS])
+unsigned char *inf_player_actionable(unsigned char *size, signed char *params,
+                                     int socket, GameState state)
 {
     unsigned char *arr = calloc((*size = 1), sizeof(signed char)), offset;
 
     for (offset = 0; offset < TOTAL_STORE; offset++)
     {
-        signed char *arr_res = vector_sub((signed char *)player->materials,
+        signed char *arr_res = vector_sub((signed char *)state->players[params[0]].materials,
                                           store[offset], TOTAL_MATERIALS);
         bool not_neg = !vector_any(arr_res, TOTAL_MATERIALS, bis_neg);
         bool has_amount = offset == DEVELOPMENT_CARD
-                              ? vector_sum(dev_bank, TOTAL_DEVELOPMENT_CARD)
-                              : player->amounts[offset];
+                              ? vector_sum(state->bankDevelopments, TOTAL_DEVELOPMENT_CARD)
+                              : state->players[params[0]].amounts[offset];
 
         arr[0] |= (not_neg && has_amount) << offset;
         free(arr_res);
@@ -288,35 +282,43 @@ unsigned char *get_player_devcards(PlayerPtr player)
     return player->developmentCards;
 }
 
-unsigned char *inf_player_materials(unsigned char *size,
-                                    PlayerPtr players,
-                                    signed char *bankMaterials,
-                                    unsigned char offset)
+unsigned char *inf_player_materials(unsigned char *size, signed char *params,
+                                    int socket, GameState state)
 {
     unsigned char *mats = inf_players_manip(size,
-                                            players,
-                                            offset,
-                                            bankMaterials,
+                                            state->players,
+                                            params[0],
+                                            state->bankMaterials,
                                             TOTAL_MATERIALS,
                                             get_player_materials);
     return mats;
 }
-unsigned char *inf_player_devcards(unsigned char *size,
-                                   PlayerPtr players,
-                                   signed char *bankDevelopment,
-                                   unsigned char offset)
+unsigned char *inf_player_devcards(unsigned char *size, signed char *params,
+                                   int socket, GameState state)
 {
     return inf_players_manip(size,
-                             players,
-                             offset,
-                             bankDevelopment,
+                             state->players,
+                             params[0],
+                             state->bankDevelopments,
                              TOTAL_DEVELOPMENT_CARD,
                              get_player_devcards);
 }
 
-unsigned char *inf_player_amounts(unsigned char *size, PlayerPtr player)
+unsigned char *inf_player_victory_points(unsigned char *size, signed char *params,
+                                         int socket, GameState state)
 {
-    return (unsigned char *)vector_dup((signed char *)player->amounts, (signed char)(*size = TOTAL_STORE - 1));
+    return single_byte(size, state->players[params[0]].victoryPoints);
+}
+
+unsigned char *inf_player_amounts(unsigned char *size, signed char *params,
+                                  int socket, GameState state)
+{
+    return (unsigned char *)vector_dup((signed char *)state->players[params[0]].amounts, (signed char)(*size = TOTAL_STORE - 1));
+}
+unsigned char *inf_achivement_cards(unsigned char *size, signed char *params,
+                                    int socket, GameState state)
+{
+    return (unsigned char *)vector_dup(state->achievementCards, (*size = TOTAL_ACHIEVEMENTS_CARD));
 }
 unsigned char *single_byte(unsigned char *size, signed char value)
 {
@@ -583,47 +585,42 @@ signed char update_longest_road(GraphPtr graph, signed char *longest_road_achiev
     return *longest_road_achievement;
 }
 
-unsigned char *switch_action_store(unsigned char *size,
-                                   signed char *params,
-                                   GraphPtr graph,
-                                   PlayerPtr player,
-                                   signed char mat_bank[TOTAL_MATERIALS],
-                                   signed char devcard_bank[TOTAL_DEVELOPMENT_CARD],
-                                   const signed char store[TOTAL_STORE][TOTAL_MATERIALS], signed char *longest_road_achievement)
+unsigned char *switch_action_store(unsigned char *size, signed char *params,
+                                   int socket, GameState state)
 {
     unsigned char *res = calloc((*size = 1), sizeof(unsigned char));
 
     switch (params[0])
     {
     case 0:
-        buy_road(player,
-                 graph,
+        buy_road(state->players,
+                 state->graph,
                  store[ROAD],
-                 mat_bank,
+                 state->bankMaterials,
                  params[1],
                  params[2] + AREAS,
                  params[3] + AREAS);
-        res[0] = update_longest_road(graph, longest_road_achievement);
+        res[0] = update_longest_road(state->graph, state->achievementCards + LONGEST_PATH);
         break;
     case 1:
-        res[0] = buy_settlement(player,
-                                graph,
+        res[0] = buy_settlement(state->players,
+                                state->graph,
                                 store[SETTLEMENT],
-                                mat_bank,
+                                state->bankMaterials,
                                 params[1],
                                 params[2] + AREAS);
         break;
     case 2:
-        res[0] = buy_city(player,
-                          graph,
+        res[0] = buy_city(state->players,
+                          state->graph,
                           store[CITY],
-                          mat_bank,
+                          state->bankMaterials,
                           params[2] + AREAS);
         break;
     case 3:
-        res[0] = buy_developement(player,
-                                  mat_bank,
-                                  devcard_bank,
+        res[0] = buy_developement(state->players,
+                                  state->bankMaterials,
+                                  state->bankDevelopments,
                                   store[DEVELOPMENT_CARD]);
         break;
     default:
@@ -652,11 +649,8 @@ void transfer_all_players_mats(PlayerPtr players,
     }
 }
 
-unsigned char *switch_dev_card(unsigned char *size,
-                               PlayerPtr players,
-                               unsigned char num_of_players,
-                               signed char *bankMaterials,
-                               signed char *params)
+unsigned char *switch_dev_card(unsigned char *size, signed char *params,
+                               int socket, GameState state)
 {
     switch (params[0])
     {
@@ -665,13 +659,13 @@ unsigned char *switch_dev_card(unsigned char *size,
         signed char mats_to_transfer[TOTAL_MATERIALS] = {0};
         mats_to_transfer[params[1]]++;
         mats_to_transfer[params[2]]++;
-        transfer_materials(players, bankMaterials, mats_to_transfer, true);
+        transfer_materials(state->players, state->bankMaterials, mats_to_transfer, true);
     }
     break;
     case 4:
-        transfer_all_players_mats(players, 0, (signed char)num_of_players, params[1]);
+        transfer_all_players_mats(state->players, 0, (signed char)state->num_of_players, params[1]);
     }
-    players->developmentCards[params[0]]--;
+    state->players->developmentCards[params[0]]--;
 
     return single_byte(size, 0);
 }
@@ -752,17 +746,12 @@ signed char update_biggest_army(PlayerPtr players,
     printt("\t\tmax = %d (%d)\n", players[maxIndex].knightUsed, maxIndex);
     return *biggest_army_achievement;
 }
-unsigned char *move_robber(unsigned char *size,
-                           PlayerPtr players,
-                           const unsigned char player_index,
-                           unsigned char *robberArea,
-                           signed char *params,
-                           signed char *biggest_army_achievement,
-                           const unsigned char num_of_players)
+unsigned char *move_robber(unsigned char *size, signed char *params,
+                           int socket, GameState state)
 {
     unsigned char *res = single_byte(size, -1);
-    unsigned char target_index = params[0]; // if got 7!
-    *robberArea = params[1];
+    unsigned char target_index = params[1]; // if got 7!
+    (state->robberArea) = params[2];
 
     switch (target_index)
     {
@@ -774,29 +763,28 @@ unsigned char *move_robber(unsigned char *size,
     {
         unsigned char cost[TOTAL_MATERIALS] = {0};
         cost[random_index_by_vals(TOTAL_MATERIALS, (signed char *)cost)]++;
-        transfer_materials(players + player_index,
-                           (signed char *)players[target_index].materials,
+        transfer_materials(state->players + params[0],
+                           (signed char *)state->players[target_index].materials,
                            (signed char *)cost, true);
         printt("steal mode player index: %d\n", target_index);
     }
     break;
 
     case 0:
-        players[player_index].knightUsed++;
-        printt("pullin up knight!! %d\n", players[player_index].knightUsed);
+        state->players[params[0]].knightUsed++;
+        printt("pullin up knight!! %d\n", state->players[params[0]].knightUsed);
         break;
     }
 
-    res[0] = update_biggest_army(players, num_of_players,
-                                 biggest_army_achievement);
+    res[0] = update_biggest_army(state->players, state->num_of_players,
+                                 state->achievementCards + BIGGEST_ARMY);
     printt("returning %hhd\n", *res);
     return res;
 }
-unsigned char *drop_materials(unsigned char *size, PlayerPtr player, signed char *mats)
+unsigned char *drop_materials(unsigned char *size, signed char *params,
+                              int socket, GameState state)
 {
-    signed char *sub = vector_sub((signed char *)player->materials,
-                                  mats, TOTAL_MATERIALS);
-    vector_cpy((signed char *)player->materials, sub, TOTAL_MATERIALS);
+    transfer_materials(state->players + params[0], state->bankMaterials, params + 1, false);
     return single_byte(size, 0);
 }
 // bots
@@ -816,37 +804,31 @@ void bot_plays(PlayerPtr player, int socket)
     usleep(500000);
 }
 
-void handle_rest_turns(int socket,
-                       GraphPtr graph,
-                       PlayerPtr players,
-                       signed char *bankDevelopments,
-                       signed char *bankMaterials,
-                       unsigned char *turnOffset,
-                       const unsigned char num_of_players,
-                       signed char *achievementCards,
-                       unsigned char *robberArea,
-                       Heap astHeaps[TOTAL_ASTRATEGIES],
-                       unsigned char *astIndexes)
+unsigned char *handle_rest_turns(unsigned char *size, signed char *params,
+                                 int socket, GameState state)
 {
-    (*turnOffset)++;
+    (state->turnOffset)++;
     signed char *_buff = malloc(sizeof(char) * 1000);
 
-    unsigned char turnColor, size;
+    unsigned char turnColor, _size;
 
     // while the turn color its not WHITE
-    while ((turnColor = (*turnOffset) % num_of_players))
+    while ((turnColor = (state->turnOffset) % state->num_of_players))
     {
 
-        bot_plays(players + turnColor, socket);
+        bot_plays(state->players + turnColor, socket);
 
         // printt("\tbot number %d done playing!", turnColor);
-        (*turnOffset)++;
+        (state->turnOffset)++;
 
         _buff[0] = 0;
-        _buff[1] = (*turnOffset) % num_of_players;
-        size = 2;
+        _buff[1] = (state->turnOffset) % state->num_of_players;
+        _size = 2;
 
-        send(socket, &size, 1, 0);
-        send(socket, _buff, size, 0);
+        send(socket, &_size, 1, 0);
+        send(socket, _buff, _size, 0);
     }
+
+    *size = 0;
+    return NULL;
 }

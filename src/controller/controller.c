@@ -3,110 +3,32 @@
 void handle_request(
     signed char *input_buffer,
     int socket,
-    GraphPtr graph,
-    unsigned char *harbors,
-    PlayerPtr players,
-    signed char *bankDevelopments,
-    signed char *bankMaterials,
-    unsigned char *turnOffset,
-    const unsigned char num_of_players,
-    signed char *achievementCards,
-    unsigned char *robberArea,
-    Heap astHeaps[TOTAL_ASTRATEGIES],
-    unsigned char *astIndexes)
+    GameState state)
 {
     unsigned char size = 0;
     void *send_buffer;
 
-    switch (input_buffer[0])
-    {
-    case 0:
-        send_buffer = areas_numbers(&size, graph);
-        break;
-    case 1:
-        send_buffer = harbors_numbers(&size, graph, harbors);
-        break;
+    unsigned char *(*func[])(unsigned char *, signed char *, int, GameState) =
+        {areas_numbers,
+         harbors_numbers,
+         players_around_area,
+         inf_player_actionable,
+         inf_player_materials,
+         inf_player_devcards,
+         inf_player_victory_points,
+         inf_player_amounts,
+         inf_achivement_cards,
+         roll_dice,
+         switch_action_store,
+         move_robber,
+         switch_dev_card,
+         drop_materials,
+         handle_rest_turns};
 
-    case 2:
-        send_buffer = players_around_area(&size, input_buffer[1], graph);
-        break;
+    puts("|");
+    printt("input_buffer[0]:%d\n", input_buffer[0]);
 
-    case 10: // player actionable
-        send_buffer = inf_player_actionable(&size, players, bankDevelopments, store);
-        break;
-
-    case 11: // player materials
-        send_buffer = inf_player_materials(&size, players, bankMaterials, input_buffer[1]);
-        break;
-
-    case 12: // developements cards
-        send_buffer = inf_player_devcards(&size, players, bankDevelopments,
-                                          input_buffer[1]);
-
-        break;
-
-    case 13: // victory points
-        send_buffer = single_byte(&size, (players + input_buffer[1])->victoryPoints);
-        break;
-
-    case 14: // player materials
-        send_buffer = inf_player_amounts(&size, players);
-        break;
-
-    case 15: // achievement cards
-        send_buffer = vector_dup(achievementCards, (size = TOTAL_ACHIEVEMENTS_CARD));
-        break;
-
-    case 30: // roll dice
-        send_buffer = roll_dice(&size, players, graph, bankMaterials, *robberArea);
-        break;
-
-    case 31: // buy from store
-        send_buffer = switch_action_store(&size,
-                                          input_buffer + 1,
-                                          graph,
-                                          players,
-                                          bankMaterials,
-                                          bankDevelopments,
-                                          store,
-                                          achievementCards + LONGEST_PATH);
-        break;
-    case 32: // move robber
-        send_buffer = move_robber(&size,
-                                  players,
-                                  0,
-                                  robberArea,
-                                  input_buffer + 1,
-                                  achievementCards + BIGGEST_ARMY,
-                                  num_of_players);
-        break;
-    case 33: // use dev card
-        send_buffer = switch_dev_card(&size, players, num_of_players, bankMaterials, input_buffer + 1);
-        break;
-
-    case 34: // drop materials
-        send_buffer = drop_materials(&size, players, (signed char *)(input_buffer + 1));
-        break;
-
-    case 40: // computer player play
-        handle_rest_turns(socket,
-                          graph,
-                          players,
-                          bankDevelopments,
-                          bankMaterials,
-                          turnOffset,
-                          num_of_players,
-                          achievementCards,
-                          robberArea,
-                          astHeaps,
-                          astIndexes);
-        size = 1;
-        send_buffer = calloc(1, sizeof(char));
-        break;
-
-    default:
-        return;
-    }
+    send_buffer = func[input_buffer[0]](&size, input_buffer + 1, socket, state);
 
     send(socket, &size, 1, 0);
     send(socket, send_buffer, size, 0);
@@ -122,7 +44,8 @@ void catan_start(signed char _num_of_players)
     signed char bankMaterials[TOTAL_MATERIALS] = {19, 19, 19, 19, 19};
     signed char bankDevelopments[TOTAL_DEVELOPMENT_CARD] = {14, 5, 2, 2, 2};
     signed char achievementCards[TOTAL_ACHIEVEMENTS_CARD] = {-1, -1};
-    unsigned char turnOffset = 0, robberArea = 9, *astIndexes;
+    const unsigned char turnOffset = 0, robberArea = 9;
+    unsigned char *astIndexes;
     Heap astHeaps[TOTAL_ASTRATEGIES];
     GraphPtr graph;
 
@@ -141,18 +64,17 @@ void catan_start(signed char _num_of_players)
     catan_players_init(players, num_of_players);
     astIndexes = astrategies_init(graph, astHeaps);
 
+    stateRec state = {graph,
+                      harbors,
+                      players,
+                      bankDevelopments,
+                      bankMaterials,
+                      turnOffset,
+                      num_of_players,
+                      achievementCards,
+                      robberArea,
+                      astHeaps,
+                      astIndexes};
     // initialize server
-    server_listen(handle_request,
-                  graph,
-                  harbors,
-                  players,
-                  bankDevelopments,
-                  bankMaterials,
-
-                  &turnOffset,
-                  num_of_players,
-                  achievementCards,
-                  &robberArea,
-                  astHeaps,
-                  astIndexes);
+    server_listen(handle_request, &state);
 }

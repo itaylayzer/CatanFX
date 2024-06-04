@@ -10,6 +10,11 @@
         "array": "c",
         "string_view": "c",
         "initializer_list": "c",
-        "utility": "c"
+        "utility": "c",
+        "string": "c",
+        "controller.h": "c",
+        "state.h": "c",
+        "types.h": "c",
+        "constants.h": "c"
     }
 }

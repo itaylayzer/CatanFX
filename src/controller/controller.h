@@ -9,6 +9,8 @@
 #include "../server/server.h"
 #include "../utils/printt/printt.h"
 #include "./constants.h"
+#include "./state.h"
+
 void catan_start(signed char);
 
 #endif

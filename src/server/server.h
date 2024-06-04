@@ -23,30 +23,14 @@
 #include "../controller/types.h"
 #include "../utils/printt/printt.h"
 #include "../structures/heap/heap.h"
+#include "../controller/state.h"
 #define PORT 5173
 #define BUFFER_SIZE 256
 
 int server_listen(void (*handle_request)(
                       signed char *buffer,
                       int socket,
-                      GraphPtr graph,
-                      unsigned char *harbors, PlayerPtr players,
-                      signed char *bankDevelopments,
-                      signed char *bankMaterials,
-                      unsigned char *turnOffset,
-                      const unsigned char num_of_players,
-                      signed char *achievementCards,
-                      unsigned char *robberArea,
-                      Heap heaps[TOTAL_ASTRATEGIES],
-                      unsigned char *astIndexes),
-                  GraphPtr graph,
-                  unsigned char *harbors, PlayerPtr players,
-                  signed char *bankDevelopments,
-                  signed char *bankMaterials,
-                  unsigned char *turnOffset,
-                  const unsigned char num_of_players,
-                  signed char *achievementCards,
-                  unsigned char *robberArea,
-                  Heap heaps[TOTAL_ASTRATEGIES],
-                  unsigned char *astIndexes);
+                      GameState state),
+                  GameState state);
+                  
 #endif

@@ -108,11 +108,11 @@ unsigned char getMissingMaterial(signed char playerMaterials[TOTAL_MATERIALS],
 
 unsigned char *leastImportent(unsigned char astrategy, PlayerPtr player, GraphPtr graph)
 {
-    unsigned char *(*func[3])(PlayerPtr, GraphPtr) = {woodMatsOrder,
+    unsigned char *(*func[3])(GraphPtr, PlayerPtr) = {woodMatsOrder,
                                                       wheatMatsOrder,
                                                       cardsMatsOrder};
 
-    unsigned char *res = func[astrategy](player, graph);
+    unsigned char *res = func[astrategy](graph, player);
     unsigned char *mats = (unsigned char *)vector_dup((signed char *)res + TOTAL_MATERIALS, TOTAL_MATERIALS);
     free(res);
 
@@ -213,8 +213,105 @@ unsigned char *astrategies_init(GraphPtr graph, Heap heaps[TOTAL_ASTRATEGIES])
     return indexes;
 }
 
+// astrategies prioritise functionsת TODO:
+unsigned short prioritiseWheatCardsRoad(GraphPtr graph,
+                                        PlayerPtr player,
+                                        Heap heaps[TOTAL_ASTRATEGIES])
+{
+    EdgePtr tempEdge;
+    VertexPtr tempVertex;
+    unsigned char vertex, bestWoodScore, best_vertex = convert_void_ptr_to_unsigned_char(heap_top(heaps + AST_WOOD));
+    unsigned short edge_num, temp_edge_num;
+    signed char heapScore, bestScore;
+
+    float mats_prob[TOTAL_MATERIALS] = {0};
+
+    Heap bestWoodScores, woodScores;
+
+    heap_init(&bestWoodScores, TOTAL_ROADS * 2);
+    heap_init(&woodScores, TOTAL_ROADS * 2);
+
+    Stack buyable_roads;
+    stack_init(&buyable_roads);
+
+    buyableRoads(&buyable_roads, player);
+
+    while (!stack_empty(buyable_roads))
+    {
+        edge_num = convert_void_ptr_to_unsigned_short(stack_pop(&buyable_roads));
+        vertex = edge_num >> 8;
+        Node node;
+        QUEUE_TRAVARSE(graph->vertices[vertex].edges, node);
+
+        tempEdge = node->data;
+        if (tempEdge->color == GRAY)
+        {
+            tempVertex = tempEdge->vertex;
+            mats_prob[tempVertex->material_number & 0x07] += probs[(tempVertex->material_number >> 3) - 2];
+        }
+
+        QUEUE_TRAVARSE_FINISH;
+        graph_dijkstra(graph, vertex, GRAY);
+
+        bestWoodScore = -10 * graph_dijkstra_distance(graph, best_vertex) + 70;
+        heap_insert(&woodScores, convert_unsigned_short_to_void_ptr(edge_num), woodScore(mats_prob), heap_max);
+        heap_insert(&bestWoodScores, convert_unsigned_short_to_void_ptr(edge_num), bestWoodScore, heap_max);
+    }
+
+    edge_num = convert_void_ptr_to_unsigned_short(heap_extract(&woodScores, heap_max, &heapScore));
+    temp_edge_num = convert_void_ptr_to_unsigned_short(heap_extract(&bestWoodScores, heap_max, &bestScore));
+
+    if (bestScore > heapScore)
+    {
+        edge_num = temp_edge_num;
+    }
+
+    return edge_num;
+}
+unsigned char prioritiseWheatCardsSettlement(GraphPtr graph,
+                                             PlayerPtr player,
+                                             Heap heaps[TOTAL_ASTRATEGIES])
+{
+    EdgePtr edge;
+    VertexPtr tempVertex;
+    unsigned char vertex;
+
+    float mats_prob[TOTAL_MATERIALS] = {0};
+
+    Heap scores;
+    heap_init(&scores, VERTECIES);
+
+    Stack stk;
+    stack_init(&stk);
+
+    buyableSettlements(&stk, player, graph, true);
+
+    while (!stack_empty(stk))
+    {
+        vertex = convert_void_ptr_to_unsigned_char(stack_pop(&stk));
+        Node node;
+
+        QUEUE_TRAVARSE(graph->vertices[vertex].edges, node);
+
+        edge = node->data;
+        if (edge->color == GRAY)
+        {
+            tempVertex = edge->vertex;
+            mats_prob[tempVertex->material_number & 0x07] += probs[(tempVertex->material_number >> 3) - 2];
+        }
+
+        QUEUE_TRAVARSE_FINISH;
+
+        heap_insert(&scores, convert_unsigned_char_to_void_ptr(vertex), woodScore(mats_prob), heap_max);
+    }
+
+    signed char score = 0;
+    vertex = convert_void_ptr_to_unsigned_char(heap_extract(&scores, heap_max, &score));
+    return vertex;
+}
+
 // astrategies prioritise functions
-unsigned char *woodMatsOrder(PlayerPtr player, GraphPtr graph)
+unsigned char *woodMatsOrder(GraphPtr graph, PlayerPtr player)
 {
     Stack temp;
     stack_init(&temp);
@@ -240,7 +337,7 @@ unsigned char *woodMatsOrder(PlayerPtr player, GraphPtr graph)
 
     return res;
 }
-unsigned char *wheatMatsOrder(PlayerPtr player, GraphPtr graph)
+unsigned char *wheatMatsOrder(GraphPtr graph, PlayerPtr player)
 {
     Stack temp;
     stack_init(&temp);
@@ -262,7 +359,7 @@ unsigned char *wheatMatsOrder(PlayerPtr player, GraphPtr graph)
 
     return res;
 }
-unsigned char *cardsMatsOrder(PlayerPtr player, GraphPtr graph)
+unsigned char *cardsMatsOrder(GraphPtr graph, PlayerPtr player)
 {
     unsigned char value[TOTAL_MATERIALS * 2] = {store[DEVELOPMENT_CARD][0],
                                                 store[DEVELOPMENT_CARD][1],
@@ -356,7 +453,8 @@ unsigned char moveRobberTo(PlayerPtr player, GraphPtr graph)
 unsigned char buyableRoads(StackPtr stk, PlayerPtr player)
 {
 
-    unsigned char count = 0;
+    unsigned char count = 0, from;
+    unsigned short edge_num;
     Queue sourceQ, destQ;
     Node node;
     VertexPtr dest;
@@ -368,15 +466,17 @@ unsigned char buyableRoads(StackPtr stk, PlayerPtr player)
 
     QUEUE_TRAVARSE_BODY(sourceQ, node);
     dest = ((EdgePtr)node->data)->vertex;
+    from = ((EdgePtr)node->data)->offset;
     enqueue(&destQ, dest->edges);
 
     QUEUE_TRAVARSE_BODY(destQ, node);
 
     dest_edge = node->data;
+    edge_num = from + (dest_edge->offset << 8);
 
     if (dest_edge->color == BLACK)
     {
-        stack_push(stk, dest_edge);
+        stack_push(stk, convert_unsigned_short_to_void_ptr(edge_num));
         count++;
     }
     QUEUE_TRAVARSE_FINISH;
@@ -416,7 +516,7 @@ unsigned char upgradeableSettlements(StackPtr stk, PlayerPtr player, GraphPtr gr
     // if settlement vertex and dont have house
     if (vertex >= AREAS && graph->vertices[vertex].color >> 6 == 0)
     {
-        stack_push(stk, graph->vertices + vertex);
+        stack_push(stk, convert_unsigned_char_to_void_ptr(vertex));
     }
     QUEUE_TRAVARSE_FINISH;
 

@@ -10,26 +10,8 @@ void print_error(const char *type, const int code)
 int server_listen(void (*handle_request)(
                       signed char *buffer,
                       int socket,
-                      GraphPtr graph,
-                      unsigned char *harbors, PlayerPtr players,
-                      signed char *bankDevelopments,
-                      signed char *bankMaterials,
-                      unsigned char *turnOffset,
-                      const unsigned char num_of_players,
-                      signed char *achievementCards,
-                      unsigned char *robberArea,
-                      Heap heaps[TOTAL_ASTRATEGIES],
-                      unsigned char *astIndexes),
-                  GraphPtr graph,
-                  unsigned char *harbors, PlayerPtr players,
-                  signed char *bankDevelopments,
-                  signed char *bankMaterials,
-                  unsigned char *turnOffset,
-                  const unsigned char num_of_players,
-                  signed char *achievementCards,
-                  unsigned char *robberArea,
-                  Heap heaps[TOTAL_ASTRATEGIES],
-                  unsigned char *astIndexes)
+                      GameState state),
+                  GameState state)
 {
     int server_fd, new_socket, valread, error_code;
     struct sockaddr_in address;
@@ -106,17 +88,7 @@ int server_listen(void (*handle_request)(
         default:
             handle_request(buffer,
                            new_socket,
-                           graph,
-                           harbors,
-                           players,
-                           bankDevelopments,
-                           bankMaterials,
-                           turnOffset,
-                           num_of_players,
-                           achievementCards,
-                           robberArea,
-                           heaps,
-                           astIndexes);
+                           state);
         }
         free(buffer);
     }

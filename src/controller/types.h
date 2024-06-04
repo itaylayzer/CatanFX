@@ -11,6 +11,7 @@
 #define AREAS 19                  // כמות קודקודי אזור
 #define VERTECIES 54              // כמות קודקודי התיישבות
 #define TOTAL_STORE 4             // כמות המפתחות בחנות
+#define TOTAL_ROADS 72
 #define HARBOR_COUNT 9
 #define MAX_PLAYERS 4
 #define MAX_VALUE 255
@@ -103,5 +104,6 @@ typedef enum
     AST_WHEAT,
     AST_CARDS
 } AST_KEYS;
+
 
 #endif
