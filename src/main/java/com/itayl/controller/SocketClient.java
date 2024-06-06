@@ -7,8 +7,6 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 import com.itayl.controller.Constants.ClientCodes;
-import com.itayl.controller.Constants.ServerCodes;
-import com.itayl.view.Player;
 import com.itayl.view.Constants.Actions.TransferMaterials;
 import com.itayl.view.Interfaces.Action;
 import com.itayl.view.Interfaces.Condition;
@@ -62,6 +60,7 @@ public class SocketClient {
 
     public byte[] rollDice() throws IOException, Exception {
         byte rolled = this.action(new byte[] { ClientCodes.ACTIONS.DICE })[0];
+
         return new byte[] { (byte) (rolled & 0x0F), (byte) (rolled >> 4) };
     }
 
@@ -72,7 +71,7 @@ public class SocketClient {
     }
 
     public byte getActionable() throws IOException, Exception {
-        return this.action(new byte[] { ClientCodes.INFORMATION.PLAYER })[0];
+        return this.action(new byte[] { ClientCodes.INFORMATION.PLAYER, 0 })[0];
     }
 
     public byte storeRoad(boolean transferMaterials, byte from, byte to) throws IOException, Exception {
@@ -93,7 +92,8 @@ public class SocketClient {
         return this.action(new byte[] { ClientCodes.ACTIONS.STORE, 3 })[0] != 1;
     }
 
-    public void endTurn(Condition<Void> condition, Action<Void> onDone) throws IOException, Exception {
+    public void endTurn(Condition<Void> condition, Action<byte[]> handle, Action<Void> onDone)
+            throws IOException, Exception {
         this.send(new byte[] { ClientCodes.ACTIONS.END_TURN });
 
         Thread thread = new Thread(() -> {
@@ -101,11 +101,8 @@ public class SocketClient {
                 try {
                     byte[] response = this.recv();
 
-                    switch (response[0]) {
-                        case ServerCodes.TURN:
-                            Player.setTurnID(response[1]);
-                            break;
-                    }
+                    handle.action(response);
+
                 } catch (Exception ex) {
                     ex.printStackTrace(System.err);
                 }
@@ -158,7 +155,7 @@ public class SocketClient {
     public void removeMats(Byte[] matsToDrop) {
 
         try {
-            this.action(new byte[] { ClientCodes.ACTIONS.DROP, matsToDrop[0], matsToDrop[1], matsToDrop[2],
+            this.action(new byte[] { ClientCodes.ACTIONS.DROP, 0, matsToDrop[0], matsToDrop[1], matsToDrop[2],
                     matsToDrop[3], matsToDrop[4] });
         } catch (Exception exp) {
             exp.printStackTrace(System.err);

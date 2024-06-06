@@ -48,10 +48,12 @@ import com.itayl.view.Utils.ImageUtils;
 import com.itayl.view.Utils.ShapeUtils;
 import com.itayl.view.Utils.TimeUtils;
 import com.itayl.view.Utils.ValueException;
+import com.itayl.view.Windows.TradeWindow;
 
 public class CatanBoard {
 
     private static CatanBoard instance;
+    public static DicePane dicePane;
 
     private final double size = 50, v = Math.sqrt(3) / 2.0;
     private final int[] rows = { 3, 4, 5, 4, 3 };
@@ -112,15 +114,16 @@ public class CatanBoard {
             byte[] landsBytes,
             byte[] harborsBytes,
             LocalPlayer player,
-            byte[] edgesByte)
+            byte[] edgesByte, DicePane dice)
             throws ValueException, IndexOutOfBoundsException {
         if (instance != null) {
             throw new ValueException();
         }
         CatanBoard board = new CatanBoard(pane, userInterface, selectionBox, playerColors, players, landsBytes,
-                harborsBytes,
-                edgesByte);
+                harborsBytes, edgesByte);
         instance = board;
+
+        // board.trade();
 
         TimeUtils.waitUntil((t) -> {
             return instance.edgesGroup.getScene() != null;
@@ -128,7 +131,14 @@ public class CatanBoard {
             player.initialize();
         });
 
+        CatanBoard.dicePane = dice;
+
         return board;
+    }
+
+    private void trade() {
+        TradeWindow tradeW = new TradeWindow();
+        tradeW.show();
     }
 
     Point2D harbordCords(Point2D A, Point2D B, Point2D middle) {
@@ -810,6 +820,16 @@ public class CatanBoard {
     public byte[] seperateEdge(Byte picked) {
         LinePackage line = edges[picked];
         return new byte[] { line.from, line.to };
+    }
+
+    public byte joinEdge(byte from, byte to) {
+        for (LinePackage line : edges) {
+            if (line.from == from && line.to == to)
+                return line.offset;
+            if (line.to == from && line.from == to)
+                return line.offset;
+        }
+        return -1;
     }
 
     public VertexPackage getVertex(byte index) {

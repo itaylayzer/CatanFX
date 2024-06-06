@@ -103,4 +103,10 @@ public class DicePane {
             onFinish.action(c1, c2);
         }, 0.01);
     }
+
+    public void setRoll(int c1, int c2) {
+        System.out.println("\tc1=" + c1 + " c2=" + c2);
+        dice1.setImage(Constants.Images.dices[c1 - 1]);
+        dice2.setImage(Constants.Images.dices[c2 - 1]);
+    }
 }

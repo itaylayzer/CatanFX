@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.itayl.controller.Constants.ServerCodes;
 import com.itayl.controller.SocketClient;
 import com.itayl.view.Components.CatanBoard.CatanBoard;
 import com.itayl.view.Components.Navbar.BankPane;
@@ -14,6 +15,7 @@ import com.itayl.view.Interfaces.Action;
 import com.itayl.view.Packages.LinePackage;
 import com.itayl.view.Packages.VertexPackage;
 
+import javafx.application.Platform;
 import javafx.scene.paint.Color;
 
 public class LocalPlayer extends Player {
@@ -218,6 +220,8 @@ public class LocalPlayer extends Player {
         try {
             client.endTurn((t) -> {
                 return !myTurn();
+            }, (bytes) -> {
+                handleBot(bytes);
             }, (t) -> {
                 setActionable(actionable);
 
@@ -236,6 +240,44 @@ public class LocalPlayer extends Player {
             System.err.println(ex);
         }
 
+    }
+
+    private void handleBot(byte[] response) {
+        System.out.println("Player.getTurnID() = " + Player.getTurnID());
+        EnemyPlayer enemy = EnemyPlayer.enemies[Player.getTurnID() - 1];
+        switch (response[0]) {
+            case ServerCodes.TURN:
+                Player.setTurnID(response[1]);
+                break;
+            case ServerCodes.UPDATE_SETTLEMENT: {
+                byte house = (byte) (response[1] - Constants.AREAS);
+                enemy.buyHouse(house);
+                Platform.runLater(() -> {
+                    CatanBoard.addHouse(house,
+                            enemy.getColor());
+                });
+                break;
+            }
+            case ServerCodes.UPDATE_ROAD: {
+                byte road = CatanBoard.getInstance().joinEdge((byte) (response[1] - Constants.AREAS),
+                        (byte) (response[2] - Constants.AREAS));
+                enemy.buyRoad(road);
+
+                Platform.runLater(() -> {
+                    CatanBoard.addRoad(road,
+                            enemy.getColor());
+                });
+                break;
+            }
+            case ServerCodes.DICE:
+                Platform.runLater(() -> {
+                    CatanBoard.dicePane.setRoll(response[1] & 0x0F, response[1] >> 4);
+                });
+                this.update();
+                EnemyPlayer.update(this.client);
+                break;
+
+        }
     }
 
     public boolean turnable() {
@@ -299,6 +341,5 @@ public class LocalPlayer extends Player {
         }
         update();
     }
-
 
 }

@@ -36,6 +36,7 @@ import com.itayl.view.Components.CatanBoard.NotificationGroup;
 import com.itayl.view.Components.Navbar.PlayersFlow;
 import com.itayl.view.Interfaces.Action;
 import com.itayl.view.Packages.NotificationPackage;
+import com.itayl.view.Utils.BytesUtils;
 import com.itayl.view.Windows.StoreWindow;
 
 public class GameController {
@@ -95,6 +96,7 @@ public class GameController {
             public byte[] apply(Void t) {
                 try {
                     byte[] rolls = sock.rollDice();
+                    System.out.println("rolls" + BytesUtils.print(rolls));
                     local.update();
 
                     if (rolls[0] + rolls[1] == 7) {
@@ -191,7 +193,7 @@ public class GameController {
                 landsBytes,
                 harborsBytes,
                 local,
-                edges);
+                edges, dices);
 
         initializeWindowEvents(window);
         initTurnRect(colors);

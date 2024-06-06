@@ -121,6 +121,8 @@ public class Player {
     }
 
     protected void setMaterials(byte[] materials) {
+        System.out.println("mats" + BytesUtils.print(materials));
+        ;
         this.materials = materials;
         callOnInventoryChange();
     }
@@ -244,5 +246,9 @@ public class Player {
 
     public static void addOnAchievementsChange(Action2<Byte, Byte> eve) {
         onAchivementChange.add(eve);
+    }
+
+    public static int getTurnID() {
+        return Player.turnID;
     }
 }

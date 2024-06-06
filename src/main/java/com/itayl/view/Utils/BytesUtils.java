@@ -79,4 +79,13 @@ public class BytesUtils {
     public static boolean bit(byte num, byte bit) {
         return ((num >> bit) & 0x01) == 1;
     }
+
+    public static String print(byte[] materials) {
+        String st = "[";
+        for (int index = 0; index < materials.length; index++) {
+            st += String.format(index == 0 ? "%d" : ", %d", materials[index]);
+        }
+        st += "]";
+        return st;
+    }
 }
