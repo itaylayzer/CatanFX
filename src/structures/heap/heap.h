@@ -30,6 +30,8 @@ void *heap_top(Heap *);
 signed char heap_top_score(Heap *);
 
 bool heap_empty(Heap);
+void heap_destroy(Heap *);
+
 signed char heap_min(signed char, signed char);
 signed char heap_max(signed char, signed char);
 #endif

@@ -15,6 +15,10 @@
         "controller.h": "c",
         "state.h": "c",
         "types.h": "c",
-        "constants.h": "c"
+        "constants.h": "c",
+        "vec_utils.h": "c",
+        "system_error": "c",
+        "avl_tree.h": "c",
+        "actions.h": "c"
     }
 }

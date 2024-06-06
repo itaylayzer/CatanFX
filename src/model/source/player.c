@@ -43,7 +43,9 @@ bool buyableSettlement(PlayerPtr player, VertexPtr source, bool needRoad)
 
     edge = node->data;
     dest = edge->vertex;
-    if ((dest->color & 0x0F) != BLACK)
+
+    // is near vertecies are bought already
+    if ((dest->color & 0x0F) < BLACK)
     {
         dontHaveHouseNear = false;
     }
@@ -201,70 +203,178 @@ unsigned char *astrategies_init(GraphPtr graph, Heap heaps[TOTAL_ASTRATEGIES])
     }
 
     offset = TOTAL_ASTRATEGIES;
+    min_index = vector_min_index(scores, TOTAL_ASTRATEGIES);
 
-    while ((min_index = vector_min_index(scores, TOTAL_ASTRATEGIES)) &&
-           scores[min_index] != S_MIN_VALUE &&
+    while (scores[min_index] != SIGNED_MAX_VALUE &&
            --offset >= 0)
     {
         indexes[offset] = min_index;
-        scores[min_index] = S_MIN_VALUE;
-    }
+        scores[min_index] = SIGNED_MAX_VALUE;
 
+        min_index = vector_min_index(scores, TOTAL_ASTRATEGIES);
+    }
+    print_vec(indexes, 3);
     return indexes;
 }
 
-// astrategies prioritise functionsת TODO:
-unsigned short prioritiseWheatCardsRoad(GraphPtr graph,
-                                        PlayerPtr player,
-                                        Heap heaps[TOTAL_ASTRATEGIES])
+// astrategies prioritise functions TODO:
+unsigned short prioritiseWoodRoad(GraphPtr graph,
+                                  PlayerPtr player,
+                                  Heap heaps[TOTAL_ASTRATEGIES],
+                                  StackPtr buyable_roads)
 {
+    Heap bestWheatScores, wheatScores, roadScores;
+
     EdgePtr tempEdge;
     VertexPtr tempVertex;
+
+    // puts("befor init to heaps");
+    heap_init(&bestWheatScores, TOTAL_ROADS * 2);
+    heap_init(&wheatScores, TOTAL_ROADS * 2);
+    heap_init(&roadScores, TOTAL_ROADS * 2);
+
+    unsigned char offset, vertex, currentRoadScore, roadScore, bestWheatScore, best_vertex = convert_void_ptr_to_unsigned_char(heap_top(heaps + AST_WOOD));
+    signed char best_vertex_score = heap_top_score(heaps + AST_WOOD);
+    float mats_prob[TOTAL_MATERIALS] = {0};
+    unsigned short edge_num;
+
+    while (!stack_empty(*buyable_roads))
+    {
+        edge_num = convert_void_ptr_to_unsigned_short(stack_pop(buyable_roads));
+        vertex = edge_num >> 8;
+
+        Node node;
+        QUEUE_TRAVARSE(graph->vertices[vertex].edges, node);
+        // printf("\tB %f %f %f %f %f \n", mats_prob[0], mats_prob[1], mats_prob[2], mats_prob[3], mats_prob[4]);
+        tempEdge = node->data;
+        if (tempEdge && tempEdge->color == GRAY)
+        {
+            tempVertex = tempEdge->vertex;
+            // printf("\t\ttempVertex->material_number & 0x07:%d\n\t\t(tempVertex->material_number >> 3) - 2:%d\n", tempVertex->material_number & 0x07, (tempVertex->material_number >> 3) - 2);
+
+            mats_prob[tempVertex->material_number & 0x07] += probs[(tempVertex->material_number >> 3) - 2];
+        }
+
+        QUEUE_TRAVARSE_FINISH;
+
+        printf("F [%f %f %f %f %f] \n", mats_prob[0], mats_prob[1], mats_prob[2], mats_prob[3], mats_prob[4]);
+
+        puts("");
+        puts("before djkstra");
+        graph_dijkstra(graph, vertex, BLACK);
+        puts("after dijkstra");
+        bestWheatScore = best_vertex_score / graph_dijkstra_distance(graph, best_vertex);
+
+        currentRoadScore = dfs_score(graph, player->color);
+
+        // apply purchasing
+        change_road(player->color, graph, edge_num & 0xFF, vertex);
+
+        roadScore = (dfs_score(graph, player->color) - currentRoadScore) * 50;
+
+        // cancel purchasing
+        change_road(BLACK, graph, edge_num & 0xFF, vertex);
+
+        heap_insert(&wheatScores, convert_unsigned_short_to_void_ptr(edge_num), woodScore(mats_prob), heap_max);
+        heap_insert(&bestWheatScores, convert_unsigned_short_to_void_ptr(edge_num), bestWheatScore, heap_max);
+        heap_insert(&roadScores, convert_unsigned_short_to_void_ptr(edge_num), roadScore * 50, heap_max);
+    }
+
+    edge_num = convert_void_ptr_to_unsigned_short(heap_top(&bestWheatScores));
+    unsigned char tempEdgeScore, bestEdgeScore = heap_top_score(&bestWheatScores);
+
+    Heap *tempHeap, *ptrHeaps[2] = {&wheatScores, &roadScores};
+
+    for (offset = 0; offset < 2; offset++)
+    {
+        tempHeap = ptrHeaps[offset];
+        tempEdgeScore = heap_top_score(tempHeap);
+
+        if (tempEdgeScore > bestEdgeScore)
+        {
+            bestEdgeScore = tempEdgeScore;
+            edge_num = convert_void_ptr_to_unsigned_short(heap_top(tempHeap));
+        }
+    }
+
+    heap_destroy(&bestWheatScores);
+    heap_destroy(&wheatScores);
+    heap_destroy(&roadScores);
+
+    return edge_num;
+}
+unsigned short prioritiseWheatCardsRoad(GraphPtr graph,
+                                        PlayerPtr player,
+                                        Heap heaps[TOTAL_ASTRATEGIES],
+                                        StackPtr buyable_roads)
+{
+    // puts("starting");
+
+    EdgePtr tempEdge;
+    VertexPtr tempVertex;
+    // puts("before top");
+
     unsigned char vertex, bestWoodScore, best_vertex = convert_void_ptr_to_unsigned_char(heap_top(heaps + AST_WOOD));
+
+    signed char best_vertex_score = heap_top_score(heaps + AST_WOOD);
+
+    // puts("after top");
+
     unsigned short edge_num, temp_edge_num;
     signed char heapScore, bestScore;
 
     float mats_prob[TOTAL_MATERIALS] = {0};
 
     Heap bestWoodScores, woodScores;
-
+    // puts("befor init to heaps");
     heap_init(&bestWoodScores, TOTAL_ROADS * 2);
     heap_init(&woodScores, TOTAL_ROADS * 2);
 
-    Stack buyable_roads;
-    stack_init(&buyable_roads);
-
-    buyableRoads(&buyable_roads, player);
-
-    while (!stack_empty(buyable_roads))
+    while (!stack_empty(*buyable_roads))
     {
-        edge_num = convert_void_ptr_to_unsigned_short(stack_pop(&buyable_roads));
+
+        edge_num = convert_void_ptr_to_unsigned_short(stack_pop(buyable_roads));
         vertex = edge_num >> 8;
+
         Node node;
         QUEUE_TRAVARSE(graph->vertices[vertex].edges, node);
-
+        // printf("\tB %f %f %f %f %f \n", mats_prob[0], mats_prob[1], mats_prob[2], mats_prob[3], mats_prob[4]);
         tempEdge = node->data;
-        if (tempEdge->color == GRAY)
+        if (tempEdge && tempEdge->color == GRAY)
         {
             tempVertex = tempEdge->vertex;
+            // printf("\t\ttempVertex->material_number & 0x07:%d\n\t\t(tempVertex->material_number >> 3) - 2:%d\n", tempVertex->material_number & 0x07, (tempVertex->material_number >> 3) - 2);
+
             mats_prob[tempVertex->material_number & 0x07] += probs[(tempVertex->material_number >> 3) - 2];
         }
 
         QUEUE_TRAVARSE_FINISH;
-        graph_dijkstra(graph, vertex, GRAY);
 
-        bestWoodScore = -10 * graph_dijkstra_distance(graph, best_vertex) + 70;
+        printf("F [%f %f %f %f %f] \n", mats_prob[0], mats_prob[1], mats_prob[2], mats_prob[3], mats_prob[4]);
+
+        puts("");
+        puts("before djkstra");
+        graph_dijkstra(graph, vertex, BLACK);
+        puts("after dijkstra");
+        bestWoodScore = best_vertex_score / graph_dijkstra_distance(graph, best_vertex);
         heap_insert(&woodScores, convert_unsigned_short_to_void_ptr(edge_num), woodScore(mats_prob), heap_max);
         heap_insert(&bestWoodScores, convert_unsigned_short_to_void_ptr(edge_num), bestWoodScore, heap_max);
     }
-
+    puts("\nafter main loop\nextract1");
     edge_num = convert_void_ptr_to_unsigned_short(heap_extract(&woodScores, heap_max, &heapScore));
+    puts("extract2");
+
     temp_edge_num = convert_void_ptr_to_unsigned_short(heap_extract(&bestWoodScores, heap_max, &bestScore));
 
     if (bestScore > heapScore)
     {
         edge_num = temp_edge_num;
     }
+
+    heap_destroy(&bestWoodScores);
+    heap_destroy(&woodScores);
+
+    // printt("\t\tedge_num:%d->%d (heapScore:%d), temp_edge_num:%d->%d (bestScore:%d)", edge_num & 0xFF, edge_num >> 8, heapScore, temp_edge_num & 0xFF, temp_edge_num >> 8, bestScore);
 
     return edge_num;
 }
@@ -307,6 +417,9 @@ unsigned char prioritiseWheatCardsSettlement(GraphPtr graph,
 
     signed char score = 0;
     vertex = convert_void_ptr_to_unsigned_char(heap_extract(&scores, heap_max, &score));
+
+    heap_destroy(&scores);
+
     return vertex;
 }
 
@@ -317,7 +430,7 @@ unsigned char *woodMatsOrder(GraphPtr graph, PlayerPtr player)
     stack_init(&temp);
 
     bool states[TOTAL_STORE] =
-        {player->amounts[ROAD] && buyableRoads(&temp, player),
+        {player->amounts[ROAD] && buyableRoads(graph, &temp, player),
          player->amounts[SETTLEMENT] && buyableSettlements(&temp, player, graph, true),
          player->amounts[CITY] && upgradeableSettlements(&temp, player, graph),
          true};
@@ -409,6 +522,9 @@ unsigned char prioritiseUpgradeableSettlement(PlayerPtr player, GraphPtr graph,
     QUEUE_TRAVARSE_FINISH;
 
     const void *vertexOffset = heap_extract(&scores, heap_max, NULL);
+
+    heap_destroy(&scores);
+
     return convert_void_ptr_to_unsigned_char(vertexOffset);
 }
 unsigned char moveRobberTo(PlayerPtr player, GraphPtr graph)
@@ -450,36 +566,67 @@ unsigned char moveRobberTo(PlayerPtr player, GraphPtr graph)
     const void *vertexOffset = heap_extract(&scores, heap_max, NULL);
     return convert_void_ptr_to_unsigned_char(vertexOffset);
 }
-unsigned char buyableRoads(StackPtr stk, PlayerPtr player)
+unsigned char buyableRoadsAroundVertex(GraphPtr graph, StackPtr stk, PlayerPtr player, unsigned char vertex)
+{
+    Node node;
+    VertexPtr tempVertex;
+    EdgePtr tempEdge;
+    unsigned char size = 0;
+
+    unsigned short edge_num;
+
+    QUEUE_TRAVARSE(graph->vertices[vertex].edges, node);
+
+    tempEdge = node->data;
+    tempVertex = tempEdge->vertex;
+    if (tempVertex->color == BLACK)
+    {
+
+        edge_num = vertex + (tempEdge->offset << 8);
+        stack_push(stk, convert_unsigned_short_to_void_ptr(edge_num));
+        size++;
+    }
+
+    QUEUE_TRAVARSE_FINISH;
+
+    return size;
+}
+unsigned char buyableRoads(GraphPtr graph, StackPtr stk, PlayerPtr player)
 {
 
-    unsigned char count = 0, from;
+    unsigned char count = 0, from, *roadArray, offset;
     unsigned short edge_num;
     Queue sourceQ, destQ;
     Node node;
     VertexPtr dest;
     EdgePtr dest_edge;
+
     queue_init(&sourceQ);
     queue_init(&destQ);
 
     enqueue(&sourceQ, player->roads);
 
     QUEUE_TRAVARSE_BODY(sourceQ, node);
-    dest = ((EdgePtr)node->data)->vertex;
-    from = ((EdgePtr)node->data)->offset;
-    enqueue(&destQ, dest->edges);
+    roadArray = ((unsigned char *)&node->data);
 
-    QUEUE_TRAVARSE_BODY(destQ, node);
-
-    dest_edge = node->data;
-    edge_num = from + (dest_edge->offset << 8);
-
-    if (dest_edge->color == BLACK)
+    for (offset = 0; offset < 2; offset++)
     {
-        stack_push(stk, convert_unsigned_short_to_void_ptr(edge_num));
-        count++;
+        from = roadArray[offset];
+        dest = graph->vertices + from;
+        enqueue(&destQ, dest->edges);
+
+        QUEUE_TRAVARSE_BODY(destQ, node);
+
+        dest_edge = node->data;
+        edge_num = from + (dest_edge->offset << 8);
+
+        if (dest_edge->color == BLACK)
+        {
+            stack_push(stk, convert_unsigned_short_to_void_ptr(edge_num));
+            count++;
+        }
+        QUEUE_TRAVARSE_FINISH;
     }
-    QUEUE_TRAVARSE_FINISH;
     QUEUE_TRAVARSE_FINISH;
     return count;
 }

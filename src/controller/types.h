@@ -15,7 +15,6 @@
 #define HARBOR_COUNT 9
 #define MAX_PLAYERS 4
 #define MAX_VALUE 255
-#define S_MIN_VALUE -128
 
 typedef enum
 {

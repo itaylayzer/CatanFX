@@ -155,3 +155,16 @@ void vector_reverse(signed char *arr, unsigned char size)
         arr[size - 1 - offset] = temp;
     }
 }
+
+void print_vec(unsigned char *arr, signed char size)
+{
+    unsigned char offset;
+    printf("[");
+
+    for (offset = 0; offset < size; offset++)
+    {
+        printf(offset ? ", %d" : "%d", arr[offset]);
+    }
+
+    printf("]\n");
+}

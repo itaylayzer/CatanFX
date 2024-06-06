@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "../../utils/math/compare.h"
 #include "../../utils/math/rand.h"
@@ -29,4 +30,6 @@ void vector_shuffle(signed char *, unsigned char size);
 
 unsigned char vector_min_index(const signed char *, signed char size);
 void vector_reverse(signed char *, unsigned char size);
+
+void print_vec(unsigned char *arr, signed char size);
 #endif

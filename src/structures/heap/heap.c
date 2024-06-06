@@ -106,3 +106,7 @@ bool heap_empty(Heap heap)
 {
     return heap.length == 0;
 }
+void heap_destroy(Heap *heap)
+{
+    free(heap->data);
+}

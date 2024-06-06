@@ -12,20 +12,6 @@ unsigned char extract_area_number(unsigned char material_number)
     return material_number >> 3;
 }
 
-// helper function
-void print_vec(unsigned char *arr, signed char size)
-{
-    unsigned char offset;
-    printf("[");
-
-    for (offset = 0; offset < size; offset++)
-    {
-        printf(offset ? ", %d" : "%d", arr[offset]);
-    }
-
-    printf("]\n");
-}
-
 void catan_edges(GraphPtr graph)
 {
     FILE *file;
@@ -192,13 +178,14 @@ unsigned char *players_around_area(unsigned char *size, signed char *params,
 
     return single_byte(size, playerBits);
 }
+
 unsigned char *roll_dice(unsigned char *size, signed char *params,
                          int socket, GameState state)
 {
     unsigned char *arr, dice, sum;
 
-    sum = dice = 3;    // brand(1, 7);
-    sum += (dice = 4); // brand(1, 7));
+    sum = /*dice = 3;*/ brand(1, 7);
+    sum += /*(dice = 4); */ dice = brand(1, 7);
     arr = single_byte(size, (dice << 4) | (sum - dice));
 
     printt("\trolled number %hhu while arr %hhd (%hhd, %hhd)\n", sum, arr[0], sum - dice, dice);
@@ -221,7 +208,7 @@ bool bis_neg(signed char x)
 unsigned char *inf_player_actionable(unsigned char *size, signed char *params,
                                      int socket, GameState state)
 {
-    unsigned char *arr = calloc((*size = 1), sizeof(signed char)), offset;
+    unsigned char *arr = calloc((*size = 2), sizeof(signed char)), offset;
 
     for (offset = 0; offset < TOTAL_STORE; offset++)
     {
@@ -235,6 +222,7 @@ unsigned char *inf_player_actionable(unsigned char *size, signed char *params,
         arr[0] |= (not_neg && has_amount) << offset;
         free(arr_res);
     }
+    arr[1] = state->players->harbors;
 
     return arr;
 }
@@ -327,24 +315,6 @@ unsigned char *single_byte(unsigned char *size, signed char value)
     return res;
 }
 
-void transfer_materials(PlayerPtr player,
-                        signed char bank[TOTAL_MATERIALS],
-                        const signed char cost[TOTAL_MATERIALS],
-                        bool to_player)
-{
-    signed char *player_mats = (signed char *)player->materials;
-
-    // remove cost from player materials
-    signed char *new_materials = (to_player ? vector_add : vector_sub)(player_mats, cost, TOTAL_MATERIALS);
-    vector_cpy(player_mats, (signed char *)new_materials, TOTAL_MATERIALS);
-    free(new_materials);
-
-    // update bank
-    new_materials = (to_player ? vector_sub : vector_add)(bank, cost, TOTAL_MATERIALS);
-    vector_cpy(bank, (signed char *)new_materials, TOTAL_MATERIALS);
-    free(new_materials);
-}
-
 void transfer_dev_card(PlayerPtr player,
                        signed char bank[TOTAL_DEVELOPMENT_CARD],
                        const signed char *cost,
@@ -365,50 +335,10 @@ void transfer_dev_card(PlayerPtr player,
     free(new_materials);
 }
 
-signed char compare_edges_offset(const void *first, const void *second)
-{
-    return ((EdgePtr)first)->offset - ((EdgePtr)second)->offset;
-}
 void print_edge_offset(const void *ptr)
 {
     EdgePtr edge = (EdgePtr)ptr;
     printf(" %d ", edge->offset);
-}
-signed char value_compare(const void *first, const void *second)
-{
-    return first - second;
-}
-bool buy_road(PlayerPtr player,
-              GraphPtr graph,
-              const signed char cost[TOTAL_MATERIALS],
-              signed char bank[TOTAL_MATERIALS],
-              bool transferMats,
-              unsigned char from,
-              unsigned char to)
-{
-    if (transferMats)
-        transfer_materials(player, bank, cost, false);
-
-    EdgePtr foundPtr;
-    EdgeRec lookRec;
-
-    lookRec.offset = to;
-
-    foundPtr = avl_search(graph->vertices[from].edges,
-                          &lookRec, compare_edges_offset)
-                   ->data;
-    foundPtr->color = player->color;
-    avl_insert(&player->roads, foundPtr, value_compare);
-
-    lookRec.offset = from;
-    foundPtr = avl_search(graph->vertices[to].edges,
-                          &lookRec, compare_edges_offset)
-                   ->data;
-    foundPtr->color = player->color;
-    avl_insert(&player->roads, foundPtr, value_compare);
-
-    player->amounts[ROAD]--;
-    return true;
 }
 
 unsigned char *svertex_to_materials(GraphPtr graph, signed char index)
@@ -511,37 +441,6 @@ bool buy_developement(PlayerPtr player,
     return true;
 }
 
-// O(E+V)
-signed char dfs(GraphPtr graph, unsigned char vertex_offset, unsigned char targetColor, bool *visited)
-{
-    VertexPtr vertex = graph->vertices + vertex_offset;
-    if (vertex == NULL || vertex->color == GRAY || (visited && visited[vertex_offset - AREAS]))
-    {
-        return 0;
-    }
-
-    if (visited)
-    {
-        visited[vertex_offset - AREAS] = true;
-    }
-    signed char max_child_length = 0;
-
-    Node node = vertex->edges;
-
-    EdgePtr edge;
-
-    QUEUE_TRAVARSE(node, node);
-    edge = node->data;
-
-    if (edge->color == targetColor)
-    {
-        max_child_length = bmax(max_child_length, dfs(graph, edge->offset, targetColor, visited));
-    }
-    QUEUE_TRAVARSE_FINISH;
-
-    return max_child_length + 1;
-}
-
 // O(CE+CVE+C) | C is negligible
 signed char update_longest_road(GraphPtr graph, signed char *longest_road_achievement)
 {
@@ -550,17 +449,7 @@ signed char update_longest_road(GraphPtr graph, signed char *longest_road_achiev
 
     for (color_offset = 0; color_offset < MAX_PLAYERS; color_offset++)
     {
-        for (vertex_offset = 0; vertex_offset < VERTECIES; vertex_offset++)
-        {
-            bool *visited = calloc(VERTECIES, sizeof(bool));
-            max_road_per_color[color_offset] = bmax(max_road_per_color[color_offset],
-                                                    dfs(graph,
-                                                        vertex_offset + AREAS,
-                                                        color_offset,
-                                                        visited) -
-                                                        1);
-            free(visited);
-        }
+        max_road_per_color[color_offset] = dfs_score(graph, color_offset);
 
         if (max_road_per_color[color_offset] > max_road_length)
         {
@@ -787,47 +676,153 @@ unsigned char *drop_materials(unsigned char *size, signed char *params,
     transfer_materials(state->players + params[0], state->bankMaterials, params + 1, false);
     return single_byte(size, 0);
 }
-// bots
 
-void bot_inits(PlayerPtr players, unsigned char num_of_players)
-{
-    while (--num_of_players)
-    {
+#define BOT_SEND_CODE(socket, code)      \
+    {                                    \
+        unsigned char _code_size = 1;    \
+        unsigned char _code = code;      \
+        send(socket, &_code_size, 1, 0); \
+        send(socket, &_code, 1, 0);      \
     }
-    // TODO: pick approach!
-}
 
-void bot_plays(PlayerPtr player, int socket)
+#define BOT_SEND(socket, size, buffer) \
+    send(socket, &size, 1, 0);         \
+    send(socket, buffer, size, 0);
+#define BOT_SEND_FREE(socket, size, buffer) \
+    BOT_SEND(socket, size, buffer);         \
+    free(buffer);
+
+#define endln puts("")
+
+// bots
+void bot_plays(PlayerPtr player, int socket, GameState state)
 {
+
+    unsigned char size, *buffer, *temp;
+
+    usleep(200000);
+
+    // open round by rolling the dice
+    buffer = calloc(2, sizeof(unsigned char));
+    temp = roll_dice(&size, NULL, socket, state);
+    vector_cpy((signed char *)(buffer + 1), (signed char *)temp, size);
+    free(temp);
+
+    buffer[0] = 3;
+
+    size = 2;
+
+    print_vec(buffer, 2);
+
+    BOT_SEND_FREE(socket, size, buffer);
+
+    // while ()
+    //     ;
 
     // TODO: play by selected approach and update client player!
-    usleep(500000);
+    usleep(400000);
+}
+
+void bot_buy_first(PlayerPtr player, int socket, GameState state)
+{
+    endln;
+
+    putts("bot_buy_first");
+    usleep(200000);
+
+    unsigned char size;
+    unsigned char astIndex = state->astIndexes[player->color - 1];
+    Heap *heap = state->astHeaps + astIndex;
+
+    unsigned short (*prioritiesRoad[2])(GraphPtr, PlayerPtr, Heap *, StackPtr) = {prioritiseWoodRoad, prioritiseWheatCardsRoad};
+
+    unsigned char vertex = 0;
+    putts("start searching vertex");
+
+    vertex = convert_void_ptr_to_unsigned_char(heap_top(heap));
+
+    while (!(state->graph->vertices[vertex].color == BLACK && buyableSettlement(player, state->graph->vertices + vertex, false)))
+    {
+        putts("\t kicking vertex");
+
+        heap_extract(heap, heap_max, NULL);
+        vertex = convert_void_ptr_to_unsigned_char(heap_top(heap));
+    }
+
+    heap_extract(heap, heap_max, NULL);
+    putts("buy settlement");
+
+    buy_settlement(player, state->graph, store[SETTLEMENT],
+                   state->bankMaterials, state->turnOffset / state->num_of_players, vertex);
+
+    unsigned char *buffer = calloc(size = 2, sizeof(unsigned char));
+    buffer[0] = 1;
+    buffer[1] = vertex;
+
+    BOT_SEND_FREE(socket, size, buffer);
+    usleep(200000);
+
+    putts("prefered road");
+
+    Stack buyableRoads;
+    stack_init(&buyableRoads);
+
+    buyableRoadsAroundVertex(state->graph, &buyableRoads, player, vertex);
+    putts("after buyable roads");
+
+    unsigned short prefered_road = prioritiesRoad[!!astIndex](state->graph, player, heap, &buyableRoads);
+    printt("maybe road %d to %d\n", prefered_road & 0xFF, prefered_road >> 8);
+
+    if (prefered_road == 0)
+        return;
+    printt("buying road %d to %d\n", prefered_road & 0xFF, prefered_road >> 8);
+
+    buy_road(player, state->graph, store[ROAD], state->bankMaterials, false, prefered_road & 0xFF, prefered_road >> 8);
+    putts("calloc");
+
+    buffer = calloc(size = 3, sizeof(unsigned char));
+    buffer[0] = 2;
+    buffer[1] = prefered_road & 0xFF;
+    buffer[2] = prefered_road >> 8;
+
+    putts("sending");
+
+    BOT_SEND_FREE(socket, size, buffer);
+
+    usleep(200000);
 }
 
 unsigned char *handle_rest_turns(unsigned char *size, signed char *params,
                                  int socket, GameState state)
 {
     (state->turnOffset)++;
-    signed char *_buff = malloc(sizeof(char) * 1000);
-
     unsigned char turnColor, _size;
+    unsigned char _buff[1000] = {0};
+    void (*playFn[2])(PlayerPtr, int, GameState) = {bot_buy_first, bot_plays};
+    bool initial_state = state->turnOffset / state->num_of_players > 1;
 
     // while the turn color its not WHITE
-    while ((turnColor = (state->turnOffset) % state->num_of_players))
+    while ((turnColor = state->turnOffset % state->num_of_players))
     {
+        printf("start: player index %d", turnColor);
+        endln;
 
-        bot_plays(state->players + turnColor, socket);
+        playFn[initial_state](state->players + turnColor, socket, state);
+        endln;
+        puts("done");
+        endln;
 
-        // printt("\tbot number %d done playing!", turnColor);
         (state->turnOffset)++;
 
         _buff[0] = 0;
         _buff[1] = (state->turnOffset) % state->num_of_players;
         _size = 2;
 
-        send(socket, &_size, 1, 0);
-        send(socket, _buff, _size, 0);
+        BOT_SEND(socket, _size, _buff)
+        // printt("\tbot number %d done playing!", turnColor);
     }
+
+    putts("done");
 
     *size = 0;
     return NULL;

@@ -25,6 +25,8 @@
 #include "../../utils/convert/convert.h"
 #include "./vec_utils.h"
 #include "./macro.h"
+#include "./player.h"
+#include "./actions.h"
 
 // initializations
 void catan_graph_init(GraphPtr graph, unsigned char harbors[HARBOR_COUNT * 2]);
@@ -67,7 +69,6 @@ unsigned char *move_robber(unsigned char *size, signed char *params,
 unsigned char *drop_materials(unsigned char *size, signed char *params,
                               int socket, GameState state);
 //    bots
-void bot_inits(PlayerPtr players, unsigned char num_of_players);
 unsigned char *handle_rest_turns(unsigned char *size, signed char *params,
                                  int socket, GameState state);
 
