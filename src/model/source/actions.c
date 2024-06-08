@@ -72,3 +72,66 @@ void transfer_materials(PlayerPtr player,
     vector_cpy(bank, (signed char *)new_materials, TOTAL_MATERIALS);
     free(new_materials);
 }
+
+bool buy_city(PlayerPtr player,
+              GraphPtr graph,
+              const signed char cost[TOTAL_MATERIALS],
+              signed char bank[TOTAL_MATERIALS],
+              unsigned char index)
+{
+
+    transfer_materials(player, bank, cost, false);
+
+    // change settlement color
+    graph->vertices[index].color = player->color | 0x40;
+
+    player->victoryPoints++;
+    player->amounts[CITY]--;
+
+    return true;
+}
+
+unsigned char random_index_by_vals(unsigned char size, signed char *arr)
+{
+    signed char offset = -1, rand = brand(0, vector_sum(arr, size));
+
+    while (rand > 0)
+    {
+        offset++;
+        rand -= arr[offset];
+    }
+    return offset;
+}
+
+void transfer_dev_card(PlayerPtr player,
+                       signed char bank[TOTAL_DEVELOPMENT_CARD],
+                       const signed char *cost,
+                       bool to_player)
+{
+    signed char *player_devs = (signed char *)player->developmentCards;
+
+    // remove cost from player materials
+    signed char *new_materials =
+        (to_player ? vector_add : vector_sub)(player_devs, cost, TOTAL_DEVELOPMENT_CARD);
+    vector_cpy(player_devs, new_materials, TOTAL_DEVELOPMENT_CARD);
+    free(new_materials);
+
+    // update bank
+    new_materials =
+        (to_player ? vector_sub : vector_add)(bank, cost, TOTAL_DEVELOPMENT_CARD);
+    vector_cpy(bank, new_materials, TOTAL_DEVELOPMENT_CARD);
+    free(new_materials);
+}
+bool buy_developement(PlayerPtr player,
+                      signed char bank[TOTAL_MATERIALS],
+                      signed char dev_bank[TOTAL_DEVELOPMENT_CARD],
+                      const signed char cost[TOTAL_MATERIALS])
+{
+
+    signed char *how_many = calloc(TOTAL_DEVELOPMENT_CARD, sizeof(signed char));
+    how_many[random_index_by_vals(TOTAL_DEVELOPMENT_CARD, dev_bank)] = 1;
+    transfer_materials(player, bank, cost, false);
+    transfer_dev_card(player, dev_bank, how_many, true);
+
+    return true;
+}

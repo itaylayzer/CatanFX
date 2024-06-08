@@ -19,6 +19,7 @@
         "vec_utils.h": "c",
         "system_error": "c",
         "avl_tree.h": "c",
-        "actions.h": "c"
+        "actions.h": "c",
+        "iterator": "c"
     }
 }

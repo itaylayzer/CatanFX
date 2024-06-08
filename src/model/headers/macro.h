@@ -18,3 +18,12 @@
     QUEUE_TRAVARSE_BODY(queue, node)
 
 #define QUEUE_TRAVARSE_FINISH }
+
+#define BOT_SEND(socket, size, buffer) \
+    send(socket, &size, 1, 0);         \
+    send(socket, buffer, size, 0);
+#define BOT_SEND_FREE(socket, size, buffer) \
+    BOT_SEND(socket, size, buffer);         \
+    free(buffer);
+
+#define endln puts("")

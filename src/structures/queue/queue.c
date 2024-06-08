@@ -19,3 +19,11 @@ void *dequeue(QueuePtr manager)
 {
     return circular_remove_after(manager);
 }
+
+void destroy_queue(QueuePtr manager)
+{
+    while (!queue_empty(*manager))
+    {
+        dequeue(manager);
+    }
+}

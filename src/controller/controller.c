@@ -25,7 +25,6 @@ void handle_request(
          drop_materials,
          handle_rest_turns};
 
-    puts("|");
     printt("input_buffer[0]:%d\n", input_buffer[0]);
 
     send_buffer = func[input_buffer[0]](&size, input_buffer + 1, socket, state);

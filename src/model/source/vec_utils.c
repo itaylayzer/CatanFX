@@ -1,5 +1,13 @@
 #include "../headers/vec_utils.h"
 
+bool below_zero(signed char x)
+{
+    return x < 0;
+}
+bool above_equal_zero(signed char x)
+{
+    return x >= 0;
+}
 signed char *vector_join(const signed char *first,
                          const signed char *second,
                          signed char size,
@@ -167,4 +175,17 @@ void print_vec(unsigned char *arr, signed char size)
     }
 
     printf("]\n");
+}
+
+unsigned char vector_manip_condition(const signed char *first,
+                                     const signed char *second,
+                                     unsigned char size,
+                                     signed char *(*manip)(const signed char *, const signed char *, signed char),
+                                     bool (*condition)(signed char))
+{
+    signed char *manipulated = manip(first, second, size);
+    bool all = vector_all(manipulated, size, condition);
+    bool any = vector_any(manipulated, size, condition);
+    free(manipulated);
+    return all + (any << 1);
 }

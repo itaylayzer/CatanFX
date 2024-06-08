@@ -107,18 +107,18 @@ void catan_players_init(PlayerPtr players, signed char size)
         players[size].amounts[SETTLEMENT] = 5;
         players[size].amounts[CITY] = 4;
 
-        // FIXME: remove
-        players[size].materials[0] = 10;
-        players[size].materials[1] = 10;
-        players[size].materials[2] = 10;
-        players[size].materials[3] = 10;
-        players[size].materials[4] = 10;
+        // // FIXME: remove
+        // players[size].materials[0] = 10;
+        // players[size].materials[1] = 10;
+        // players[size].materials[2] = 10;
+        // players[size].materials[3] = 10;
+        // players[size].materials[4] = 10;
 
-        players[size].developmentCards[0] = 10;
-        players[size].developmentCards[1] = 10;
-        players[size].developmentCards[2] = 10;
-        players[size].developmentCards[3] = 10;
-        players[size].developmentCards[4] = 10;
+        // players[size].developmentCards[0] = 10;
+        // players[size].developmentCards[1] = 10;
+        // players[size].developmentCards[2] = 10;
+        // players[size].developmentCards[3] = 10;
+        // players[size].developmentCards[4] = 10;
     }
 }
 unsigned char *areas_numbers(unsigned char *size, signed char *params,
@@ -212,15 +212,18 @@ unsigned char *inf_player_actionable(unsigned char *size, signed char *params,
 
     for (offset = 0; offset < TOTAL_STORE; offset++)
     {
-        signed char *arr_res = vector_sub((signed char *)state->players[params[0]].materials,
-                                          store[offset], TOTAL_MATERIALS);
-        bool not_neg = !vector_any(arr_res, TOTAL_MATERIALS, bis_neg);
+
+        bool not_neg = !(vector_manip_condition(
+                             (signed char *)state->players[params[0]].materials,
+                             store[offset], TOTAL_MATERIALS,
+                             vector_sub, bis_neg) >>
+                         1);
+
         bool has_amount = offset == DEVELOPMENT_CARD
                               ? vector_sum(state->bankDevelopments, TOTAL_DEVELOPMENT_CARD)
                               : state->players[params[0]].amounts[offset];
 
         arr[0] |= (not_neg && has_amount) << offset;
-        free(arr_res);
     }
     arr[1] = state->players->harbors;
 
@@ -237,24 +240,18 @@ unsigned char *inf_players_manip(unsigned char *size,
     PlayerPtr player = players + offset;
     unsigned char *res;
 
-    bool _is_bank = offset == MAX_PLAYERS,
-         _is_local = !offset;
+    bool _is_bank = offset == MAX_PLAYERS;
 
-    if (offset == MAX_PLAYERS)
+    if (_is_bank)
     {
         // is bank
         res = (unsigned char *)vector_dup(bank, (*size = count));
     }
-    else if (!offset)
+    else
     {
         // is local
         // return every materials
         res = (unsigned char *)vector_dup((signed char *)manip(player), (*size = count));
-    }
-    else
-    {
-        // return only the count of the materials
-        res = single_byte(size, vector_sum((signed char *)manip(player), count));
     }
 
     return res;
@@ -313,26 +310,6 @@ unsigned char *single_byte(unsigned char *size, signed char value)
     unsigned char *res = malloc(sizeof(unsigned char) * (*size = 1));
     *res = value;
     return res;
-}
-
-void transfer_dev_card(PlayerPtr player,
-                       signed char bank[TOTAL_DEVELOPMENT_CARD],
-                       const signed char *cost,
-                       bool to_player)
-{
-    signed char *player_devs = (signed char *)player->developmentCards;
-
-    // remove cost from player materials
-    signed char *new_materials =
-        (to_player ? vector_add : vector_sub)(player_devs, cost, TOTAL_DEVELOPMENT_CARD);
-    vector_cpy(player_devs, new_materials, TOTAL_DEVELOPMENT_CARD);
-    free(new_materials);
-
-    // update bank
-    new_materials =
-        (to_player ? vector_sub : vector_add)(bank, cost, TOTAL_DEVELOPMENT_CARD);
-    vector_cpy(bank, new_materials, TOTAL_DEVELOPMENT_CARD);
-    free(new_materials);
 }
 
 void print_edge_offset(const void *ptr)
@@ -394,49 +371,6 @@ bool buy_settlement(PlayerPtr player,
 
     if (graph->vertices[index].harbor)
         player->harbors |= (1 << (graph->vertices[index].harbor - 1));
-
-    return true;
-}
-
-bool buy_city(PlayerPtr player,
-              GraphPtr graph,
-              const signed char cost[TOTAL_MATERIALS],
-              signed char bank[TOTAL_MATERIALS],
-              unsigned char index)
-{
-
-    transfer_materials(player, bank, cost, false);
-
-    // change settlement color
-    graph->vertices[index].color = player->color | 0x40;
-
-    player->victoryPoints++;
-    player->amounts[CITY]--;
-
-    return true;
-}
-
-unsigned char random_index_by_vals(unsigned char size, signed char *arr)
-{
-    signed char offset = -1, rand = brand(0, vector_sum(arr, size));
-
-    while (rand > 0)
-    {
-        offset++;
-        rand -= arr[offset];
-    }
-    return offset;
-}
-bool buy_developement(PlayerPtr player,
-                      signed char bank[TOTAL_MATERIALS],
-                      signed char dev_bank[TOTAL_DEVELOPMENT_CARD],
-                      const signed char cost[TOTAL_MATERIALS])
-{
-
-    signed char *how_many = calloc(TOTAL_DEVELOPMENT_CARD, sizeof(signed char));
-    how_many[random_index_by_vals(TOTAL_DEVELOPMENT_CARD, dev_bank)] = 1;
-    transfer_materials(player, bank, cost, false);
-    transfer_dev_card(player, dev_bank, how_many, true);
 
     return true;
 }
@@ -677,35 +611,20 @@ unsigned char *drop_materials(unsigned char *size, signed char *params,
     return single_byte(size, 0);
 }
 
-#define BOT_SEND_CODE(socket, code)      \
-    {                                    \
-        unsigned char _code_size = 1;    \
-        unsigned char _code = code;      \
-        send(socket, &_code_size, 1, 0); \
-        send(socket, &_code, 1, 0);      \
-    }
-
-#define BOT_SEND(socket, size, buffer) \
-    send(socket, &size, 1, 0);         \
-    send(socket, buffer, size, 0);
-#define BOT_SEND_FREE(socket, size, buffer) \
-    BOT_SEND(socket, size, buffer);         \
-    free(buffer);
-
-#define endln puts("")
-
 // bots
 void bot_plays(PlayerPtr player, int socket, GameState state)
 {
-
+    unsigned char astIndex = state->astIndexes[player->color - 1];
     unsigned char size, *buffer, *temp;
-
+    bool need_stealing;
     usleep(200000);
 
     // open round by rolling the dice
     buffer = calloc(2, sizeof(unsigned char));
     temp = roll_dice(&size, NULL, socket, state);
     vector_cpy((signed char *)(buffer + 1), (signed char *)temp, size);
+
+    need_stealing = (temp[0] & 0x0F) + (temp[0] >> 4) == 7;
     free(temp);
 
     buffer[0] = 3;
@@ -716,10 +635,31 @@ void bot_plays(PlayerPtr player, int socket, GameState state)
 
     BOT_SEND_FREE(socket, size, buffer);
 
-    // while ()
-    //     ;
+    if (need_stealing)
+    {
+        // TODO: if the cubes are equal 7?
+        putts("need_stealing");
+    }
 
-    // TODO: play by selected approach and update client player!
+    bool (**conditionsFunctions)(PlayerPtr, GameState, QueuePtr);
+    void (**actionsFunctions)(PlayerPtr, int, GameState, QueuePtr);
+
+    void (*init_actions[])(bool (***)(PlayerPtr, GameState, QueuePtr), void (***)(PlayerPtr, int, GameState, QueuePtr)) = {
+        wood_init_actions,
+        wheat_init_actions,
+        cards_init_actions};
+
+    init_actions[astIndex](&conditionsFunctions, &actionsFunctions);
+    putts("after init");
+    play_actions_with_conditions(state,
+                                 player,
+                                 socket,
+                                 conditionsFunctions,
+                                 actionsFunctions, 4);
+    putts("after play");
+    free(conditionsFunctions);
+    free(actionsFunctions);
+
     usleep(400000);
 }
 
@@ -753,7 +693,7 @@ void bot_buy_first(PlayerPtr player, int socket, GameState state)
     putts("buy settlement");
 
     buy_settlement(player, state->graph, store[SETTLEMENT],
-                   state->bankMaterials, state->turnOffset / state->num_of_players, vertex);
+                   state->bankMaterials, -state->turnOffset / state->num_of_players, vertex);
 
     unsigned char *buffer = calloc(size = 2, sizeof(unsigned char));
     buffer[0] = 1;

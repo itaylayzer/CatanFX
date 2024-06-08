@@ -11,6 +11,8 @@
 
 #define SIGNED_MAX_VALUE 127
 
+bool below_zero(signed char x);
+bool above_equal_zero(signed char x);
 signed char *vector_join(const signed char *first,
                          const signed char *second,
                          signed char size,
@@ -32,4 +34,9 @@ unsigned char vector_min_index(const signed char *, signed char size);
 void vector_reverse(signed char *, unsigned char size);
 
 void print_vec(unsigned char *arr, signed char size);
+unsigned char vector_manip_condition(const signed char *first,
+                                     const signed char *second,
+                                     unsigned char size,
+                                     signed char *(*manip)(const signed char *, const signed char *, signed char),
+                                     bool (*condition)(signed char));
 #endif

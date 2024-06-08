@@ -16,4 +16,6 @@ bool queue_empty(Queue);
 
 void *dequeue(QueuePtr);
 
+void destroy_queue(QueuePtr);
+
 #endif
