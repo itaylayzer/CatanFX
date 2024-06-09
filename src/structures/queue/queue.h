@@ -10,7 +10,7 @@ typedef linkNode Queue, *QueuePtr;
 
 void queue_init(QueuePtr);
 
-void enqueue(QueuePtr, void *data);
+bool enqueue(QueuePtr, void *data);
 
 bool queue_empty(Queue);
 

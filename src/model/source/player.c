@@ -36,10 +36,9 @@ Stack areaSettlements(VertexPtr vertex)
     QUEUE_TRAVARSE(vertex->edges, node);
     edge = node->data;
     dest = edge->vertex;
-    if (edge->color == GRAY)
-    {
-        stack_push(&stk, dest);
-    }
+    (edge->color == GRAY) &&
+        (stack_push(&stk, dest));
+
     QUEUE_TRAVARSE_FINISH;
 
     return stk;
@@ -59,14 +58,13 @@ bool buyableSettlement(PlayerPtr player, VertexPtr source, bool needRoad)
     dest = edge->vertex;
 
     // is near vertecies are bought already
-    if ((dest->color & 0x0F) < BLACK)
-    {
-        dontHaveHouseNear = false;
-    }
-    if (needRoad && edge->color == player->color)
-    {
-        connectedByRoad = true;
-    }
+    ((dest->color & 0x0F) < BLACK) &&
+        (dontHaveHouseNear = false);
+
+    // if has a near road
+    (needRoad && edge->color == player->color) &&
+        (connectedByRoad = true);
+
     QUEUE_TRAVARSE_FINISH;
 
     return connectedByRoad && dontHaveHouseNear;
@@ -147,10 +145,8 @@ unsigned char buyableMaterial(unsigned char astrategy,
         }
 
         take = 4;
-        if (playerHarbors >> 5)
-        {
-            take = 3;
-        }
+        (playerHarbors >> 5) &&
+            (take = 3);
 
         if (playerMaterials[harbor] - take >= 0 && !result)
         {
@@ -225,6 +221,8 @@ unsigned short prioritiseWoodRoad(GraphPtr graph,
                                   Heap heaps[TOTAL_ASTRATEGIES],
                                   StackPtr buyable_roads)
 {
+    endln;
+    puts("prioritiseWoodRoad");
     Heap bestWheatScores, wheatScores, roadScores;
 
     EdgePtr tempEdge;
@@ -234,11 +232,13 @@ unsigned short prioritiseWoodRoad(GraphPtr graph,
     heap_init(&bestWheatScores, TOTAL_ROADS * 2);
     heap_init(&wheatScores, TOTAL_ROADS * 2);
     heap_init(&roadScores, TOTAL_ROADS * 2);
+    puts("after heap_init");
 
     unsigned char offset, vertex, currentRoadScore, roadScore, bestWheatScore, best_vertex = convert_void_ptr_to_unsigned_char(heap_top(heaps + AST_WHEAT));
     signed char best_vertex_score = heap_top_score(heaps + AST_WHEAT);
     float *mats_prob;
     unsigned short edge_num;
+    puts("after heap_init");
 
     while (!stack_empty(*buyable_roads))
     {
@@ -282,11 +282,8 @@ unsigned short prioritiseWoodRoad(GraphPtr graph,
         tempHeap = ptrHeaps[offset];
         tempEdgeScore = heap_top_score(tempHeap);
 
-        if (tempEdgeScore > bestEdgeScore)
-        {
-            bestEdgeScore = tempEdgeScore;
-            edge_num = convert_void_ptr_to_unsigned_short(heap_top(tempHeap));
-        }
+        (tempEdgeScore > bestEdgeScore) &&
+            (bestEdgeScore = tempEdgeScore, edge_num = convert_void_ptr_to_unsigned_short(heap_top(tempHeap)));
     }
 
     heap_destroy(&bestWheatScores);
@@ -300,6 +297,9 @@ unsigned short prioritiseWheatCardsRoad(GraphPtr graph,
                                         Heap heaps[TOTAL_ASTRATEGIES],
                                         StackPtr buyable_roads)
 {
+    endln;
+
+    puts("prioritiseWheatCardsRoad");
     // puts("starting");
 
     EdgePtr tempEdge;
@@ -307,8 +307,10 @@ unsigned short prioritiseWheatCardsRoad(GraphPtr graph,
     // puts("before top");
 
     unsigned char vertex, bestWoodScore, best_vertex = convert_void_ptr_to_unsigned_char(heap_top(heaps + AST_WOOD));
+    puts("after heap_top");
 
     signed char best_vertex_score = heap_top_score(heaps + AST_WOOD);
+    puts("after heap_top_score");
 
     // puts("after top");
 
@@ -325,10 +327,14 @@ unsigned short prioritiseWheatCardsRoad(GraphPtr graph,
     while (!stack_empty(*buyable_roads))
     {
 
+        puts("loop");
+
         edge_num = convert_void_ptr_to_unsigned_short(stack_pop(buyable_roads));
         vertex = edge_num >> 8;
+        printt("after stack_pop edge_num=%d vertex=%d\n", edge_num, vertex);
 
         mats_prob = materials_probabilities(graph, vertex);
+        puts("after materials_probabilities");
 
         printf("F [%f %f %f %f %f] \n", mats_prob[0], mats_prob[1], mats_prob[2], mats_prob[3], mats_prob[4]);
 
@@ -348,10 +354,8 @@ unsigned short prioritiseWheatCardsRoad(GraphPtr graph,
 
     temp_edge_num = convert_void_ptr_to_unsigned_short(heap_extract(&bestWoodScores, heap_max, &bestScore));
 
-    if (bestScore > heapScore)
-    {
-        edge_num = temp_edge_num;
-    }
+    (bestScore > heapScore) &&
+        (edge_num = temp_edge_num);
 
     heap_destroy(&bestWoodScores);
     heap_destroy(&woodScores);
@@ -438,10 +442,9 @@ unsigned char prioritiseWoodSettlement(GraphPtr graph, PlayerPtr player, Heap he
     }
 
     best_vertex = convert_void_ptr_to_unsigned_char(heap_top(&wheatScores));
-    if (heap_top_score(&vertexScores) > heap_top_score(&wheatScores))
-    {
-        best_vertex = convert_void_ptr_to_unsigned_char(heap_top(&vertexScores));
-    }
+
+    (heap_top_score(&vertexScores) > heap_top_score(&wheatScores)) &&
+        (best_vertex = convert_void_ptr_to_unsigned_char(heap_top(&vertexScores)));
 
     heap_destroy(&wheatScores);
     heap_destroy(&vertexScores);
@@ -581,11 +584,14 @@ void play_actions_with_conditions(GameState state,
         queue_init(&queue);
         while (conditions[offset](player, state, &queue))
         {
+            putts("condition worked");
             actions[offset](player, socket, state, &queue);
             destroy_queue(&queue);
             queue_init(&queue);
+            usleep(200000);
         }
         destroy_queue(&queue);
+        usleep(200000);
     }
 }
 
@@ -644,16 +650,12 @@ unsigned char moveRobberTo(PlayerPtr player, GraphPtr graph)
             settlement = stack_pop(&settlements);
             belongToPlayer |= (settlement->color & 0x0F) == player->color;
 
-            if (settlement->color < BLACK)
-            {
-                score += prob;
-            }
+            (settlement->color < BLACK) &&
+                (score += prob);
         }
 
-        if (belongToPlayer == false)
-        {
+        (belongToPlayer == false) &&
             heap_insert(&scores, convert_unsigned_char_to_void_ptr(offset), score, heap_max);
-        }
     }
 
     const void *vertexOffset = heap_extract(&scores, heap_max, NULL);
@@ -676,6 +678,7 @@ unsigned char buyableRoadsAroundVertex(GraphPtr graph, StackPtr stk, PlayerPtr p
     {
 
         edge_num = vertex + (tempEdge->offset << 8);
+        printt("\tedge_num=%d| vertex=%d |tempEdge->offset= %d\n", edge_num, vertex, tempEdge->offset);
         stack_push(stk, convert_unsigned_short_to_void_ptr(edge_num));
         size++;
     }
@@ -693,6 +696,7 @@ unsigned char buyableRoads(GraphPtr graph, StackPtr stk, PlayerPtr player)
     Node node;
     VertexPtr dest;
     EdgePtr dest_edge;
+    bool condition;
 
     queue_init(&sourceQ);
     queue_init(&destQ);
@@ -713,11 +717,12 @@ unsigned char buyableRoads(GraphPtr graph, StackPtr stk, PlayerPtr player)
         dest_edge = node->data;
         edge_num = from + (dest_edge->offset << 8);
 
-        if (dest_edge->color == BLACK)
-        {
-            stack_push(stk, convert_unsigned_short_to_void_ptr(edge_num));
-            count++;
-        }
+        condition = dest_edge->color == BLACK;
+        count += condition;
+
+        condition &&
+            (stack_push(stk, convert_unsigned_short_to_void_ptr(edge_num)));
+
         QUEUE_TRAVARSE_FINISH;
     }
     QUEUE_TRAVARSE_FINISH;
@@ -726,19 +731,16 @@ unsigned char buyableRoads(GraphPtr graph, StackPtr stk, PlayerPtr player)
 unsigned char buyableSettlements(StackPtr stk, PlayerPtr player, GraphPtr graph, bool needRoad)
 {
     unsigned char count = 0;
-
+    bool condition;
     unsigned char offset;
     VertexPtr vertex;
 
     for (offset = 0; offset < VERTECIES; offset++)
     {
         vertex = graph->vertices + offset + AREAS;
-
-        if (vertex->color == BLACK && buyableSettlement(player, vertex, needRoad))
-        {
-            count++;
-            stack_push(stk, vertex);
-        }
+        condition = vertex->color == BLACK && buyableSettlement(player, vertex, needRoad);
+        count += condition;
+        condition &&stack_push(stk, vertex);
     }
 
     return count;
@@ -762,6 +764,20 @@ unsigned char upgradeableSettlements(StackPtr stk, PlayerPtr player, GraphPtr gr
 
     return count;
 }
+
+signed char *calc_deals_mats(unsigned char playerHarbors)
+{
+    unsigned char offset;
+    signed char *mats = calloc(TOTAL_MATERIALS, sizeof(signed char));
+
+    for (offset = 0; offset < TOTAL_MATERIALS; offset++)
+    {
+        bool conditions[3] = {playerHarbors >> offset, playerHarbors >> 5, true};
+        mats[offset] = find_first_true_index(conditions, 3) + 2;
+    }
+    return mats;
+}
+
 bool buyableProduct(unsigned char astrategy,
                     PlayerPtr player,
                     GraphPtr graph,
@@ -771,22 +787,29 @@ bool buyableProduct(unsigned char astrategy,
                     QueuePtr actionsQ)
 {
 
-    signed char *clone, *sub;
+    signed char *clone, *sub, *dealsMats;
     unsigned char res, missingMat;
     bool buyable;
 
     clone = vector_dup(playerMats, TOTAL_MATERIALS);
-    missingMat = getMissingMaterial(clone, productMats);
-    res = buyableMaterial(astrategy, player, graph, missingMat, clone, playerHarbors);
+    dealsMats = calc_deals_mats(playerHarbors);
+    res = 0;
 
-    while (!(buyable = vector_manip_condition(clone, productMats, TOTAL_MATERIALS, vector_sub, above_equal_zero)) & 0x01 && !res)
+    puts("dealsMats ");
+    print_vec((unsigned char *)dealsMats, TOTAL_MATERIALS);
+
+    while (
+        !(buyable = vector_manip_condition(clone, productMats, TOTAL_MATERIALS, vector_sub, above_equal_zero) & 0x01) && (vector_manip_condition(clone, dealsMats, TOTAL_MATERIALS, vector_sub, above_equal_zero) >> 1) &&
+        !(res = buyableMaterial(astrategy, player, graph, getMissingMaterial(clone, productMats), clone, playerHarbors)))
     {
-
         enqueue(actionsQ, convert_unsigned_char_to_void_ptr(res));
-        missingMat = getMissingMaterial(clone, productMats);
-        res = buyableMaterial(astrategy, player, graph, missingMat, clone, playerHarbors);
     }
 
+    res &&
+        enqueue(actionsQ, convert_unsigned_char_to_void_ptr(res));
+
+    free(dealsMats);
+    printt("buyable=%d\n", buyable);
     return buyable;
 }
 
@@ -794,6 +817,8 @@ bool buyableProduct(unsigned char astrategy,
 
 bool state_can_buy_road(PlayerPtr player, GameState state, QueuePtr queue)
 {
+    puts("state_can_buy_road");
+
     Stack stk;
     stack_init(&stk);
 
@@ -816,6 +841,8 @@ bool state_can_buy_road(PlayerPtr player, GameState state, QueuePtr queue)
 }
 bool state_can_buy_settlement(PlayerPtr player, GameState state, QueuePtr queue)
 {
+    puts("state_can_buy_settlement");
+
     Stack stk;
     stack_init(&stk);
 
@@ -838,6 +865,8 @@ bool state_can_buy_settlement(PlayerPtr player, GameState state, QueuePtr queue)
 }
 bool state_can_buy_city(PlayerPtr player, GameState state, QueuePtr queue)
 {
+    puts("state_can_buy_city");
+
     Stack stk;
     stack_init(&stk);
 
@@ -859,8 +888,11 @@ bool state_can_buy_city(PlayerPtr player, GameState state, QueuePtr queue)
 }
 bool state_can_buy_development(PlayerPtr player, GameState state, QueuePtr queue)
 {
+    puts("state_can_buy_development");
 
     unsigned char ast = state->astIndexes[player->color - 1];
+
+    print_vec(player->materials, TOTAL_MATERIALS);
 
     bool can_buy =
         // if buyable by player materials and bank/harbor deals
@@ -879,12 +911,14 @@ void handle_deal_num(PlayerPtr player,
                      GameState state, unsigned char deal_num)
 
 {
+    puts("handle_deal_num");
+
     unsigned char deal_mat_from = (deal_num & 0x07) - 1;
     unsigned char deal_type = deal_num >> 3;
     unsigned char deal_mat_to = deal_num >> 5;
 
-    unsigned char cost_from_player[TOTAL_MATERIALS] = {0},
-                  cost_to_player[TOTAL_MATERIALS] = {0};
+    signed char cost_from_player[TOTAL_MATERIALS] = {0},
+                cost_to_player[TOTAL_MATERIALS] = {0};
 
     cost_from_player[deal_mat_from] = deal_type + 2;
     cost_from_player[deal_mat_to]++;
@@ -897,6 +931,8 @@ void handle_action_q(PlayerPtr player,
                      GameState state,
                      QueuePtr actionsQ)
 {
+    puts("handle_action_q");
+
     while (!queue_empty(*actionsQ))
     {
         handle_deal_num(player, state,
@@ -910,6 +946,8 @@ void state_buy_road(PlayerPtr player,
                     GameState state,
                     QueuePtr actionsQ)
 {
+    puts("state_buy_road");
+
     handle_action_q(player, state, actionsQ);
 
     Stack stk;
@@ -921,7 +959,8 @@ void state_buy_road(PlayerPtr player,
     unsigned short (*prioritiseRoads[])(GraphPtr, PlayerPtr, Heap *, StackPtr) =
         {prioritiseWoodRoad, prioritiseWheatCardsRoad};
 
-    unsigned short road = prioritiseRoads[!!ast](state->graph, player, state->astHeaps, stk);
+    unsigned short road = prioritiseRoads[!!ast](state->graph, player, state->astHeaps,
+                                                 &stk);
 
     buy_road(player, state->graph, store[CITY],
              state->bankMaterials, true, road & 0xFF, road >> 8);
@@ -938,6 +977,7 @@ void state_buy_settlement(PlayerPtr player,
                           GameState state,
                           QueuePtr actionsQ)
 {
+    puts("state_buy_settlement");
     handle_action_q(player, state, actionsQ);
 
     unsigned char size, ast = state->astIndexes[player->color - 1];
@@ -961,6 +1001,8 @@ void state_buy_city(PlayerPtr player,
                     GameState state,
                     QueuePtr actionsQ)
 {
+    puts("state_buy_city");
+
     handle_action_q(player, state, actionsQ);
 
     unsigned char size, ast = state->astIndexes[player->color - 1];
@@ -983,6 +1025,11 @@ void state_buy_development(PlayerPtr player,
                            GameState state,
                            QueuePtr actionsQ)
 {
+    puts("state_buy_development");
+
     handle_action_q(player, state, actionsQ);
+
+    buy_developement(player, state->bankMaterials, state->bankDevelopments, store[DEVELOPMENT_CARD]);
+
     // buy and use
 }

@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "./sock.h"
 #include "../controller/types.h"
@@ -32,5 +33,5 @@ int server_listen(void (*handle_request)(
                       int socket,
                       GameState state),
                   GameState state);
-                  
+
 #endif

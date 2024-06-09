@@ -79,15 +79,14 @@ Node insert(Node node, void *element, signed char (*cmp)(const void *, const voi
         return new_mode(element);
     }
     signed char cmp_result = cmp(element, node->data);
-    if (cmp_result < 0)
-    {
-        node->left = insert(node->left, element, cmp);
-    }
-    else if (cmp_result > 0)
-    {
-        node->right = insert(node->right, element, cmp);
-    }
-    else
+
+    (cmp_result < 0) &&
+        (node->left = insert(node->left, element, cmp));
+
+    (cmp_result > 0) &&
+        (node->right = insert(node->right, element, cmp));
+
+    if (!cmp_result)
     {
         return node;
     }
@@ -97,24 +96,21 @@ Node insert(Node node, void *element, signed char (*cmp)(const void *, const voi
 
     int balance = calc_balance(node);
 
-    if (balance > 1 && cmp(element, node->left->data) < 0)
-    {
-        return right_rotate(node);
-    }
+    // RR
+    (balance > 1 && cmp(element, node->left->data) < 0) &&
+        (node = right_rotate(node));
 
-    if (balance < -1 && cmp(element, node->right->data) > 0)
-    {
-        return left_rotate(node);
-    }
-    if (balance > 1 && cmp(element, node->left->data) > 0)
-    {
-        return left_right_rotate(node);
-    }
+    // LL
+    (balance < -1 && cmp(element, node->right->data) > 0) &&
+        (node = left_rotate(node));
 
-    if (balance < -1 && cmp(element, node->right->data) < 0)
-    {
-        return right_left_rotate(node);
-    }
+    // LR
+    (balance > 1 && cmp(element, node->left->data) > 0) &&
+        (node = left_right_rotate(node));
+
+    // RL
+    (balance < -1 && cmp(element, node->right->data) < 0) &&
+        (node = right_left_rotate(node));
 
     return node;
 }
@@ -134,15 +130,11 @@ Node avl_search(Node node, void *element, signed char cmp(const void *, const vo
     {
         signed char cmp_result = cmp(node->data, element);
 
-        if (cmp_result > 0)
-        {
-            return avl_search(node->left, element, cmp);
-        }
+        (cmp_result > 0) &&
+            (node = avl_search(node->left, element, cmp));
 
-        if (cmp_result < 0)
-        {
-            return avl_search(node->right, element, cmp);
-        }
+        (cmp_result < 0) &&
+            (node = avl_search(node->right, element, cmp));
 
         return node;
     }

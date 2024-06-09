@@ -10,7 +10,7 @@ typedef linkNode Stack, *StackPtr;
 
 void stack_init(StackPtr);
 
-void stack_push(StackPtr, void *data);
+bool stack_push(StackPtr, void *data);
 
 bool stack_empty(Stack);
 

@@ -22,11 +22,11 @@ bool validate_index(Heap *heap, unsigned char index)
 void heapify_up(Heap *heap, unsigned char index, signed char (*cmp)(signed char, signed char))
 {
     unsigned char father = (index - 1) / 2;
-    if (index > 0 && cmp(heap->data[index].score, heap->data[father].score) > 0)
-    {
-        swap(heap, index, father);
-        heapify_up(heap, father, cmp);
-    }
+
+    (index > 0 && cmp(heap->data[index].score, heap->data[father].score) > 0) &&
+        (swap(heap, index, father),
+         heapify_up(heap, father, cmp),
+         1);
 }
 
 void heapify_down(Heap *heap, unsigned char index,
@@ -36,24 +36,19 @@ void heapify_down(Heap *heap, unsigned char index,
     unsigned char rightChild = 2 * index + 2;
     unsigned char largest = index;
 
-    if (validate_index(heap, leftChild) && cmp(heap->data[leftChild].score, heap->data[largest].score) > 0)
-    {
-        largest = leftChild;
-    }
+    (validate_index(heap, leftChild) && cmp(heap->data[leftChild].score, heap->data[largest].score) > 0) &&
+        (largest = leftChild);
 
-    if (validate_index(heap, rightChild) && cmp(heap->data[rightChild].score, heap->data[largest].score) > 0)
-    {
-        largest = rightChild;
-    }
+    (validate_index(heap, rightChild) && cmp(heap->data[rightChild].score, heap->data[largest].score) > 0) &&
+        (largest = rightChild);
 
-    if (largest != index)
-    {
-        swap(heap, index, largest);
-        heapify_down(heap, largest, cmp);
-    }
+    (largest != index) &&
+        (swap(heap, index, largest),
+         heapify_down(heap, largest, cmp),
+         1);
 }
 
-void heap_insert(Heap *heap, void *data, signed char score,
+bool heap_insert(Heap *heap, void *data, signed char score,
                  signed char (*cmp)(signed char, signed char))
 {
     heapInfo info;
@@ -62,6 +57,8 @@ void heap_insert(Heap *heap, void *data, signed char score,
 
     heap->data[heap->length] = info;
     heapify_up(heap, heap->length++, cmp);
+
+    return true;
 }
 
 void *heap_extract(Heap *heap,
@@ -75,11 +72,11 @@ void *heap_extract(Heap *heap,
 
     swap(heap, 0, --heap->length);
 
-    if (heap->length)
-        heapify_down(heap, 0, cmp);
+    (heap->length) &&
+        (heapify_down(heap, 0, cmp), 1);
 
-    if (scoreptr)
-        *scoreptr = score;
+    (scoreptr) &&
+        (*scoreptr = score);
 
     return data;
 }

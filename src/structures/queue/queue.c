@@ -5,9 +5,11 @@ void queue_init(QueuePtr manager)
     circular_init(manager);
 }
 
-void enqueue(QueuePtr manager, void *data)
+bool enqueue(QueuePtr manager, void *data)
 {
-    circular_insert_end(manager)->data = data;
+    linkNode node = circular_insert_end(manager);
+    node->data = data;
+    return !!node;
 }
 
 bool queue_empty(Queue manager)

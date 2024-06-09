@@ -2,10 +2,6 @@
 #include "../headers/model.h"
 
 // extract data functions
-unsigned char extract_area_materials(unsigned char material_number)
-{
-    return material_number & 0x07;
-}
 
 unsigned char extract_area_number(unsigned char material_number)
 {
@@ -22,11 +18,7 @@ void catan_edges(GraphPtr graph)
     file = fopen("edges.byte", "rb");
 #endif
 
-    if (!file)
-    {
-        perror("could not open edges.byte!");
-        exit(EXIT_FAILURE);
-    }
+    assert(file && "could not open edges.byte!");
 
     signed char elements[2];
     // printt("building graph\n");
@@ -142,8 +134,7 @@ unsigned char *harbors_numbers(unsigned char *size, signed char *params,
     {
         mat = mat_index = state->graph->vertices[state->harbors[offset * 2] + AREAS].harbor - 1;
 
-        if (mat == GENERAL_DEAL)
-            mat_index += general_deal_counter++;
+        mat == GENERAL_DEAL && (mat_index += general_deal_counter++);
 
         harbors_numbs[mat_index * 2] = state->harbors[offset * 2];
         harbors_numbs[mat_index * 2 + 1] = state->harbors[offset * 2 + 1];
@@ -169,10 +160,8 @@ unsigned char *players_around_area(unsigned char *size, signed char *params,
     edge = node->data;
     dest = edge->vertex;
 
-    if (dest->color < BLACK)
-    {
-        playerBits |= 1 << dest->color;
-    }
+    (dest->color < BLACK) &&
+        (playerBits |= 1 << dest->color);
 
     QUEUE_TRAVARSE_FINISH;
 
@@ -241,18 +230,10 @@ unsigned char *inf_players_manip(unsigned char *size,
     unsigned char *res;
 
     bool _is_bank = offset == MAX_PLAYERS;
+    signed char *vec = bank;
+    !_is_bank && (vec = (signed char *)manip(player));
 
-    if (_is_bank)
-    {
-        // is bank
-        res = (unsigned char *)vector_dup(bank, (*size = count));
-    }
-    else
-    {
-        // is local
-        // return every materials
-        res = (unsigned char *)vector_dup((signed char *)manip(player), (*size = count));
-    }
+    res = (unsigned char *)vector_dup(vec, (*size = count));
 
     return res;
 }
@@ -318,63 +299,6 @@ void print_edge_offset(const void *ptr)
     printf(" %d ", edge->offset);
 }
 
-unsigned char *svertex_to_materials(GraphPtr graph, signed char index)
-{
-    Queue que;
-    EdgePtr edge;
-    unsigned char size = 0, *mats = calloc(TOTAL_MATERIALS, sizeof(char));
-    Node node = graph->vertices[index].edges;
-
-    QUEUE_TRAVARSE(node, node);
-    size++;
-    edge = (EdgePtr)node->data;
-
-    if (edge->color == GRAY)
-    {
-        mats[extract_area_materials(edge->vertex->material_number)]++;
-    }
-    QUEUE_TRAVARSE_FINISH;
-    return mats;
-}
-
-bool buy_settlement(PlayerPtr player,
-                    GraphPtr graph,
-                    const signed char cost[TOTAL_MATERIALS],
-                    signed char bank[TOTAL_MATERIALS],
-                    signed char transferMats, // -1 to player 1 from player
-                    unsigned char index)
-{
-    switch (transferMats)
-    {
-    case 1:
-        transfer_materials(player, bank, cost, false);
-        break;
-    case -1:
-    {
-        unsigned char *materials = svertex_to_materials(graph, index);
-        transfer_materials(player, bank, (signed char *)materials, true);
-        free(materials);
-        break;
-    }
-    default:
-        break;
-    }
-
-    // change settlement color
-    graph->vertices[index].color = player->color;
-    player->victoryPoints++;
-
-    avl_insert(&player->settlements, convert_unsigned_char_to_void_ptr(index), value_compare);
-
-    player->victoryPoints++;
-    player->amounts[SETTLEMENT]--;
-
-    if (graph->vertices[index].harbor)
-        player->harbors |= (1 << (graph->vertices[index].harbor - 1));
-
-    return true;
-}
-
 // O(CE+CVE+C) | C is negligible
 signed char update_longest_road(GraphPtr graph, signed char *longest_road_achievement)
 {
@@ -392,16 +316,15 @@ signed char update_longest_road(GraphPtr graph, signed char *longest_road_achiev
         }
     }
 
-    if (max_road_length < 5)
-    {
-        *longest_road_achievement = -1;
-    }
-    else if (vector_count(max_road_per_color,
-                          MAX_PLAYERS,
-                          max_road_length) == 1)
-    {
-        *longest_road_achievement = max_road_color;
-    }
+    // if the same max road length apply to only 1 player, only then change
+    (vector_count(max_road_per_color,
+                  MAX_PLAYERS,
+                  max_road_length) == 1) &&
+        (*longest_road_achievement = max_road_color);
+
+    // if the max road length is below 5, return longest road player index to -1
+    (max_road_length < 5) &&
+        (*longest_road_achievement = -1);
 
     print_vec((unsigned char *)max_road_per_color, MAX_PLAYERS);
 
@@ -533,10 +456,9 @@ void collect_materials(unsigned char rolled_num,
 
     for (offset = 0, vertex = 0; offset < AREAS; offset++)
     {
-        if (extract_area_number(graph->vertices[offset].material_number) == rolled_num && robberArea != offset)
-        {
-            vertecies[vertex++] = graph->vertices + offset;
-        }
+        (extract_area_number(graph->vertices[offset].material_number) == rolled_num &&
+         robberArea != offset) &&
+            (vertecies[vertex++] = graph->vertices + offset);
     }
 
     while (--vertex >= 0)
@@ -552,20 +474,16 @@ signed char update_biggest_army(PlayerPtr players,
 
     while (--num_of_players >= 0)
     {
-        if (players[num_of_players].knightUsed > players[maxIndex].knightUsed)
-        {
-            maxIndex = num_of_players;
-        }
+        (players[num_of_players].knightUsed > players[maxIndex].knightUsed) &&
+            (maxIndex = num_of_players);
     }
 
-    if (players[maxIndex].knightUsed >= 3)
-    {
-        *biggest_army_achievement = maxIndex;
-    }
-    else
-    {
-        *biggest_army_achievement = -1;
-    }
+    *biggest_army_achievement = maxIndex;
+
+    // if the knight used is below 3, then set the biggest army player index to -1
+    (players[maxIndex].knightUsed < 3) &&
+        (*biggest_army_achievement = -1);
+
     printt("\t\tmax = %d (%d)\n", players[maxIndex].knightUsed, maxIndex);
     return *biggest_army_achievement;
 }
@@ -651,6 +569,8 @@ void bot_plays(PlayerPtr player, int socket, GameState state)
 
     init_actions[astIndex](&conditionsFunctions, &actionsFunctions);
     putts("after init");
+    usleep(200000);
+
     play_actions_with_conditions(state,
                                  player,
                                  socket,
@@ -713,8 +633,6 @@ void bot_buy_first(PlayerPtr player, int socket, GameState state)
     unsigned short prefered_road = prioritiesRoad[!!astIndex](state->graph, player, heap, &buyableRoads);
     printt("maybe road %d to %d\n", prefered_road & 0xFF, prefered_road >> 8);
 
-    if (prefered_road == 0)
-        return;
     printt("buying road %d to %d\n", prefered_road & 0xFF, prefered_road >> 8);
 
     buy_road(player, state->graph, store[ROAD], state->bankMaterials, false, prefered_road & 0xFF, prefered_road >> 8);

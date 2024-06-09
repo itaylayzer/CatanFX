@@ -103,8 +103,7 @@ int main()
     FILE *file;
     file = fopen("edges.byte", "wb");
 
-    if (!file)
-        exit(EXIT_FAILURE);
+    assert(file);
 
     const byte AREAS = 19;
     const byte DOTS = 54;
@@ -134,8 +133,7 @@ int main()
             byte org = offset + AREAS;
             byte dest = dots[index] + AREAS;
             byte elements[2] = {org, dest};
-            if (offset < 3)
-                printf("%hhu %hhu\n", elements[0], elements[1]);
+            (offset < 3) && printf("%hhu %hhu\n", elements[0], elements[1]);
             fwrite(elements, sizeof(byte), 2, file);
         }
         free(dots);

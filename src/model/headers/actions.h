@@ -6,7 +6,7 @@
 
 signed char value_compare(const void *first, const void *second);
 
-void transfer_materials(PlayerPtr player,
+bool transfer_materials(PlayerPtr player,
                         signed char bank[TOTAL_MATERIALS],
                         const signed char cost[TOTAL_MATERIALS],
                         bool to_player);
@@ -32,4 +32,11 @@ bool buy_developement(PlayerPtr player,
                       signed char dev_bank[TOTAL_DEVELOPMENT_CARD],
                       const signed char cost[TOTAL_MATERIALS]);
 unsigned char random_index_by_vals(unsigned char size, signed char *arr);
+bool buy_settlement(PlayerPtr player,
+                    GraphPtr graph,
+                    const signed char cost[TOTAL_MATERIALS],
+                    signed char bank[TOTAL_MATERIALS],
+                    signed char transferMats, // -1 to player 1 from player
+                    unsigned char index);
+unsigned char extract_area_materials(unsigned char material_number);
 #endif

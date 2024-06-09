@@ -5,9 +5,11 @@ void stack_init(StackPtr pstk)
     linear_init(pstk);
 }
 
-void stack_push(StackPtr pstk, void *data)
+bool stack_push(StackPtr pstk, void *data)
 {
-    linear_push(pstk)->data = data;
+    linkNode node = linear_push(pstk);
+    node->data = data;
+    return !!node;
 }
 
 bool stack_empty(Stack stk)

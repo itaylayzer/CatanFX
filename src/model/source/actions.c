@@ -24,8 +24,7 @@ bool buy_road(PlayerPtr player,
 
     player->amounts[ROAD]--;
 
-    if (transferMats)
-        transfer_materials(player, bank, cost, false);
+    transferMats &&transfer_materials(player, bank, cost, false);
 
     return change_road(player->color, graph, from, to);
 }
@@ -55,7 +54,7 @@ bool change_road(unsigned char color,
     return true;
 }
 
-void transfer_materials(PlayerPtr player,
+bool transfer_materials(PlayerPtr player,
                         signed char bank[TOTAL_MATERIALS],
                         const signed char cost[TOTAL_MATERIALS],
                         bool to_player)
@@ -71,6 +70,7 @@ void transfer_materials(PlayerPtr player,
     new_materials = (to_player ? vector_sub : vector_add)(bank, cost, TOTAL_MATERIALS);
     vector_cpy(bank, (signed char *)new_materials, TOTAL_MATERIALS);
     free(new_materials);
+    return true;
 }
 
 bool buy_city(PlayerPtr player,
@@ -132,6 +132,66 @@ bool buy_developement(PlayerPtr player,
     how_many[random_index_by_vals(TOTAL_DEVELOPMENT_CARD, dev_bank)] = 1;
     transfer_materials(player, bank, cost, false);
     transfer_dev_card(player, dev_bank, how_many, true);
+
+    return true;
+}
+unsigned char extract_area_materials(unsigned char material_number)
+{
+    return material_number & 0x07;
+}
+
+unsigned char *svertex_to_materials(GraphPtr graph, signed char index)
+{
+    Queue que;
+    EdgePtr edge;
+    unsigned char size = 0, *mats = calloc(TOTAL_MATERIALS, sizeof(char));
+    Node node = graph->vertices[index].edges;
+
+    QUEUE_TRAVARSE(node, node);
+    size++;
+    edge = (EdgePtr)node->data;
+
+    (edge->color == GRAY) &&
+        (mats[extract_area_materials(edge->vertex->material_number)]++);
+
+    QUEUE_TRAVARSE_FINISH;
+    return mats;
+}
+
+bool buy_settlement(PlayerPtr player,
+                    GraphPtr graph,
+                    const signed char cost[TOTAL_MATERIALS],
+                    signed char bank[TOTAL_MATERIALS],
+                    signed char transferMats, // -1 to player 1 from player
+                    unsigned char index)
+{
+    switch (transferMats)
+    {
+    case 1:
+        transfer_materials(player, bank, cost, false);
+        break;
+    case -1:
+    {
+        unsigned char *materials = svertex_to_materials(graph, index);
+        transfer_materials(player, bank, (signed char *)materials, true);
+        free(materials);
+        break;
+    }
+    default:
+        break;
+    }
+
+    // change settlement color
+    graph->vertices[index].color = player->color;
+    player->victoryPoints++;
+
+    avl_insert(&player->settlements, convert_unsigned_char_to_void_ptr(index), value_compare);
+
+    player->victoryPoints++;
+    player->amounts[SETTLEMENT]--;
+
+    (graph->vertices[index].harbor) &&
+        (player->harbors |= (1 << (graph->vertices[index].harbor - 1)));
 
     return true;
 }

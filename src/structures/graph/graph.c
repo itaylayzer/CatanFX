@@ -29,11 +29,10 @@ void graph_join(GraphPtr graph,
 
 void dijkstra_relaxation(VertexPtr source, VertexPtr dest, unsigned char weight)
 {
-    if (dest->weight > source->weight + weight)
-    {
-        dest->weight = weight + source->weight;
-        dest->father = source;
-    }
+    (dest->weight > source->weight + weight) &&
+        (dest->weight = weight + source->weight,
+         dest->father = source,
+         1);
 }
 
 void graph_dijkstra(GraphPtr graph, unsigned char source, unsigned char color)
@@ -61,41 +60,24 @@ void graph_dijkstra(GraphPtr graph, unsigned char source, unsigned char color)
     {
         vertex = heap_extract(&scores, heap_min, NULL);
 
-        Queue queue;
         Node node;
         EdgePtr edge;
         VertexPtr dest;
         unsigned char vertex_weight;
-        queue_init(&queue);
-        enqueue(&queue, vertex->edges);
 
-        // For each edge
-        while (!queue_empty(queue) && vertex->visited == false)
+        QUEUE_TRAVARSE_CONDITION(vertex->edges, node, vertex->visited == false);
+        edge = node->data;
+        dest = edge->vertex;
+        if (edge->color == color)
         {
-            node = dequeue(&queue);
-            if (node->left != NULL)
-            {
-                enqueue(&queue, node->left);
-            }
+            vertex_weight = dest->weight;
+            dijkstra_relaxation(vertex, dest, 1);
 
-            if (node->right != NULL)
-            {
-                enqueue(&queue, node->right);
-            }
-
-            edge = node->data;
-            dest = edge->vertex;
-            if (edge->color == color)
-            {
-                vertex_weight = dest->weight;
-                dijkstra_relaxation(vertex, dest, 1);
-                if (vertex_weight > dest->weight)
-                {
-                    heap_insert(&scores, dest, dest->weight, heap_min);
-                }
-            }
+            (vertex_weight > dest->weight) &&
+                heap_insert(&scores, dest, dest->weight, heap_min);
         }
 
+        QUEUE_TRAVARSE_FINISH;
         while (!queue_empty(queue))
         {
             dequeue(&queue);
@@ -125,10 +107,9 @@ signed char dfs(GraphPtr graph, unsigned char vertex_offset, unsigned char targe
         return 0;
     }
 
-    if (visited)
-    {
-        visited[vertex_offset - AREAS] = true;
-    }
+    (visited) &&
+        (visited[vertex_offset - AREAS] = true);
+
     signed char max_child_length = 0;
 
     Node node = vertex->edges;
@@ -138,10 +119,9 @@ signed char dfs(GraphPtr graph, unsigned char vertex_offset, unsigned char targe
     QUEUE_TRAVARSE(node, node);
     edge = node->data;
 
-    if (edge->color == targetColor)
-    {
-        max_child_length = bmax(max_child_length, dfs(graph, edge->offset, targetColor, visited));
-    }
+    (edge->color == targetColor) &&
+        (max_child_length = bmax(max_child_length, dfs(graph, edge->offset, targetColor, visited)));
+
     QUEUE_TRAVARSE_FINISH;
 
     return max_child_length + 1;

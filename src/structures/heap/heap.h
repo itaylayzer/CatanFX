@@ -20,7 +20,7 @@ typedef struct heapType
 
 void heap_init(Heap *, unsigned char);
 
-void heap_insert(Heap *, void *data, signed char score,
+bool heap_insert(Heap *, void *data, signed char score,
                  signed char (*)(signed char, signed char));
 
 void *heap_extract(Heap *heap,
