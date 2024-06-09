@@ -28,7 +28,6 @@ float cardsScore(float[TOTAL_MATERIALS]);
 // picking astrategies
 unsigned char *astrategies_init(GraphPtr graph, Heap heaps[TOTAL_ASTRATEGIES]);
 
-// astrategies prioritise functionsת TODO:
 unsigned short prioritiseWoodRoad(GraphPtr, PlayerPtr, Heap[TOTAL_ASTRATEGIES],
                                   StackPtr);
 unsigned short prioritiseWheatCardsRoad(GraphPtr, PlayerPtr, Heap[TOTAL_ASTRATEGIES],
@@ -40,7 +39,6 @@ unsigned char *woodMatsOrder(GraphPtr, PlayerPtr);
 unsigned char *wheatMatsOrder(GraphPtr, PlayerPtr);
 unsigned char *cardsMatsOrder(GraphPtr, PlayerPtr);
 
-// astrategies play function TODO:
 void wood_init_actions(bool (***ptr_conditions)(PlayerPtr, GameState, QueuePtr),
                        void (***ptr_actions)(PlayerPtr, int, GameState, QueuePtr));
 void wheat_init_actions(bool (***ptr_conditions)(PlayerPtr, GameState, QueuePtr),

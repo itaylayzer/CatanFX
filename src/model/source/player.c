@@ -8,15 +8,17 @@ float *materials_probabilities(GraphPtr graph, unsigned char vertex)
     Node node;
     EdgePtr edge;
     VertexPtr tempVertex;
+    bool condition;
 
     QUEUE_TRAVARSE(graph->vertices[vertex].edges, node);
 
     edge = node->data;
-    if (edge->color == GRAY)
-    {
-        tempVertex = edge->vertex;
-        mats_prob[tempVertex->material_number & 0x07] += probs[(tempVertex->material_number >> 3) - 2];
-    }
+    condition = (edge->color == GRAY);
+
+    tempVertex = edge->vertex;
+
+    mats_prob[tempVertex->material_number & 0x07] +=
+        probs[(tempVertex->material_number >> 3) - 2] * condition;
 
     QUEUE_TRAVARSE_FINISH;
 
@@ -132,28 +134,31 @@ unsigned char buyableMaterial(unsigned char astrategy,
 {
     unsigned char harborOffset, harbor, take, result = 0;
     unsigned char *least_importent = leastImportent(astrategy, player, graph);
+    bool condition;
 
     for (harborOffset = 0; harborOffset < TOTAL_MATERIALS && !result; harborOffset++)
     {
         harbor = least_importent[harborOffset];
-        if (playerHarbors >> harborOffset & 0x01 &&
-            vector_all(playerMaterials, TOTAL_MATERIALS, above_equal_zero) && !result)
-        {
-            playerMaterials[harborOffset] -= 2;
-            playerMaterials[missingMaterial]++;
-            result = harborOffset + 1 + (missingMaterial >> 5);
-        }
+        condition = (playerHarbors >> harborOffset & 0x01 &&
+                     vector_all(playerMaterials, TOTAL_MATERIALS, above_equal_zero) && !result);
+
+        playerMaterials[harborOffset] -= condition * 2;
+        playerMaterials[missingMaterial] += condition;
+
+        (condition) &&
+            (result = harborOffset + 1 + (missingMaterial >> 5));
 
         take = 4;
         (playerHarbors >> 5) &&
             (take = 3);
 
-        if (playerMaterials[harbor] - take >= 0 && !result)
-        {
-            playerMaterials[harborOffset] -= take;
-            playerMaterials[missingMaterial]++;
-            result = harborOffset + 1 + ((take - 2) >> 3) + (missingMaterial >> 5);
-        }
+        condition = (playerMaterials[harbor] - take >= 0 && !result);
+
+        playerMaterials[harborOffset] -= take * condition;
+        playerMaterials[missingMaterial] += condition;
+
+        (condition) &&
+            (result = harborOffset + 1 + ((take - 2) >> 3) + (missingMaterial >> 5));
     }
 
     return result;
@@ -215,7 +220,6 @@ unsigned char *astrategies_init(GraphPtr graph, Heap heaps[TOTAL_ASTRATEGIES])
     return indexes;
 }
 
-// astrategies prioritise functions TODO:
 unsigned short prioritiseWoodRoad(GraphPtr graph,
                                   PlayerPtr player,
                                   Heap heaps[TOTAL_ASTRATEGIES],
@@ -666,6 +670,7 @@ unsigned char buyableRoadsAroundVertex(GraphPtr graph, StackPtr stk, PlayerPtr p
     Node node;
     VertexPtr tempVertex;
     EdgePtr tempEdge;
+    bool condition;
     unsigned char size = 0;
 
     unsigned short edge_num;
@@ -674,14 +679,12 @@ unsigned char buyableRoadsAroundVertex(GraphPtr graph, StackPtr stk, PlayerPtr p
 
     tempEdge = node->data;
     tempVertex = tempEdge->vertex;
-    if (tempVertex->color == BLACK)
-    {
-
-        edge_num = vertex + (tempEdge->offset << 8);
-        printt("\tedge_num=%d| vertex=%d |tempEdge->offset= %d\n", edge_num, vertex, tempEdge->offset);
-        stack_push(stk, convert_unsigned_short_to_void_ptr(edge_num));
-        size++;
-    }
+    condition = tempVertex->color == BLACK;
+    (condition) &&
+        (stack_push(stk,
+                    convert_unsigned_short_to_void_ptr(
+                        (edge_num = vertex + (tempEdge->offset << 8)))));
+    size += condition;
 
     QUEUE_TRAVARSE_FINISH;
 
@@ -756,10 +759,9 @@ unsigned char upgradeableSettlements(StackPtr stk, PlayerPtr player, GraphPtr gr
     vertex = (unsigned char)node->data;
 
     // if settlement vertex and dont have house
-    if (vertex >= AREAS && graph->vertices[vertex].color >> 6 == 0)
-    {
+    (vertex >= AREAS && graph->vertices[vertex].color >> 6 == 0) &&
         stack_push(stk, convert_unsigned_char_to_void_ptr(vertex));
-    }
+
     QUEUE_TRAVARSE_FINISH;
 
     return count;
@@ -1031,5 +1033,5 @@ void state_buy_development(PlayerPtr player,
 
     buy_developement(player, state->bankMaterials, state->bankDevelopments, store[DEVELOPMENT_CARD]);
 
-    // buy and use
+    // TODO: use
 }

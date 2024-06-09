@@ -40,6 +40,7 @@ void graph_dijkstra(GraphPtr graph, unsigned char source, unsigned char color)
     unsigned char offset;
     VertexPtr vertex;
     Heap scores;
+    bool condition;
 
     // dijkstra reset
     for (offset = 0; offset < VERTECIES; offset++)
@@ -68,20 +69,17 @@ void graph_dijkstra(GraphPtr graph, unsigned char source, unsigned char color)
         QUEUE_TRAVARSE_CONDITION(vertex->edges, node, vertex->visited == false);
         edge = node->data;
         dest = edge->vertex;
-        if (edge->color == color)
-        {
-            vertex_weight = dest->weight;
-            dijkstra_relaxation(vertex, dest, 1);
+        condition = (edge->color == color);
 
-            (vertex_weight > dest->weight) &&
-                heap_insert(&scores, dest, dest->weight, heap_min);
-        }
+        (condition) &&
+            (dijkstra_relaxation((vertex_weight = dest->weight), dest, 1), 1);
+
+        (condition && vertex_weight > dest->weight) &&
+            heap_insert(&scores, dest, dest->weight, heap_min);
 
         QUEUE_TRAVARSE_FINISH;
-        while (!queue_empty(queue))
-        {
-            dequeue(&queue);
-        }
+
+        destroy_queue(queue);
     }
 }
 

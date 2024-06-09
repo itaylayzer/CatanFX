@@ -309,11 +309,9 @@ signed char update_longest_road(GraphPtr graph, signed char *longest_road_achiev
     {
         max_road_per_color[color_offset] = dfs_score(graph, color_offset);
 
-        if (max_road_per_color[color_offset] > max_road_length)
-        {
-            max_road_length = max_road_per_color[color_offset];
-            max_road_color = color_offset;
-        }
+        (max_road_per_color[color_offset] > max_road_length) &&
+            (max_road_length = max_road_per_color[color_offset],
+             max_road_color = color_offset);
     }
 
     // if the same max road length apply to only 1 player, only then change
@@ -382,16 +380,18 @@ void transfer_all_players_mats(PlayerPtr players,
                                unsigned char mat)
 {
     PlayerPtr other;
+    bool is_other_player;
     while (--num_of_players >= 0)
     {
         other = players + num_of_players;
         signed char mats_to_transfer[TOTAL_MATERIALS] = {0};
 
-        if (num_of_players != player_index)
-        {
-            mats_to_transfer[mat] = other->materials[mat];
+        is_other_player = (num_of_players != player_index);
+
+        mats_to_transfer[mat] = is_other_player * other->materials[mat];
+
+        is_other_player &&
             transfer_materials(players + player_index, (signed char *)other->materials, mats_to_transfer, true);
-        }
     }
 }
 

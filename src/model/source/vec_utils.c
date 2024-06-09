@@ -143,11 +143,9 @@ unsigned char vector_min_index(const signed char *arr, signed char size)
     unsigned char min_index = 0;
     while (--size >= 0)
     {
-        if (arr[size] < min_value)
-        {
-            min_value = arr[size];
-            min_index = size;
-        }
+        (arr[size] < min_value) &&
+            (min_value = arr[size],
+             min_index = size);
     }
     return min_index;
 }
