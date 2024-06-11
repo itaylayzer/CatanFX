@@ -296,7 +296,7 @@ unsigned char *single_byte(unsigned char *size, signed char value)
 void print_edge_offset(const void *ptr)
 {
     EdgePtr edge = (EdgePtr)ptr;
-    printf(" %d ", edge->offset);
+    printt(" %d ", edge->offset);
 }
 
 // O(CE+CVE+C) | C is negligible
@@ -372,27 +372,6 @@ unsigned char *switch_action_store(unsigned char *size, signed char *params,
         break;
     }
     return res;
-}
-
-void transfer_all_players_mats(PlayerPtr players,
-                               unsigned char player_index,
-                               signed char num_of_players,
-                               unsigned char mat)
-{
-    PlayerPtr other;
-    bool is_other_player;
-    while (--num_of_players >= 0)
-    {
-        other = players + num_of_players;
-        signed char mats_to_transfer[TOTAL_MATERIALS] = {0};
-
-        is_other_player = (num_of_players != player_index);
-
-        mats_to_transfer[mat] = is_other_player * other->materials[mat];
-
-        is_other_player &&
-            transfer_materials(players + player_index, (signed char *)other->materials, mats_to_transfer, true);
-    }
 }
 
 unsigned char *switch_dev_card(unsigned char *size, signed char *params,
@@ -503,7 +482,8 @@ unsigned char *move_robber(unsigned char *size, signed char *params,
     case 1:
     {
         unsigned char cost[TOTAL_MATERIALS] = {0};
-        cost[random_index_by_vals(TOTAL_MATERIALS, (signed char *)cost)]++;
+        cost[random_index_by_vals(TOTAL_MATERIALS,
+                                  (signed char *)state->players[target_index].materials)]++;
         transfer_materials(state->players + params[0],
                            (signed char *)state->players[target_index].materials,
                            (signed char *)cost, true);
@@ -553,11 +533,7 @@ void bot_plays(PlayerPtr player, int socket, GameState state)
 
     BOT_SEND_FREE(socket, size, buffer);
 
-    if (need_stealing)
-    {
-        // TODO: if the cubes are equal 7?
-        putts("need_stealing");
-    }
+    (need_stealing) && (usleep(200000), state_steal(player, socket, state));
 
     bool (**conditionsFunctions)(PlayerPtr, GameState, QueuePtr);
     void (**actionsFunctions)(PlayerPtr, int, GameState, QueuePtr);
@@ -585,7 +561,6 @@ void bot_plays(PlayerPtr player, int socket, GameState state)
 
 void bot_buy_first(PlayerPtr player, int socket, GameState state)
 {
-    endln;
 
     putts("bot_buy_first");
     usleep(200000);
@@ -662,13 +637,10 @@ unsigned char *handle_rest_turns(unsigned char *size, signed char *params,
     // while the turn color its not WHITE
     while ((turnColor = state->turnOffset % state->num_of_players))
     {
-        printf("start: player index %d", turnColor);
-        endln;
+        printt("start: player index %d", turnColor);
 
         playFn[initial_state](state->players + turnColor, socket, state);
-        endln;
-        puts("done");
-        endln;
+        putts("player done");
 
         (state->turnOffset)++;
 

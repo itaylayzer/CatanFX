@@ -31,4 +31,4 @@
     BOT_SEND(socket, size, buffer);         \
     free(buffer);
 
-#define endln puts("")
+#define endln putts("")

@@ -72,6 +72,26 @@ bool transfer_materials(PlayerPtr player,
     free(new_materials);
     return true;
 }
+void transfer_all_players_mats(PlayerPtr players,
+                               unsigned char player_index,
+                               signed char num_of_players,
+                               unsigned char mat)
+{
+    PlayerPtr other;
+    bool is_other_player;
+    while (--num_of_players >= 0)
+    {
+        other = players + num_of_players;
+        signed char mats_to_transfer[TOTAL_MATERIALS] = {0};
+
+        is_other_player = (num_of_players != player_index);
+
+        mats_to_transfer[mat] = is_other_player * other->materials[mat];
+
+        is_other_player &&
+            transfer_materials(players + player_index, (signed char *)other->materials, mats_to_transfer, true);
+    }
+}
 
 bool buy_city(PlayerPtr player,
               GraphPtr graph,
@@ -122,18 +142,19 @@ void transfer_dev_card(PlayerPtr player,
     vector_cpy(bank, new_materials, TOTAL_DEVELOPMENT_CARD);
     free(new_materials);
 }
-bool buy_developement(PlayerPtr player,
-                      signed char bank[TOTAL_MATERIALS],
-                      signed char dev_bank[TOTAL_DEVELOPMENT_CARD],
-                      const signed char cost[TOTAL_MATERIALS])
+unsigned char buy_developement(PlayerPtr player,
+                               signed char bank[TOTAL_MATERIALS],
+                               signed char dev_bank[TOTAL_DEVELOPMENT_CARD],
+                               const signed char cost[TOTAL_MATERIALS])
 {
 
     signed char *how_many = calloc(TOTAL_DEVELOPMENT_CARD, sizeof(signed char));
-    how_many[random_index_by_vals(TOTAL_DEVELOPMENT_CARD, dev_bank)] = 1;
+    unsigned char index = random_index_by_vals(TOTAL_DEVELOPMENT_CARD, dev_bank);
+    how_many[index] = 1;
     transfer_materials(player, bank, cost, false);
     transfer_dev_card(player, dev_bank, how_many, true);
 
-    return true;
+    return index;
 }
 unsigned char extract_area_materials(unsigned char material_number)
 {
@@ -194,4 +215,150 @@ bool buy_settlement(PlayerPtr player,
         (player->harbors |= (1 << (graph->vertices[index].harbor - 1)));
 
     return true;
+}
+
+// use dev_card bot actions
+void use_dev_knight(PlayerPtr player, int socket, GameState state)
+{
+    unsigned char size, area = moveRobberTo(player, state->graph);
+    player->knightUsed++;
+    state->robberArea = area;
+
+    // update bot developments cards
+    player->developmentCards[KNIGHT_CARD]--;
+
+    // update user
+    unsigned char *buffer = calloc(size = 2, sizeof(unsigned char));
+    buffer[0] = 6;
+    buffer[1] = area;
+
+    BOT_SEND_FREE(socket, size, buffer);
+
+    socket_short_log(socket, 4);
+}
+void use_dev_point(PlayerPtr player, int socket, GameState state)
+{
+    // update client
+
+    unsigned char size, *buffer = calloc(size = 2, sizeof(unsigned char));
+    buffer[0] = 5;
+    buffer[1] = player->developmentCards[VICTORY_POINTS_CARD];
+
+    BOT_SEND_FREE(socket, size, buffer);
+}
+void use_dev_roads(PlayerPtr player, int socket, GameState state)
+{
+
+    // get astrategy
+    unsigned char offset, size, astindex = state->astIndexes[player->color - 1];
+
+    // get buyable roads
+    Stack stk;
+    stack_init(&stk);
+
+    buyableRoads(state->graph, &stk, player);
+
+    unsigned short (*prioritiseRoad[])(GraphPtr, PlayerPtr, Heap[TOTAL_ASTRATEGIES], StackPtr) = {prioritiseWoodRoad, prioritiseWheatCardsRoad};
+
+    for (offset = 0; offset < 2; offset++)
+    {
+        unsigned short road = prioritiseRoad[!!astindex](state->graph, player, state->astHeaps, &stk);
+
+        buy_road(player, state->graph, store[ROAD], state->bankMaterials, true,
+                 road >> 8, road & 0xFF);
+
+        unsigned char *buffer = calloc(size = 3, sizeof(unsigned char));
+        buffer[0] = 2;
+        buffer[1] = road & 0xFF;
+        buffer[2] = road >> 8;
+
+        BOT_SEND_FREE(socket, size, buffer);
+    }
+
+    // update bot developments cards
+    player->developmentCards[ROADS_CARD]--;
+
+    socket_short_log(socket, 5);
+}
+void use_dev_yop(PlayerPtr player, int socket, GameState state)
+{
+    unsigned char count = 2, astindex = state->astIndexes[player->color - 1], *product,
+                  *mats;
+    bool condition, tried_everything = false;
+    unsigned char *(*order[])(GraphPtr, PlayerPtr) = {
+        woodMatsOrder, wheatMatsOrder, cardsMatsOrder};
+
+    mats = (product = order[astindex](state->graph, player)) + TOTAL_MATERIALS;
+
+    signed char *sub = vector_sub((signed char *)player->materials,
+                                  (signed char *)product, TOTAL_MATERIALS);
+    signed char *bank = vector_dup(state->bankMaterials, TOTAL_MATERIALS);
+
+    unsigned char cost[TOTAL_MATERIALS] = {0};
+
+    while (count && !tried_everything)
+    {
+        unsigned char min_index = vector_min_index(sub, TOTAL_MATERIALS);
+        tried_everything = bank[min_index] == SIGNED_MAX_VALUE;
+
+        condition = !!bank[min_index];
+        cost[min_index]++;
+        sub[min_index]++;
+
+        condition &&
+            (count--);
+
+        !condition &&
+            (bank[min_index] = SIGNED_MAX_VALUE);
+    }
+
+    (!tried_everything) &&
+        (transfer_materials(player, state->bankMaterials, (signed char *)cost, true),
+         player->developmentCards[YEAR_OF_PLANT_CARD]--,
+         socket_short_log(socket, 6), 1);
+
+    free(sub);
+    free(product);
+}
+void use_dev_monopol(PlayerPtr player, int socket, GameState state)
+{
+    unsigned char offset, astindex = state->astIndexes[player->color - 1], *product,
+                          *mats;
+
+    unsigned char *(*order[])(GraphPtr, PlayerPtr) = {
+        woodMatsOrder, wheatMatsOrder, cardsMatsOrder};
+
+    mats = (product = order[astindex](state->graph, player)) + TOTAL_MATERIALS;
+
+    signed char *sub = vector_sub((signed char *)player->materials,
+                                  (signed char *)product, TOTAL_MATERIALS);
+
+    unsigned char min_index = vector_min_index(sub, TOTAL_MATERIALS);
+
+    transfer_all_players_mats(state->players, player->color, state->num_of_players, min_index);
+
+    free(sub);
+    free(product);
+
+    // update bot developments cards
+    player->developmentCards[MONOPOL_CARD]--;
+
+    socket_short_log(socket, 7);
+}
+
+// socket shortcuts
+void socket_short_update(int socket)
+{
+    unsigned char size, *buffer = calloc(size = 1, sizeof(unsigned char));
+    buffer[0] = 7;
+
+    BOT_SEND_FREE(socket, size, buffer);
+}
+void socket_short_log(int socket, unsigned char log_type)
+{
+    unsigned char size, *buffer = calloc(size = 2, sizeof(unsigned char));
+    buffer[0] = 8;
+    buffer[1] = log_type;
+
+    BOT_SEND_FREE(socket, size, buffer);
 }

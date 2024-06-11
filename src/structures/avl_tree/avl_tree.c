@@ -139,21 +139,3 @@ Node avl_search(Node node, void *element, signed char cmp(const void *, const vo
         return node;
     }
 }
-
-void avl_inorder(Node node, void printfn(const void *))
-{
-    if (node == NULL)
-    {
-        return;
-    }
-    else
-    {
-        printf("(");
-        avl_inorder(node->left, printfn);
-
-        printfn(node->data);
-
-        avl_inorder(node->right, printfn);
-        printf(")");
-    }
-}

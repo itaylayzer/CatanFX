@@ -60,6 +60,7 @@ void state_buy_road(PlayerPtr, int, GameState, QueuePtr);
 void state_buy_settlement(PlayerPtr, int, GameState, QueuePtr);
 void state_buy_city(PlayerPtr, int, GameState, QueuePtr);
 void state_buy_development(PlayerPtr, int, GameState, QueuePtr);
+bool state_steal(PlayerPtr, int, GameState);
 
 // generic functions
 unsigned char prioritiseUpgradeableSettlement(PlayerPtr player, GraphPtr graph,
@@ -76,5 +77,4 @@ bool buyableProduct(unsigned char astrategy,
                     signed char playerHarbors,
                     const signed char productMats[TOTAL_MATERIALS],
                     QueuePtr actionsQ);
-
 #endif

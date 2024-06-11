@@ -104,5 +104,4 @@ typedef enum
     AST_CARDS
 } AST_KEYS;
 
-
 #endif

@@ -10,5 +10,4 @@
 
 void avl_insert(Node *, void *element, signed char (*compare)(const void *, const void *));
 Node avl_search(Node node, void *element, signed char (*compare)(const void *, const void *));
-void avl_inorder(Node node, void (*manip)(const void *));
 #endif

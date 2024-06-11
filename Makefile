@@ -1,5 +1,5 @@
 CC=clang
-CFLAGS=-g -I. 
+CFLAGS=-g -I. -Wno-unused-value 
 LDFLAGS=
 SRC_DIR=src
 OBJ_DIR=bin

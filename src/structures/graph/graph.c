@@ -72,14 +72,14 @@ void graph_dijkstra(GraphPtr graph, unsigned char source, unsigned char color)
         condition = (edge->color == color);
 
         (condition) &&
-            (dijkstra_relaxation((vertex_weight = dest->weight), dest, 1), 1);
+            (vertex_weight = dest->weight, dijkstra_relaxation(vertex, dest, 1), 1);
 
         (condition && vertex_weight > dest->weight) &&
             heap_insert(&scores, dest, dest->weight, heap_min);
 
         QUEUE_TRAVARSE_FINISH;
 
-        destroy_queue(queue);
+        destroy_queue(&queue);
     }
 }
 
@@ -87,7 +87,6 @@ unsigned char graph_dijkstra_distance(GraphPtr graph, unsigned char dest)
 {
     unsigned char distance = 0;
     VertexPtr vertex = graph->vertices + dest;
-    puts("graph_dijkstra_distance");
     while (vertex && vertex->father != vertex)
     {
         vertex = vertex->father;

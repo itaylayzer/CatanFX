@@ -133,7 +133,7 @@ int main()
             byte org = offset + AREAS;
             byte dest = dots[index] + AREAS;
             byte elements[2] = {org, dest};
-            (offset < 3) && printf("%hhu %hhu\n", elements[0], elements[1]);
+            (offset < 3) && printt("%hhu %hhu\n", elements[0], elements[1]);
             fwrite(elements, sizeof(byte), 2, file);
         }
         free(dots);
