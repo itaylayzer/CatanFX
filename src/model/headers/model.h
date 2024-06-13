@@ -69,6 +69,8 @@ unsigned char *move_robber(unsigned char *size, signed char *params,
 
 unsigned char *drop_materials(unsigned char *size, signed char *params,
                               int socket, GameState state);
+unsigned char *make_a_deal(unsigned char *size, signed char *params, int socket,
+                           GameState state);
 //    bots
 unsigned char *handle_rest_turns(unsigned char *size, signed char *params,
                                  int socket, GameState state);

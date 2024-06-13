@@ -509,6 +509,23 @@ unsigned char *drop_materials(unsigned char *size, signed char *params,
     return single_byte(size, 0);
 }
 
+unsigned char *make_a_deal(unsigned char *size, signed char *params, int socket, GameState state)
+{
+
+    unsigned char deal_num = params[0];
+    unsigned char deal_mat_from = (deal_num & 0x07) - 1;
+    unsigned char deal_mat_to = (deal_num >> 3) - 1;
+
+    bool conditions[3] = {state->players->harbors >> deal_mat_from, state->players->harbors >> TOTAL_MATERIALS, true};
+
+    unsigned char deal_type = find_first_true_index(conditions, 3);
+    printt("local player deal: from: %d to: %d type: %d\n", deal_mat_from, deal_mat_to, deal_type);
+
+    handle_deal(state->players, state, deal_mat_from, deal_mat_to, deal_type);
+
+    return single_byte(size, 0);
+}
+
 // bots
 void bot_plays(PlayerPtr player, int socket, GameState state)
 {

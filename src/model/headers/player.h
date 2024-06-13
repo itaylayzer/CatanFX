@@ -19,6 +19,8 @@
 
 // helper
 bool buyableSettlement(PlayerPtr player, VertexPtr source, bool needRoad);
+unsigned char find_first_true_index(bool *arr, unsigned char size);
+void handle_deal(PlayerPtr player, GameState state, unsigned char deal_mat_from, unsigned char deal_mat_to, unsigned deal_type);
 
 // astrategies scores
 float woodScore(float[TOTAL_MATERIALS]);

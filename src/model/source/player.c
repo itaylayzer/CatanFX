@@ -799,7 +799,7 @@ bool buyableProduct(unsigned char astrategy,
 
     while (
         !(buyable = vector_manip_condition(clone, productMats, TOTAL_MATERIALS, vector_sub, above_equal_zero) & 0x01) && (vector_manip_condition(clone, dealsMats, TOTAL_MATERIALS, vector_sub, above_equal_zero) >> 1) &&
-        !(res = buyableMaterial(astrategy, player, graph, getMissingMaterial(clone, productMats), clone, playerHarbors)))
+        (res = buyableMaterial(astrategy, player, graph, getMissingMaterial(clone, productMats), clone, playerHarbors)))
     {
         printt("\tres:(to:%d, deal:%d, from:%d) |clone:", res & 0x07, (res >> 3) & 0x03, res >> 5);
         // printt("\tclone:");
@@ -920,16 +920,19 @@ void handle_deal_num(PlayerPtr player,
     unsigned char deal_type = deal_num >> 3;
     unsigned char deal_mat_to = deal_num >> 5;
 
+    handle_deal(player, state, deal_mat_from, deal_mat_to, deal_type);
+}
+void handle_deal(PlayerPtr player, GameState state, unsigned char deal_mat_from, unsigned char deal_mat_to, unsigned deal_type)
+{
     signed char cost_from_player[TOTAL_MATERIALS] = {0},
                 cost_to_player[TOTAL_MATERIALS] = {0};
 
     cost_from_player[deal_mat_from] = deal_type + 2;
-    cost_from_player[deal_mat_to]++;
+    cost_to_player[deal_mat_to]++;
 
     transfer_materials(player, state->bankMaterials, cost_from_player, false);
     transfer_materials(player, state->bankMaterials, cost_to_player, true);
 }
-
 void handle_action_q(PlayerPtr player,
                      GameState state,
                      QueuePtr actionsQ)
@@ -1063,7 +1066,7 @@ bool state_steal(PlayerPtr player, int socket, GameState state)
     while (--size < MAX_PLAYERS)
         players[size] = (players_around >> size) & 0x01;
 
-    unsigned char target_index = random_index_by_vals(MAX_PLAYERS, players);
+    unsigned char target_index = random_index_by_vals(MAX_PLAYERS, (signed char *)players);
     bool found = target_index < MAX_PLAYERS;
 
     unsigned char cost[TOTAL_MATERIALS] = {0};
@@ -1080,4 +1083,6 @@ bool state_steal(PlayerPtr player, int socket, GameState state)
     BOT_SEND_FREE(socket, size, buffer);
 
     socket_short_log(socket, 4);
+
+    return true;
 }

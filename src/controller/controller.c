@@ -23,7 +23,9 @@ void handle_request(
          move_robber,
          switch_dev_card,
          drop_materials,
-         handle_rest_turns};
+         make_a_deal,
+         handle_rest_turns
+         };
 
     printt("input_buffer[0]:%d\n", input_buffer[0]);
 
