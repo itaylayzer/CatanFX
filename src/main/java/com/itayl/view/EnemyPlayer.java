@@ -47,4 +47,8 @@ public class EnemyPlayer extends Player {
         }
     }
 
+    public void setMaterial(int i, byte b) {
+        super.materials[i] = b;
+    }
+
 }

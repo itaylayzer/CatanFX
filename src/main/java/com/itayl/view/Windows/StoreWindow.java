@@ -62,7 +62,6 @@ public class StoreWindow extends Stage {
     private VBox box;
 
     public StoreWindow() {
-
         box = new VBox();
         box.setStyle("-fx-background-color: #1a1a1a");
         box.setPadding(new Insets(20));

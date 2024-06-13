@@ -121,7 +121,7 @@ public class Player {
     }
 
     protected void setMaterials(byte[] materials) {
-        System.out.println("mats" + BytesUtils.print(materials));
+        System.out.println("mats" + BytesUtils.bytesString(materials));
         ;
         this.materials = materials;
         callOnInventoryChange();

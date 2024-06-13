@@ -123,8 +123,6 @@ public class CatanBoard {
                 harborsBytes, edgesByte);
         instance = board;
 
-        // board.trade();
-
         TimeUtils.waitUntil((t) -> {
             return instance.edgesGroup.getScene() != null;
         }, null, () -> {
@@ -136,8 +134,15 @@ public class CatanBoard {
         return board;
     }
 
-    private void trade() {
-        TradeWindow tradeW = new TradeWindow();
+    public void trade(LocalPlayer player, Action<Byte> onFinished) {
+        setInterfaceDisabled(true);
+        TradeWindow tradeW = new TradeWindow(player, (b) -> {
+            onFinished.action(b);
+        }, (window) -> {
+            setInterfaceDisabled(false);
+            window.close();
+
+        });
         tradeW.show();
     }
 
@@ -865,20 +870,24 @@ public class CatanBoard {
         updateRobberPos();
     }
 
+    public void setInterfaceDisabled(boolean isDisabled) {
+        this.userInterface.setDisabled(isDisabled);
+    }
+
     private void abstractSelect(AbstractSelection selection, Action<Byte> onFinish, boolean cancellable) {
-        this.userInterface.setDisabled(true);
+        setInterfaceDisabled(true);
         selection.selection(this.selectionBox, (matIndex) -> {
-            this.userInterface.setDisabled(false);
+            setInterfaceDisabled(false);
             if (onFinish != null)
                 onFinish.action(matIndex);
         }, cancellable);
     }
 
     public void materialCounts(Action<Byte[]> onFinish, byte maxSum, byte[] availables) {
-        this.userInterface.setDisabled(true);
+        setInterfaceDisabled(true);
         MaterialCounts counts = new MaterialCounts();
         counts.startCounting(this.selectionBox, (byteCounts) -> {
-            this.userInterface.setDisabled(false);
+            setInterfaceDisabled(false);
             if (onFinish != null)
                 onFinish.action(byteCounts);
         }, availables, maxSum);

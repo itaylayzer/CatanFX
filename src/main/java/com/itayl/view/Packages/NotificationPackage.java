@@ -4,6 +4,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 
 public class NotificationPackage {
+    public static final String[] messages = { "road", "settlement", "city", "development", "used knight card",
+            "used roads card", "used year of plants card", "used monopol card" };
     final public String message;
     final public Paint color;
 

@@ -9,12 +9,14 @@ public class Constants {
         }
 
         public static class ACTIONS {
-            public static final byte DICE = 9, STORE = 10, END_TURN = 14, ROBBER = 11, USE_DEV_CARD = 12, DROP = 13;
+            public static final byte DICE = 9, STORE = 10, END_TURN = 15, ROBBER = 11, USE_DEV_CARD = 12, DROP = 13,
+                    DEAL = 14;
         }
     }
 
     public static class ServerCodes {
-        public static final byte TURN = 0, UPDATE_SETTLEMENT = 1, UPDATE_ROAD = 2, DICE = 3;
+        public static final byte TURN = 0, UPDATE_SETTLEMENT = 1, UPDATE_ROAD = 2, DICE = 3, UPDATE_CITY = 4,
+                UPDATE_VICTORY_POINT = 5, UPDATE_KNIGHT_POS = 6, UPDATE = 7, LOG = 8;
     }
 
 }

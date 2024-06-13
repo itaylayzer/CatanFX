@@ -7,12 +7,14 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.itayl.controller.Constants.ServerCodes;
+import com.itayl.controller.GameController;
 import com.itayl.controller.SocketClient;
 import com.itayl.view.Components.CatanBoard.CatanBoard;
 import com.itayl.view.Components.Navbar.BankPane;
 import com.itayl.view.Constants.Actions.TransferMaterials;
 import com.itayl.view.Interfaces.Action;
 import com.itayl.view.Packages.LinePackage;
+import com.itayl.view.Packages.NotificationPackage;
 import com.itayl.view.Packages.VertexPackage;
 
 import javafx.application.Platform;
@@ -23,6 +25,7 @@ public class LocalPlayer extends Player {
     public static LocalPlayer local;
 
     private byte actionable;
+    private byte harbors;
     private List<Action<Byte>> onActionableChange;
     private List<Action<Byte[]>> onAmountsChange;
     private SocketClient client;
@@ -102,6 +105,10 @@ public class LocalPlayer extends Player {
         }
     }
 
+    public void setHarbors(byte bites) {
+        harbors = bites;
+    }
+
     public void addOnActionableEvent(Action<Byte> eve) {
         this.addOnActionableEvent(eve, false);
     }
@@ -125,7 +132,9 @@ public class LocalPlayer extends Player {
 
     public void update() {
         try {
-            setActionable(client.getActionable());
+            byte[] actionable = client.getActionable();
+            setActionable(actionable[0]);
+            setHarbors(actionable[1]);
             setMaterials(client.getMaterials(this.id));
             setDevelopements(client.getDevelopments(this.id));
             setAmounts(client.getAmounts());
@@ -224,7 +233,8 @@ public class LocalPlayer extends Player {
                 handleBot(bytes);
             }, (t) -> {
                 setActionable(actionable);
-
+                this.update();
+                EnemyPlayer.update(this.client);
                 if (this.initMode > 1) {
                     this.initMode = 1;
                     init_pickVertexAndEdge(TransferMaterials.TO, () -> {
@@ -245,6 +255,8 @@ public class LocalPlayer extends Player {
     private void handleBot(byte[] response) {
         System.out.println("Player.getTurnID() = " + Player.getTurnID());
         EnemyPlayer enemy = EnemyPlayer.enemies[Player.getTurnID() - 1];
+        System.out.println("response[0]:" + response[0]);
+
         switch (response[0]) {
             case ServerCodes.TURN:
                 Player.setTurnID(response[1]);
@@ -256,7 +268,7 @@ public class LocalPlayer extends Player {
                     CatanBoard.addHouse(house,
                             enemy.getColor());
                 });
-                break;
+                return;
             }
             case ServerCodes.UPDATE_ROAD: {
                 byte road = CatanBoard.getInstance().joinEdge((byte) (response[1] - Constants.AREAS),
@@ -273,11 +285,39 @@ public class LocalPlayer extends Player {
                 Platform.runLater(() -> {
                     CatanBoard.dicePane.setRoll(response[1] & 0x0F, response[1] >> 4);
                 });
-                this.update();
-                EnemyPlayer.update(this.client);
+                break;
+
+            case ServerCodes.UPDATE_KNIGHT_POS:
+                CatanBoard.getInstance().setRobberPos(response[1]);
+                break;
+
+            case ServerCodes.UPDATE_VICTORY_POINT:
+                enemy.setMaterial(1, response[1]);
+                break;
+
+            case ServerCodes.UPDATE:
+                EnemyPlayer.update(client);
+                update();
+                break;
+
+            case ServerCodes.UPDATE_CITY:
+                enemy.buyCity(response[1]);
+
+                Platform.runLater(() -> {
+                    CatanBoard.addCity(response[1],
+                            enemy.getColor());
+                });
+                break;
+            case ServerCodes.LOG:
+                Platform.runLater(() -> {
+                    GameController.addNotification(
+                            new NotificationPackage(enemy.getName() + ": " + NotificationPackage.messages[response[1]],
+                                    enemy.getColor()));
+                });
                 break;
 
         }
+
     }
 
     public boolean turnable() {
@@ -336,6 +376,19 @@ public class LocalPlayer extends Player {
     public void monopol(Byte matIndex) {
         try {
             client.monopol(matIndex);
+        } catch (Exception ex) {
+            ex.printStackTrace(System.err);
+        }
+        update();
+    }
+
+    public byte getHarbors() {
+        return this.harbors;
+    }
+
+    public void deal(Byte dealType) {
+        try {
+            client.deal(dealType);
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
         }

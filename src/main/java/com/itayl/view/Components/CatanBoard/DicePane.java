@@ -47,6 +47,8 @@ public class DicePane {
             if (onFinish != null) {
                 byte[] roll_result = this.socketDice.apply(null);
                 onFinish.action(roll_result[0], roll_result[1]);
+                scaleFromTo(dice1, 1.15, 1, 0.5);
+                scaleFromTo(dice2, 1.15, 1, 0.5);
             }
         } else {
             Timeline timeline = new Timeline();
@@ -77,26 +79,6 @@ public class DicePane {
                 return new byte[] { c1, c2 };
             }
 
-            private void scaleFromTo(ImageView dice, double from, double to, double time) {
-
-                Duration deltaTime = Duration.seconds(time);
-
-                ScaleTransition scaleTransition = new ScaleTransition(deltaTime, dice);
-                scaleTransition.setFromX(from);
-                scaleTransition.setFromY(from);
-                scaleTransition.setToX(to);
-                scaleTransition.setToY(to);
-                scaleTransition.setInterpolator(Interpolator.SPLINE(.3, 0, 0, 1));
-
-                FadeTransition fadeTransition = new FadeTransition(deltaTime, dice);
-                fadeTransition.setFromValue(0.7);
-                fadeTransition.setToValue(1);
-                fadeTransition.setInterpolator(Interpolator.SPLINE(.3, 0, 0, 1));
-
-                scaleTransition.play();
-                if (from < to)
-                    fadeTransition.play();
-            }
         }, (c1, c2) -> {
             dice1.setImage(Constants.Images.dices[c1 - 1]);
             dice2.setImage(Constants.Images.dices[c2 - 1]);
@@ -105,8 +87,32 @@ public class DicePane {
     }
 
     public void setRoll(int c1, int c2) {
+        scaleFromTo(dice1, 1.15, 1, 0.5);
+        scaleFromTo(dice2, 1.15, 1, 0.5);
+
         System.out.println("\tc1=" + c1 + " c2=" + c2);
         dice1.setImage(Constants.Images.dices[c1 - 1]);
         dice2.setImage(Constants.Images.dices[c2 - 1]);
+    }
+
+    private static void scaleFromTo(ImageView dice, double from, double to, double time) {
+
+        Duration deltaTime = Duration.seconds(time);
+
+        ScaleTransition scaleTransition = new ScaleTransition(deltaTime, dice);
+        scaleTransition.setFromX(from);
+        scaleTransition.setFromY(from);
+        scaleTransition.setToX(to);
+        scaleTransition.setToY(to);
+        scaleTransition.setInterpolator(Interpolator.SPLINE(.3, 0, 0, 1));
+
+        FadeTransition fadeTransition = new FadeTransition(deltaTime, dice);
+        fadeTransition.setFromValue(0.7);
+        fadeTransition.setToValue(1);
+        fadeTransition.setInterpolator(Interpolator.SPLINE(.3, 0, 0, 1));
+
+        scaleTransition.play();
+        if (from < to)
+            fadeTransition.play();
     }
 }

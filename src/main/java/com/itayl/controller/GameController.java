@@ -41,7 +41,7 @@ import com.itayl.view.Windows.StoreWindow;
 
 public class GameController {
 
-    private static Action<NotificationPackage> notificationHandler;
+    public static Action<NotificationPackage> notificationHandler;
     private AnimationTimer turnTimer;
 
     @FXML
@@ -96,13 +96,14 @@ public class GameController {
             public byte[] apply(Void t) {
                 try {
                     byte[] rolls = sock.rollDice();
-                    System.out.println("rolls" + BytesUtils.print(rolls));
+                    System.out.println("rolls" + BytesUtils.bytesString(rolls));
                     local.update();
 
                     if (rolls[0] + rolls[1] == 7) {
+
                         CatanBoard board = CatanBoard.getInstance();
                         // board.cancelCurrentPick(false);
-
+                        board.setInterfaceDisabled(true);
                         byte counts = local.getMaterialsCount();
                         byte[] mats = local.getMaterials();
                         if (counts >= 7) {
@@ -119,7 +120,8 @@ public class GameController {
 
                                         try {
                                             byte allowed = sock.nearbyPlayers(picked);
-                                            if ((allowed & 0x0F) == 0) {
+                                            System.out.println("allowed  " + BytesUtils.singleString(allowed));
+                                            if ((allowed & 0x0F) != 0) {
                                                 board.playerSelect(allowed, (player) -> {
                                                     local.moveRobber(picked, player);
                                                     local.update();
@@ -148,13 +150,15 @@ public class GameController {
 
                                 try {
                                     byte allowed = sock.nearbyPlayers(picked);
-                                    if ((allowed & 0x0F) == 0) {
+                                    if (allowed != 0) {
                                         board.playerSelect(allowed, (player) -> {
+                                            board.setInterfaceDisabled(false);
                                             local.moveRobber(picked, player);
                                             local.update();
 
                                         }, false);
                                     } else {
+                                        board.setInterfaceDisabled(false);
                                         local.moveRobber(picked, (byte) 4);
                                         local.update();
                                     }

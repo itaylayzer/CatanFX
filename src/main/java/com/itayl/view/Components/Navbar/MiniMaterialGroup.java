@@ -7,7 +7,7 @@ import javafx.scene.paint.Paint;
 
 class MiniMaterialGroup extends ImageButton {
     private byte count;
-    private static final double multiplyFactor = 1;
+    private static final double multiplyFactor = 0.8;
 
     public MiniMaterialGroup(ImagePackage landUI) {
         this(landUI, (byte) 1);
@@ -16,7 +16,7 @@ class MiniMaterialGroup extends ImageButton {
     public MiniMaterialGroup(ImagePackage landUI, byte count) {
         super(30 * multiplyFactor, 45 * multiplyFactor, 3 * multiplyFactor);
 
-        setFontSize(20);
+        setFontSize(20 * multiplyFactor);
         setTooltipFontSize(10 * multiplyFactor);
         setTooltip(landUI.name.toUpperCase());
         setFill(Paint.valueOf("#101010"));

@@ -80,12 +80,29 @@ public class BytesUtils {
         return ((num >> bit) & 0x01) == 1;
     }
 
-    public static String print(byte[] materials) {
+    public static String bytesString(byte[] materials) {
         String st = "[";
         for (int index = 0; index < materials.length; index++) {
             st += String.format(index == 0 ? "%d" : ", %d", materials[index]);
         }
         st += "]";
         return st;
+    }
+
+    public static String singleString(byte _byte) {
+        return String.format("%8s", Integer.toBinaryString(_byte & 0xFF)).replace(' ', '0');
+    }
+
+    public static byte find(byte[] arr, byte val) {
+        byte offset;
+        for (offset = (byte) 0; offset < arr.length; offset++) {
+            if (arr[offset] == val)
+                return offset;
+        }
+        return (byte) -1;
+    }
+
+    public static byte max(byte a, byte b) {
+        return a > b ? a : b;
     }
 }

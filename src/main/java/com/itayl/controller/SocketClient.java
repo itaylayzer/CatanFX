@@ -70,8 +70,8 @@ public class SocketClient {
         }
     }
 
-    public byte getActionable() throws IOException, Exception {
-        return this.action(new byte[] { ClientCodes.INFORMATION.PLAYER, 0 })[0];
+    public byte[] getActionable() throws IOException, Exception {
+        return this.action(new byte[] { ClientCodes.INFORMATION.PLAYER, 0 });
     }
 
     public byte storeRoad(boolean transferMaterials, byte from, byte to) throws IOException, Exception {
@@ -161,6 +161,10 @@ public class SocketClient {
             exp.printStackTrace(System.err);
         }
 
+    }
+
+    public void deal(byte dealType) throws IOException, Exception {
+        this.action(new byte[] { ClientCodes.ACTIONS.DEAL, dealType });
     }
 
 }

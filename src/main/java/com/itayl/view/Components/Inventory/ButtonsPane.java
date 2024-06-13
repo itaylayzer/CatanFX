@@ -116,6 +116,15 @@ public class ButtonsPane {
                 CatanBoard.addRoad(picked, player.getColor());
             });
         });
+        tradeAction.setOnAction((event) -> {
+            CatanBoard board = CatanBoard.getInstance();
+            board.trade(player, (dealType) -> {
+                byte from = (byte) (dealType & 0x07);
+                byte to = (byte) (dealType >> 3);
+                System.out.println("from=" + from + " to=" + to);
+                player.deal(dealType);
+            });
+        });
         devcardAction.setOnAction((event) -> {
             player.buyDevCard();
         });
