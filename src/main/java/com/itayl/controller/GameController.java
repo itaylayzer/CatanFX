@@ -121,7 +121,7 @@ public class GameController {
                                         try {
                                             byte allowed = sock.nearbyPlayers(picked);
                                             System.out.println("allowed  " + BytesUtils.singleString(allowed));
-                                            if ((allowed & 0x0F) != 0) {
+                                            if ((allowed & 0x0E) != 0) {
                                                 board.playerSelect(allowed, (player) -> {
                                                     local.moveRobber(picked, player);
                                                     local.update();

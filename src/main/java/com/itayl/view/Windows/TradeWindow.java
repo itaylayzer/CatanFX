@@ -5,7 +5,7 @@ import com.itayl.view.LocalPlayer;
 import com.itayl.view.Components.Buttons.CountButton;
 import com.itayl.view.Components.Buttons.SelectButton;
 import com.itayl.view.Interfaces.Action;
-import com.itayl.view.Interfaces.Action2;
+
 import com.itayl.view.Utils.BytesUtils;
 
 import javafx.beans.property.ObjectProperty;
