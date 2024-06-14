@@ -106,6 +106,7 @@ unsigned char getMissingMaterial(signed char playerMaterials[TOTAL_MATERIALS],
 {
     signed char *sub = vector_sub(playerMaterials, productMats, TOTAL_MATERIALS);
     const unsigned char min_index = vector_min_index(sub, TOTAL_MATERIALS);
+
     free(sub);
     return min_index;
 }
@@ -118,6 +119,8 @@ unsigned char *leastImportent(unsigned char astrategy, PlayerPtr player, GraphPt
 
     unsigned char *res = func[astrategy](graph, player);
     unsigned char *mats = (unsigned char *)vector_dup((signed char *)res + TOTAL_MATERIALS, TOTAL_MATERIALS);
+    putts("free S");
+
     free(res);
 
     vector_reverse((signed char *)mats, TOTAL_MATERIALS);
@@ -270,6 +273,7 @@ unsigned short prioritiseWoodRoad(GraphPtr graph,
         heap_insert(&wheatScores, convert_unsigned_short_to_void_ptr(edge_num), wheatScore(mats_prob), heap_max);
         heap_insert(&bestWheatScores, convert_unsigned_short_to_void_ptr(edge_num), bestWheatScore, heap_max);
         heap_insert(&roadScores, convert_unsigned_short_to_void_ptr(edge_num), roadScore * 50, heap_max);
+        putts("free Y");
 
         free(mats_prob);
     }
@@ -627,7 +631,7 @@ unsigned char prioritiseUpgradeableSettlement(PlayerPtr player, GraphPtr graph,
 
     return convert_void_ptr_to_unsigned_char(vertexOffset);
 }
-unsigned char moveRobberTo(PlayerPtr player, GraphPtr graph)
+unsigned char moveRobberTo(PlayerPtr player, GraphPtr graph, unsigned char current_robber)
 {
     Heap scores;
     Stack settlements;
@@ -654,6 +658,9 @@ unsigned char moveRobberTo(PlayerPtr player, GraphPtr graph)
             (settlement->color < BLACK) &&
                 (score += prob);
         }
+
+        // we want to move to another place then the current place!
+        score *= !!(offset - current_robber);
 
         (belongToPlayer == false) &&
             heap_insert(&scores, convert_unsigned_char_to_void_ptr(offset), score, heap_max);
@@ -796,13 +803,14 @@ bool buyableProduct(unsigned char astrategy,
 
     putts("dealsMats ");
     print_vec((unsigned char *)dealsMats, TOTAL_MATERIALS);
-
     while (
         !(buyable = vector_manip_condition(clone, productMats, TOTAL_MATERIALS, vector_sub, above_equal_zero) & 0x01) && (vector_manip_condition(clone, dealsMats, TOTAL_MATERIALS, vector_sub, above_equal_zero) >> 1) &&
-        (res = buyableMaterial(astrategy, player, graph, getMissingMaterial(clone, productMats), clone, playerHarbors)))
+        (res = buyableMaterial(astrategy, player, graph, getMissingMaterial(clone, productMats), clone, playerHarbors)) && vector_all(clone, TOTAL_MATERIALS, above_equal_zero))
     {
         printt("\tres:(to:%d, deal:%d, from:%d) |clone:", res & 0x07, (res >> 3) & 0x03, res >> 5);
         // printt("\tclone:");
+        // times++;
+
         print_vec((unsigned char *)clone, TOTAL_MATERIALS);
 
         enqueue(actionsQ, convert_unsigned_char_to_void_ptr(res));
@@ -914,10 +922,11 @@ void handle_deal_num(PlayerPtr player,
                      GameState state, unsigned char deal_num)
 
 {
+
     putts("handle_deal_num");
 
     unsigned char deal_mat_from = (deal_num & 0x07) - 1;
-    unsigned char deal_type = deal_num >> 3;
+    unsigned char deal_type = (deal_num >> 3) & 0x03;
     unsigned char deal_mat_to = deal_num >> 5;
 
     handle_deal(player, state, deal_mat_from, deal_mat_to, deal_type);
@@ -1056,7 +1065,7 @@ void state_buy_development(PlayerPtr player,
 
 bool state_steal(PlayerPtr player, int socket, GameState state)
 {
-    unsigned char size, area = moveRobberTo(player, state->graph);
+    unsigned char size, area = moveRobberTo(player, state->graph, state->robberArea);
     state->robberArea = area;
 
     unsigned char players_around = players_around_area(&size, (signed char *)&area,

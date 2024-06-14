@@ -69,6 +69,7 @@ bool transfer_materials(PlayerPtr player,
     // update bank
     new_materials = (to_player ? vector_sub : vector_add)(bank, cost, TOTAL_MATERIALS);
     vector_cpy(bank, (signed char *)new_materials, TOTAL_MATERIALS);
+
     free(new_materials);
     return true;
 }
@@ -134,12 +135,14 @@ void transfer_dev_card(PlayerPtr player,
     signed char *new_materials =
         (to_player ? vector_add : vector_sub)(player_devs, cost, TOTAL_DEVELOPMENT_CARD);
     vector_cpy(player_devs, new_materials, TOTAL_DEVELOPMENT_CARD);
+
     free(new_materials);
 
     // update bank
     new_materials =
         (to_player ? vector_sub : vector_add)(bank, cost, TOTAL_DEVELOPMENT_CARD);
     vector_cpy(bank, new_materials, TOTAL_DEVELOPMENT_CARD);
+
     free(new_materials);
 }
 unsigned char buy_developement(PlayerPtr player,
@@ -165,15 +168,15 @@ unsigned char *svertex_to_materials(GraphPtr graph, signed char index)
 {
     Queue que;
     EdgePtr edge;
-    unsigned char size = 0, *mats = calloc(TOTAL_MATERIALS, sizeof(char));
+    unsigned char material_number, size = 0, *mats = calloc(TOTAL_MATERIALS, sizeof(char));
     Node node = graph->vertices[index].edges;
 
     QUEUE_TRAVARSE(node, node);
     size++;
     edge = (EdgePtr)node->data;
-
-    (edge->color == GRAY) &&
-        (mats[extract_area_materials(edge->vertex->material_number)]++);
+    material_number = edge->vertex->material_number;
+    (edge->color == GRAY && material_number != 7 << 3) &&
+        (mats[extract_area_materials(material_number)]++);
 
     QUEUE_TRAVARSE_FINISH;
     return mats;
@@ -195,6 +198,8 @@ bool buy_settlement(PlayerPtr player,
     {
         unsigned char *materials = svertex_to_materials(graph, index);
         transfer_materials(player, bank, (signed char *)materials, true);
+        putts("free F");
+
         free(materials);
         break;
     }
@@ -220,7 +225,7 @@ bool buy_settlement(PlayerPtr player,
 // use dev_card bot actions
 void use_dev_knight(PlayerPtr player, int socket, GameState state)
 {
-    unsigned char size, area = moveRobberTo(player, state->graph);
+    unsigned char size, area = moveRobberTo(player, state->graph, state->robberArea);
     player->knightUsed++;
     state->robberArea = area;
 
@@ -231,6 +236,7 @@ void use_dev_knight(PlayerPtr player, int socket, GameState state)
     unsigned char *buffer = calloc(size = 2, sizeof(unsigned char));
     buffer[0] = 6;
     buffer[1] = area;
+    putts("free G");
 
     BOT_SEND_FREE(socket, size, buffer);
 
@@ -243,6 +249,8 @@ void use_dev_point(PlayerPtr player, int socket, GameState state)
     unsigned char size, *buffer = calloc(size = 2, sizeof(unsigned char));
     buffer[0] = 5;
     buffer[1] = player->developmentCards[VICTORY_POINTS_CARD];
+    putts("free H");
+    putts("free I");
 
     BOT_SEND_FREE(socket, size, buffer);
 }
@@ -271,6 +279,7 @@ void use_dev_roads(PlayerPtr player, int socket, GameState state)
         buffer[0] = 2;
         buffer[1] = road & 0xFF;
         buffer[2] = road >> 8;
+        putts("free J");
 
         BOT_SEND_FREE(socket, size, buffer);
     }
@@ -316,8 +325,11 @@ void use_dev_yop(PlayerPtr player, int socket, GameState state)
         (transfer_materials(player, state->bankMaterials, (signed char *)cost, true),
          player->developmentCards[YEAR_OF_PLANT_CARD]--,
          socket_short_log(socket, 6), 1);
+    putts("free K");
 
     free(sub);
+    putts("free M");
+
     free(product);
 }
 void use_dev_monopol(PlayerPtr player, int socket, GameState state)
@@ -336,8 +348,11 @@ void use_dev_monopol(PlayerPtr player, int socket, GameState state)
     unsigned char min_index = vector_min_index(sub, TOTAL_MATERIALS);
 
     transfer_all_players_mats(state->players, player->color, state->num_of_players, min_index);
+    putts("free N");
 
     free(sub);
+    putts("free O");
+
     free(product);
 
     // update bot developments cards
@@ -351,6 +366,7 @@ void socket_short_update(int socket)
 {
     unsigned char size, *buffer = calloc(size = 1, sizeof(unsigned char));
     buffer[0] = 7;
+    putts("free P");
 
     BOT_SEND_FREE(socket, size, buffer);
 }

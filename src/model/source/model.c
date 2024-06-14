@@ -540,6 +540,7 @@ void bot_plays(PlayerPtr player, int socket, GameState state)
     vector_cpy((signed char *)(buffer + 1), (signed char *)temp, size);
 
     need_stealing = (temp[0] & 0x0F) + (temp[0] >> 4) == 7;
+
     free(temp);
 
     buffer[0] = 3;
@@ -570,6 +571,7 @@ void bot_plays(PlayerPtr player, int socket, GameState state)
                                  conditionsFunctions,
                                  actionsFunctions, 4);
     putts("after play");
+
     free(conditionsFunctions);
     free(actionsFunctions);
 

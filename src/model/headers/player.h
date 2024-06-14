@@ -67,7 +67,7 @@ bool state_steal(PlayerPtr, int, GameState);
 // generic functions
 unsigned char prioritiseUpgradeableSettlement(PlayerPtr player, GraphPtr graph,
                                               float (*)(float[TOTAL_MATERIALS]));
-unsigned char moveRobberTo(PlayerPtr player, GraphPtr graph);
+unsigned char moveRobberTo(PlayerPtr player, GraphPtr graph, unsigned char current_robber);
 unsigned char buyableRoadsAroundVertex(GraphPtr graph, StackPtr stk, PlayerPtr player, unsigned char);
 unsigned char buyableRoads(GraphPtr graph, StackPtr stk, PlayerPtr player);
 unsigned char buyableSettlements(StackPtr, PlayerPtr player, GraphPtr graph, bool needRoad);
