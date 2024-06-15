@@ -18,8 +18,8 @@ single player and 1 to 2 enemy bots, not all the rules are the same as the famil
 
 ### Game
 
-![alt text](images/Capture.PNG)
+![game](images/Capture.PNG)
 
 ### Model Graph
 
-![alt text](images/graph.PNG)
+![graph](images/graph.png)
