@@ -9,23 +9,23 @@ void handle_request(
     void *send_buffer;
 
     unsigned char *(*func[])(unsigned char *, signed char *, int, GameState) =
-        {areas_numbers,
-         harbors_numbers,
-         players_around_area,
-         inf_player_actionable,
-         inf_player_materials,
-         inf_player_devcards,
-         inf_player_victory_points,
-         inf_player_amounts,
-         inf_achivement_cards,
-         roll_dice,
-         switch_action_store,
-         move_robber,
-         switch_dev_card,
-         drop_materials,
-         make_a_deal,
-         handle_rest_turns
-         };
+        {areas_numbers,             // 0
+         harbors_numbers,           // 1
+         players_around_area,       // 2
+         inf_player_actionable,     // 3
+         inf_player_materials,      // 4
+         inf_player_devcards,       // 5
+         inf_player_victory_points, // 6
+         inf_player_amounts,        // 7
+         inf_achivement_cards,      // 8
+         roll_dice,                 // 9
+         switch_action_store,       // 10
+         move_robber,               // 11
+         switch_dev_card,           // 12
+         drop_materials,            // 13
+         make_a_deal,               // 14
+         handle_rest_turns,         // 15
+         close_server};             // 16
 
     printt("input_buffer[0]:%d\n", input_buffer[0]);
 

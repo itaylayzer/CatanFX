@@ -75,5 +75,6 @@ unsigned char *make_a_deal(unsigned char *size, signed char *params, int socket,
 bool bot_drop_materials(PlayerPtr, GameState);
 unsigned char *handle_rest_turns(unsigned char *size, signed char *params,
                                  int socket, GameState state);
-
+// closing
+unsigned char *close_server(unsigned char *size, signed char *params, int socket, GameState state);
 #endif

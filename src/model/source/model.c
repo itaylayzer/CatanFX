@@ -105,7 +105,6 @@ void catan_players_init(PlayerPtr players, signed char size)
         // players[size].materials[2] = 10;
         // players[size].materials[3] = 10;
         // players[size].materials[4] = 10;
-
         // players[size].developmentCards[0] = 10;
         // players[size].developmentCards[1] = 10;
         // players[size].developmentCards[2] = 10;
@@ -273,7 +272,10 @@ unsigned char *inf_player_devcards(unsigned char *size, signed char *params,
 unsigned char *inf_player_victory_points(unsigned char *size, signed char *params,
                                          int socket, GameState state)
 {
-    return single_byte(size, state->players[params[0]].victoryPoints);
+    unsigned char victory_points = state->players[params[0]].victoryPoints;
+    victory_points += state->achievementCards[BIGGEST_ARMY] == params[0];
+    victory_points += state->achievementCards[LONGEST_PATH] == params[0];
+    return single_byte(size, victory_points);
 }
 
 unsigned char *inf_player_amounts(unsigned char *size, signed char *params,
@@ -711,4 +713,8 @@ unsigned char *handle_rest_turns(unsigned char *size, signed char *params,
 
     *size = 0;
     return NULL;
+}
+unsigned char *close_server(unsigned char *size, signed char *params, int socket, GameState state)
+{
+    exit(EXIT_SUCCESS);
 }
