@@ -5,12 +5,13 @@ public class Constants {
     public static class ClientCodes {
         public static class INFORMATION {
             public static final byte LANDS = 0, HARBORS = 1, NEARBY = 2, PLAYER = 3, MATS = 4, DEVCARDS = 5,
+                    VICTORY_POINT = 6,
                     AMOUNTS = 7;
         }
 
         public static class ACTIONS {
             public static final byte DICE = 9, STORE = 10, END_TURN = 15, ROBBER = 11, USE_DEV_CARD = 12, DROP = 13,
-                    DEAL = 14;
+                    DEAL = 14, END_GAME = 16;
         }
     }
 

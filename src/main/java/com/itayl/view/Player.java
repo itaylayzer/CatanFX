@@ -9,6 +9,10 @@ import com.itayl.view.Interfaces.Action2;
 import com.itayl.view.Interfaces.Predicate;
 import com.itayl.view.Utils.BytesUtils;
 
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.paint.Color;
 
 public class Player {
@@ -77,7 +81,7 @@ public class Player {
         return 0;
     }
 
-    public byte getVicotryPoints() {
+    public byte getVictoryPoints() {
         byte index;
         byte count = 0;
 
@@ -122,7 +126,7 @@ public class Player {
 
     protected void setMaterials(byte[] materials) {
         System.out.println("mats" + BytesUtils.bytesString(materials));
-        ;
+
         this.materials = materials;
         callOnInventoryChange();
     }
@@ -136,6 +140,19 @@ public class Player {
 
         for (Runnable event : onInventoryChange) {
             event.run();
+        }
+
+        if (getVictoryPoints() >= 10) {
+            LocalPlayer.local.endGame();
+            Alert alert = new Alert(AlertType.CONFIRMATION, this.name + " WON", new ButtonType[] { ButtonType.FINISH });
+
+            alert.showAndWait().ifPresent((a) -> {
+                System.out.println("exiting");
+                Platform.exit();
+                System.exit(0);
+            });
+            ;
+
         }
     }
 

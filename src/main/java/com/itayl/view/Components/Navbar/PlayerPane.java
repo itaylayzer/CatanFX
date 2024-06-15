@@ -146,7 +146,7 @@ public class PlayerPane extends VBox {
     private void updateInfo() {
         materialsGroup.setCount(player.getMaterialsCount());
         devcardsGroup.setCount(player.getDevCardsCount());
-        pointsGroup.setCount(player.getVicotryPoints());
+        pointsGroup.setCount(player.getVictoryPoints());
         roadsGroup.setCount(player.getLongestRoadLength());
     }
 

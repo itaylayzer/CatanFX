@@ -402,4 +402,8 @@ public class LocalPlayer extends Player {
         update();
     }
 
+    public void endGame() {
+        this.client.endGame();
+    }
+
 }

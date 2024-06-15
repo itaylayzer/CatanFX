@@ -169,4 +169,7 @@ public class SocketClient {
         this.action(new byte[] { ClientCodes.ACTIONS.DEAL, dealType });
     }
 
+    public void endGame() {
+        this.send(new byte[] { ClientCodes.ACTIONS.END_GAME });
+    }
 }
