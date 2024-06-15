@@ -13,6 +13,7 @@
 
 bool below_zero(signed char x);
 bool above_equal_zero(signed char x);
+bool above_zero(signed char x);
 signed char *vector_join(const signed char *first,
                          const signed char *second,
                          signed char size,
@@ -39,4 +40,8 @@ unsigned char vector_manip_condition(const signed char *first,
                                      unsigned char size,
                                      signed char *(*manip)(const signed char *, const signed char *, signed char),
                                      bool (*condition)(signed char));
+signed char vector_order_find_last(const signed char *source,
+                                   const signed char *order,
+                                   signed char size,
+                                   bool (*condition)(signed char));
 #endif

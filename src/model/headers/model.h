@@ -72,6 +72,7 @@ unsigned char *drop_materials(unsigned char *size, signed char *params,
 unsigned char *make_a_deal(unsigned char *size, signed char *params, int socket,
                            GameState state);
 //    bots
+bool bot_drop_materials(PlayerPtr, GameState);
 unsigned char *handle_rest_turns(unsigned char *size, signed char *params,
                                  int socket, GameState state);
 

@@ -8,6 +8,10 @@ bool above_equal_zero(signed char x)
 {
     return x >= 0;
 }
+bool above_zero(signed char x)
+{
+    return x > 0;
+}
 signed char *vector_join(const signed char *first,
                          const signed char *second,
                          signed char size,
@@ -186,4 +190,17 @@ unsigned char vector_manip_condition(const signed char *first,
     bool any = vector_any(manipulated, size, condition);
     free(manipulated);
     return all + (any << 1);
+}
+signed char vector_order_find_last(const signed char *source,
+                                     const signed char *order,
+                                     signed char size,
+                                     bool (*condition)(signed char))
+{
+    signed char find_index = 0, fixed_index;
+    while (--size >= 0 && !find_index)
+    {
+        fixed_index = order[size];
+        find_index = (fixed_index + 1) * condition(source[fixed_index]);
+    }
+    return find_index - 1;
 }

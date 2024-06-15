@@ -505,7 +505,14 @@ unsigned char *move_robber(unsigned char *size, signed char *params,
 unsigned char *drop_materials(unsigned char *size, signed char *params,
                               int socket, GameState state)
 {
-    transfer_materials(state->players + params[0], state->bankMaterials, params + 1, false);
+    transfer_materials(state->players + params[0], state->bankMaterials, params + 2, false);
+
+    unsigned char offset;
+    for (offset = 1; offset < state->num_of_players && params[1]; offset++)
+    {
+        vector_sum((signed char *)state->players[offset].materials, TOTAL_MATERIALS) >= 7 && bot_drop_materials(state->players + offset, state);
+    }
+
     return single_byte(size, 0);
 }
 
@@ -527,7 +534,33 @@ unsigned char *make_a_deal(unsigned char *size, signed char *params, int socket,
 }
 
 // bots
-void bot_plays(PlayerPtr player, int socket, GameState state)
+bool bot_drop_materials(PlayerPtr player, GameState state)
+{
+    unsigned char astIndex = state->astIndexes[player->color - 1];
+    unsigned char amount = vector_sum((signed char *)player->materials, TOTAL_MATERIALS) / 2;
+
+    unsigned char *(*func[3])(GraphPtr, PlayerPtr) = {woodMatsOrder,
+                                                      wheatMatsOrder,
+                                                      cardsMatsOrder};
+
+    unsigned char *res = func[astIndex](state->graph, player);
+    unsigned char *order = (unsigned char *)vector_dup((signed char *)res + TOTAL_MATERIALS, TOTAL_MATERIALS);
+
+    free(res);
+
+    while (amount--)
+    {
+        unsigned char cost[TOTAL_MATERIALS] = {0};
+        signed char index = vector_order_find_last((signed char *)player->materials, (signed char *)order, TOTAL_MATERIALS, above_zero);
+        cost[index]++;
+        transfer_materials(player, state->bankMaterials, (signed char *)cost, false);
+    }
+
+    free(order);
+
+    return true;
+}
+bool bot_plays(PlayerPtr player, int socket, GameState state)
 {
     unsigned char astIndex = state->astIndexes[player->color - 1];
     unsigned char size, *buffer, *temp;
@@ -576,9 +609,10 @@ void bot_plays(PlayerPtr player, int socket, GameState state)
     free(actionsFunctions);
 
     usleep(400000);
+    return need_stealing;
 }
 
-void bot_buy_first(PlayerPtr player, int socket, GameState state)
+bool bot_buy_first(PlayerPtr player, int socket, GameState state)
 {
 
     putts("bot_buy_first");
@@ -642,30 +676,32 @@ void bot_buy_first(PlayerPtr player, int socket, GameState state)
     BOT_SEND_FREE(socket, size, buffer);
 
     usleep(200000);
+    return false;
 }
 
 unsigned char *handle_rest_turns(unsigned char *size, signed char *params,
                                  int socket, GameState state)
 {
     (state->turnOffset)++;
-    unsigned char turnColor, _size;
-    unsigned char _buff[1000] = {0};
-    void (*playFn[2])(PlayerPtr, int, GameState) = {bot_buy_first, bot_plays};
+    unsigned char turnColor, _size = 3;
+    unsigned char _buff[3] = {0};
+    bool (*playFn[2])(PlayerPtr, int, GameState) = {bot_buy_first, bot_plays};
     bool initial_state = state->turnOffset / state->num_of_players > 1;
+    bool stealing;
 
     // while the turn color its not WHITE
     while ((turnColor = state->turnOffset % state->num_of_players))
     {
         printt("start: player index %d", turnColor);
 
-        playFn[initial_state](state->players + turnColor, socket, state);
+        stealing = playFn[initial_state](state->players + turnColor, socket, state);
         putts("player done");
 
         (state->turnOffset)++;
 
         _buff[0] = 0;
         _buff[1] = (state->turnOffset) % state->num_of_players;
-        _size = 2;
+        _buff[2] = stealing && vector_sum((signed char *)state->players->materials, TOTAL_MATERIALS) >= 7;
 
         BOT_SEND(socket, _size, _buff)
         // printt("\tbot number %d done playing!", turnColor);

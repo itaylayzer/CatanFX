@@ -119,7 +119,6 @@ unsigned char *leastImportent(unsigned char astrategy, PlayerPtr player, GraphPt
 
     unsigned char *res = func[astrategy](graph, player);
     unsigned char *mats = (unsigned char *)vector_dup((signed char *)res + TOTAL_MATERIALS, TOTAL_MATERIALS);
-    putts("free S");
 
     free(res);
 
@@ -273,7 +272,6 @@ unsigned short prioritiseWoodRoad(GraphPtr graph,
         heap_insert(&wheatScores, convert_unsigned_short_to_void_ptr(edge_num), wheatScore(mats_prob), heap_max);
         heap_insert(&bestWheatScores, convert_unsigned_short_to_void_ptr(edge_num), bestWheatScore, heap_max);
         heap_insert(&roadScores, convert_unsigned_short_to_void_ptr(edge_num), roadScore * 50, heap_max);
-        putts("free Y");
 
         free(mats_prob);
     }
