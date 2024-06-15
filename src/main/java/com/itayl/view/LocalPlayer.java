@@ -256,9 +256,16 @@ public class LocalPlayer extends Player {
         System.out.println("Player.getTurnID() = " + Player.getTurnID());
         EnemyPlayer enemy = EnemyPlayer.enemies[Player.getTurnID() - 1];
         System.out.println("response[0]:" + response[0]);
-
+        CatanBoard board = CatanBoard.getInstance();
         switch (response[0]) {
             case ServerCodes.TURN:
+                if (response[2] != 0) {
+                    byte amountToDrop = (byte) (getMaterialsCount() / 2);
+
+                    board.materialCounts((a) -> {
+                        client.removeMats(a, false);
+                    }, amountToDrop, getMaterials());
+                }
                 Player.setTurnID(response[1]);
                 break;
             case ServerCodes.UPDATE_SETTLEMENT: {
@@ -271,7 +278,7 @@ public class LocalPlayer extends Player {
                 return;
             }
             case ServerCodes.UPDATE_ROAD: {
-                byte road = CatanBoard.getInstance().joinEdge((byte) (response[1] - Constants.AREAS),
+                byte road = board.joinEdge((byte) (response[1] - Constants.AREAS),
                         (byte) (response[2] - Constants.AREAS));
                 enemy.buyRoad(road);
 
@@ -288,7 +295,7 @@ public class LocalPlayer extends Player {
                 break;
 
             case ServerCodes.UPDATE_KNIGHT_POS:
-                CatanBoard.getInstance().setRobberPos(response[1]);
+                board.setRobberPos(response[1]);
                 break;
 
             case ServerCodes.UPDATE_VICTORY_POINT:

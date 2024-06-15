@@ -152,11 +152,13 @@ public class SocketClient {
         return this.action(new byte[] { ClientCodes.INFORMATION.NEARBY, picked })[0];
     }
 
-    public void removeMats(Byte[] matsToDrop) {
+    public void removeMats(Byte[] matsToDrop, boolean notifyBots) {
 
         try {
-            this.action(new byte[] { ClientCodes.ACTIONS.DROP, 0, matsToDrop[0], matsToDrop[1], matsToDrop[2],
-                    matsToDrop[3], matsToDrop[4] });
+            this.action(
+                    new byte[] { ClientCodes.ACTIONS.DROP, 0, (byte) (notifyBots ? 1 : 0), matsToDrop[0], matsToDrop[1],
+                            matsToDrop[2],
+                            matsToDrop[3], matsToDrop[4] });
         } catch (Exception exp) {
             exp.printStackTrace(System.err);
         }

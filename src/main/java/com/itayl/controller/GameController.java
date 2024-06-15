@@ -111,7 +111,7 @@ public class GameController {
                                 byte amountToDrop = (byte) (counts / 2);
 
                                 board.materialCounts((a) -> {
-                                    sock.removeMats(a);
+                                    sock.removeMats(a, true);
                                     board.pickHexagon((value) -> {
                                         return value != 9 && board.getRobberPos() != value;
                                     }, () -> {
