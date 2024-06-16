@@ -99,6 +99,7 @@ public class CatanBoard {
     private UserInterface userInterface;
     private Color[] playerColors;
     private Player[] players;
+    private boolean countsMode;
 
     public static void clear() {
         instance = null;
@@ -168,6 +169,7 @@ public class CatanBoard {
         this.userInterface = userInterface;
         this.playerColors = playerColors;
         this.players = players;
+        this.countsMode = false;
 
         lands = new ArrayList<>();
         landsGroup = new Group();
@@ -885,9 +887,12 @@ public class CatanBoard {
 
     public void materialCounts(Action<Byte[]> onFinish, byte maxSum, byte[] availables) {
         setInterfaceDisabled(true);
+        this.countsMode = true;
         MaterialCounts counts = new MaterialCounts();
         counts.startCounting(this.selectionBox, (byteCounts) -> {
             setInterfaceDisabled(false);
+            this.countsMode = false;
+
             if (onFinish != null)
                 onFinish.action(byteCounts);
         }, availables, maxSum);
@@ -903,5 +908,9 @@ public class CatanBoard {
 
     public void playerSelect(Action<Byte> onFinish, boolean cancellable) {
         playerSelect((byte) 0x7F, onFinish, cancellable);
+    }
+
+    public boolean isNnMiddleOfCounts() {
+        return this.countsMode;
     }
 }

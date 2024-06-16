@@ -30,6 +30,8 @@ public class EnemyPlayer extends Player {
     }
 
     public static void update(SocketClient client) {
+        LocalPlayer.local.updateAchivements();
+
         for (EnemyPlayer enemy : enemies) {
             if (enemy == null)
                 continue;

@@ -99,9 +99,39 @@ public class GameController {
                     System.out.println("rolls" + BytesUtils.bytesString(rolls));
                     local.update();
 
-                    if (rolls[0] + rolls[1] == 7) {
+                    CatanBoard board = CatanBoard.getInstance();
 
-                        CatanBoard board = CatanBoard.getInstance();
+                    Action<Byte> moveRobberAction = (picked) -> {
+                        board.setInterfaceDisabled(false);
+                        local.moveRobber(picked, (byte) 4);
+                        local.update();
+                    };
+
+                    Action<Void> stealAction = (v) -> {
+
+                        board.pickHexagon((value) -> {
+                            return value != 9 && board.getRobberPos() != value;
+                        }, () -> {
+                        }, (picked) -> {
+                            board.setRobberPos(picked);
+
+                            try {
+                                byte allowed = sock.nearbyPlayers(picked);
+                                System.out.println("allowed  " + BytesUtils.singleString(allowed));
+                                if ((allowed & 0x0E) != 0) {
+                                    board.playerSelect(allowed, (player) -> {
+                                        moveRobberAction.action(picked);
+                                    }, false);
+                                } else {
+                                    moveRobberAction.action(picked);
+                                }
+                            } catch (Exception exp) {
+                                exp.printStackTrace(System.err);
+                            }
+
+                        });
+                    };
+                    if (rolls[0] + rolls[1] == 7) {
                         // board.cancelCurrentPick(false);
                         board.setInterfaceDisabled(true);
                         byte counts = local.getMaterialsCount();
@@ -111,62 +141,17 @@ public class GameController {
                                 byte amountToDrop = (byte) (counts / 2);
 
                                 board.materialCounts((a) -> {
+                                    board.setInterfaceDisabled(true);
+
                                     sock.removeMats(a, true);
-                                    board.pickHexagon((value) -> {
-                                        return value != 9 && board.getRobberPos() != value;
-                                    }, () -> {
-                                    }, (picked) -> {
-                                        board.setRobberPos(picked);
-
-                                        try {
-                                            byte allowed = sock.nearbyPlayers(picked);
-                                            System.out.println("allowed  " + BytesUtils.singleString(allowed));
-                                            if ((allowed & 0x0E) != 0) {
-                                                board.playerSelect(allowed, (player) -> {
-                                                    local.moveRobber(picked, player);
-                                                    local.update();
-
-                                                }, false);
-                                            } else {
-                                                local.moveRobber(picked, (byte) 4);
-                                                local.update();
-                                            }
-                                        } catch (Exception exp) {
-                                            exp.printStackTrace(System.err);
-                                        }
-
-                                    });
+                                    stealAction.action(null);
 
                                 }, amountToDrop, mats);
                             } catch (Exception exp) {
                                 exp.printStackTrace(System.err);
                             }
                         } else {
-                            board.pickHexagon((value) -> {
-                                return value != 9 && board.getRobberPos() != value;
-                            }, () -> {
-                            }, (picked) -> {
-                                board.setRobberPos(picked);
-
-                                try {
-                                    byte allowed = sock.nearbyPlayers(picked);
-                                    if (allowed != 0) {
-                                        board.playerSelect(allowed, (player) -> {
-                                            board.setInterfaceDisabled(false);
-                                            local.moveRobber(picked, player);
-                                            local.update();
-
-                                        }, false);
-                                    } else {
-                                        board.setInterfaceDisabled(false);
-                                        local.moveRobber(picked, (byte) 4);
-                                        local.update();
-                                    }
-                                } catch (Exception exp) {
-                                    exp.printStackTrace(System.err);
-                                }
-
-                            });
+                            stealAction.action(null);
                         }
 
                     }

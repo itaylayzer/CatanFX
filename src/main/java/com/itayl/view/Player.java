@@ -246,11 +246,12 @@ public class Player {
 
     protected static void setAchivementIDS(byte index, byte value) {
         achievements[index] = value;
-        if (index == 0)
-            System.out.println("change robber " + value);
-        for (var event : onAchivementChange) {
-            event.action(achievements[0], achievements[1]);
-        }
+
+        Platform.runLater(() -> {
+            for (var event : onAchivementChange) {
+                event.action(achievements[0], achievements[1]);
+            }
+        });
     }
 
     public static byte getBiggerArmyID() {

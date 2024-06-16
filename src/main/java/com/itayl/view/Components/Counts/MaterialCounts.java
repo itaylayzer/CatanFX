@@ -5,6 +5,7 @@ import com.itayl.view.Components.Buttons.CountButton;
 import com.itayl.view.Components.Buttons.SelectButton;
 import com.itayl.view.Interfaces.Action;
 
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
@@ -18,67 +19,72 @@ import javafx.scene.text.FontWeight;
 
 public class MaterialCounts {
     public void startCounting(VBox box, Action<Byte[]> onFinish, byte[] maxCounts, byte count) {
+        Platform.runLater(() -> {
+            ObjectProperty<Byte[]> propertyMaterials = new SimpleObjectProperty<>(new Byte[] { 0, 0, 0, 0, 0 });
+            ObjectProperty<Byte> amount = new SimpleObjectProperty<>((byte) 0);
+            VBox container = new VBox();
+            container.setPadding(new Insets(10));
+            container.setStyle("-fx-background-color:#1a1a1a");
+            container.setSpacing(10);
 
-        ObjectProperty<Byte[]> propertyMaterials = new SimpleObjectProperty<>(new Byte[] { 0, 0, 0, 0, 0 });
-        ObjectProperty<Byte> amount = new SimpleObjectProperty<>((byte) 0);
-        VBox container = new VBox();
-        container.setPadding(new Insets(10));
-        container.setStyle("-fx-background-color:#1a1a1a");
-        container.setSpacing(10);
-        box.getChildren().add(container);
+            box.getChildren().add(container);
 
-        ObservableList<Node> children = container.getChildren();
-        Action<Void> disposeChildren = (v) -> {
-            children.clear();
-            box.getChildren().remove(container);
-        };
+            ObservableList<Node> children = container.getChildren();
+            Action<Void> disposeChildren = (v) -> {
+                children.clear();
 
-        SelectButton approveButton = new SelectButton(Constants.Packages.approve, true);
-        approveButton.setButtonDisabled(true);
-        Label label = new Label(count + " LEFT");
-        label.setFont(Font.font("consolas", FontWeight.LIGHT, FontPosture.ITALIC, 20));
-        children.add(label);
+                box.getChildren().remove(container);
 
-        propertyMaterials.addListener((obs, old, newValue) -> {
-            byte sum = 0;
-            for (byte c : newValue) {
-                sum += c;
-            }
-            amount.setValue((byte) sum);
+            };
 
-        });
+            SelectButton approveButton = new SelectButton(Constants.Packages.approve, true);
+            approveButton.setButtonDisabled(true);
+            Label label = new Label(count + " LEFT");
+            label.setFont(Font.font("consolas", FontWeight.LIGHT, FontPosture.ITALIC, 20));
+            children.add(label);
 
-        amount.addListener((obs, old, newValue) -> {
-            label.setText((count - newValue) + " LEFT");
-            approveButton.setButtonDisabled(count != newValue);
-        });
-        for (int index = 0; index < Constants.Packages.materials.length; index++) {
-
-            ObjectProperty<Integer> integerIndex = new SimpleObjectProperty<>(index);
-            CountButton materialButton = new CountButton(Constants.Packages.materials[index], 0.5);
-
-            materialButton.setOnCountAction(param -> {
-                byte aIndex = integerIndex.get().byteValue();
-
-                if (param > maxCounts[aIndex]) {
-                    materialButton.setCount(maxCounts[aIndex]);
-                    param = maxCounts[aIndex];
+            propertyMaterials.addListener((obs, old, newValue) -> {
+                byte sum = 0;
+                for (byte c : newValue) {
+                    sum += c;
                 }
+                amount.setValue((byte) sum);
 
-                Byte[] oldVal = propertyMaterials.get();
-                Byte[] newVal = oldVal.clone();
-                newVal[aIndex] = param;
-                propertyMaterials.setValue(newVal);
             });
 
-            children.add(materialButton);
-        }
+            amount.addListener((obs, old, newValue) -> {
+                label.setText((count - newValue) + " LEFT");
+                approveButton.setButtonDisabled(count != newValue);
+            });
+            for (int index = 0; index < Constants.Packages.materials.length; index++) {
 
-        approveButton.setOnAction((e) -> {
-            disposeChildren.action(null);
-            onFinish.action(propertyMaterials.getValue());
+                ObjectProperty<Integer> integerIndex = new SimpleObjectProperty<>(index);
+                CountButton materialButton = new CountButton(Constants.Packages.materials[index], 0.5);
+
+                materialButton.setOnCountAction(param -> {
+                    byte aIndex = integerIndex.get().byteValue();
+
+                    if (param > maxCounts[aIndex]) {
+                        materialButton.setCount(maxCounts[aIndex]);
+                        param = maxCounts[aIndex];
+                    }
+
+                    Byte[] oldVal = propertyMaterials.get();
+                    Byte[] newVal = oldVal.clone();
+                    newVal[aIndex] = param;
+                    propertyMaterials.setValue(newVal);
+                });
+
+                children.add(materialButton);
+            }
+
+            approveButton.setOnAction((e) -> {
+                disposeChildren.action(null);
+                onFinish.action(propertyMaterials.getValue());
+            });
+
+            children.add(approveButton);
         });
 
-        children.add(approveButton);
     }
 }

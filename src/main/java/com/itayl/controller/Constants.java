@@ -6,7 +6,7 @@ public class Constants {
         public static class INFORMATION {
             public static final byte LANDS = 0, HARBORS = 1, NEARBY = 2, PLAYER = 3, MATS = 4, DEVCARDS = 5,
                     VICTORY_POINT = 6,
-                    AMOUNTS = 7;
+                    AMOUNTS = 7, ACHIVEMENT_CARDS = 8;
         }
 
         public static class ACTIONS {

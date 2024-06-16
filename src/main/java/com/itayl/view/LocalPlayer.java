@@ -140,8 +140,8 @@ public class LocalPlayer extends Player {
             setAmounts(client.getAmounts());
             if (bank == null)
                 return;
-            bank.setMaterials(client.getMaterials((byte) 5));
             bank.setDevelopements(client.getDevelopments((byte) 5));
+            bank.setMaterials(client.getMaterials((byte) 5));
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
         }
@@ -259,7 +259,7 @@ public class LocalPlayer extends Player {
         CatanBoard board = CatanBoard.getInstance();
         switch (response[0]) {
             case ServerCodes.TURN:
-                if (response[2] != 0) {
+                if (response[2] != 0 && !board.isNnMiddleOfCounts()) {
                     byte amountToDrop = (byte) (getMaterialsCount() / 2);
 
                     board.materialCounts((a) -> {
@@ -404,6 +404,12 @@ public class LocalPlayer extends Player {
 
     public void endGame() {
         this.client.endGame();
+    }
+
+    public void updateAchivements() {
+        byte[] ach = this.client.updateAchivementCards();
+        setAchivementIDS((byte) 0, ach[0]);
+        setAchivementIDS((byte) 1, ach[1]);
     }
 
 }

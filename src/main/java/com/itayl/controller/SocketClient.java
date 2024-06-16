@@ -172,4 +172,14 @@ public class SocketClient {
     public void endGame() {
         this.send(new byte[] { ClientCodes.ACTIONS.END_GAME });
     }
+
+    public byte[] updateAchivementCards() {
+        try {
+            return this.action(new byte[] { ClientCodes.INFORMATION.ACHIVEMENT_CARDS });
+
+        } catch (Exception exp) {
+            exp.printStackTrace(System.err);
+        }
+        return null;
+    }
 }
