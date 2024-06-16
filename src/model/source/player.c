@@ -587,13 +587,13 @@ void play_actions_with_conditions(GameState state,
         {
             putts("condition worked");
             actions[offset](player, socket, state, &queue);
-            destroy_queue(&queue);
+            queue_destroy(&queue);
             queue_init(&queue);
             // socket_short_update(socket);
             usleep(200000);
         }
         // socket_short_update(socket);
-        destroy_queue(&queue);
+        queue_destroy(&queue);
         usleep(200000);
     }
 }

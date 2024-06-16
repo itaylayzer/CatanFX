@@ -1,10 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #include "../utils/math/compare.h"
+#include "../utils/printt/printt.h"
 
 #define byte signed char
+
+//----------------------------------------------------------------------------------------
+// this files write the entire graph edges and connections.
+// the output of this files is the file "edges.byte".
+// to run this file run `make wr`
+//----------------------------------------------------------------------------------------
 
 const byte settlementsRowsInitials[] = {0, 3, 7, 11, 16, 21, 27, 33, 38, 43, 47, 51, 54};
 const byte areaRowsInitials[] = {0, 3, 7, 12, 16, 19};
@@ -133,7 +141,6 @@ int main()
             byte org = offset + AREAS;
             byte dest = dots[index] + AREAS;
             byte elements[2] = {org, dest};
-            (offset < 3) && printt("%hhu %hhu\n", elements[0], elements[1]);
             fwrite(elements, sizeof(byte), 2, file);
         }
         free(dots);

@@ -28,6 +28,19 @@
 #define PORT 5173
 #define BUFFER_SIZE 256
 
+//----------------------------------------------------------------------------------------
+//                                 server listen
+//                                 -------------
+//
+// General      : The functions starts a server and attach a request handler.
+//
+// Parameters   :
+//          handle_request - request handler (In)
+//          state      - Game State (In/Out)
+//
+// Return Value : Exit status integer.
+//
+//----------------------------------------------------------------------------------------
 int server_listen(void (*handle_request)(
                       signed char *buffer,
                       int socket,

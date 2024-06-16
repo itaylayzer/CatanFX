@@ -20,6 +20,8 @@
         "system_error": "c",
         "avl_tree.h": "c",
         "actions.h": "c",
-        "iterator": "c"
+        "iterator": "c",
+        "rand.h": "c",
+        "compare.h": "c"
     }
 }

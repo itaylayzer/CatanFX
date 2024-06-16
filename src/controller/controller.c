@@ -1,5 +1,19 @@
 #include "controller.h"
 
+//----------------------------------------------------------------------------------------
+//                                 handle request
+//                                 --------------
+//
+// General      : The functions handle a request from a socket.
+//
+// Parameters   :
+//          input_buffer - The Request (In)
+//          socket     - Socket ID (In)
+//          state      - Game State (In/Out)
+//
+// Return Value : None.
+//
+//----------------------------------------------------------------------------------------
 void handle_request(
     signed char *input_buffer,
     int socket,
@@ -29,8 +43,10 @@ void handle_request(
 
     printt("input_buffer[0]:%d\n", input_buffer[0]);
 
+    // calculate the response with the help of the handlers
     send_buffer = func[input_buffer[0]](&size, input_buffer + 1, socket, state);
 
+    // send to socket
     send(socket, &size, 1, 0);
     send(socket, send_buffer, size, 0);
     free(send_buffer);

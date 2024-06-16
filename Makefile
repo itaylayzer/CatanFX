@@ -24,7 +24,8 @@ SRCS=$(wildcard $(SRC_DIR)/*.c) \
 	 $(wildcard $(SRC_DIR)/utils/printt/*.c)
 
 WRITE_SRCS=$(wildcard $(SRC_DIR)/utils/math/*.c) \
-		$(wildcard $(SRC_DIR)/write/*.c)
+		   $(wildcard $(SRC_DIR)/utils/printt/*.c) \
+		   $(wildcard $(SRC_DIR)/write/*.c)
 
 WRITE_OBJS=$(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(WRITE_SRCS))
 

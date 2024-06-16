@@ -74,41 +74,49 @@ int calc_balance(Node N)
 
 Node insert(Node node, void *element, signed char (*cmp)(const void *, const void *))
 {
+    // if the node is null create it.
     if (node == NULL)
     {
         return new_mode(element);
     }
+
+    // compare between the current value and the element value
     signed char cmp_result = cmp(element, node->data);
 
+    // if the compare value is negative go to the left child
     (cmp_result < 0) &&
         (node->left = insert(node->left, element, cmp));
 
+    // if the compare value is positive go to the right child
     (cmp_result > 0) &&
         (node->right = insert(node->right, element, cmp));
 
+    // if the compare value is 0 return the current node
     if (!cmp_result)
     {
         return node;
     }
 
+    // calculate the current node height
     node->height = 1 + bmax(safe_height(node->left),
                             safe_height(node->right));
 
+    // calculate balance factor
     int balance = calc_balance(node);
 
-    // RR
+    // RR rotation
     (balance > 1 && cmp(element, node->left->data) < 0) &&
         (node = right_rotate(node));
 
-    // LL
+    // LL rotation
     (balance < -1 && cmp(element, node->right->data) > 0) &&
         (node = left_rotate(node));
 
-    // LR
+    // LR rotation
     (balance > 1 && cmp(element, node->left->data) > 0) &&
         (node = left_right_rotate(node));
 
-    // RL
+    // RL rotation
     (balance < -1 && cmp(element, node->right->data) < 0) &&
         (node = right_left_rotate(node));
 
@@ -122,20 +130,25 @@ void avl_insert(Node *root, void *element, signed char cmp(const void *, const v
 
 Node avl_search(Node node, void *element, signed char cmp(const void *, const void *))
 {
+    // if the node null return null
     if (node == NULL)
     {
         return NULL;
     }
     else
     {
-        signed char cmp_result = cmp(node->data, element);
+        // compare between current value and searched element value
+        signed char cmp_result = cmp(element, node->data);
 
-        (cmp_result > 0) &&
+        // if compare value is negative go to the left
+        (cmp_result < 0) &&
             (node = avl_search(node->left, element, cmp));
 
-        (cmp_result < 0) &&
+        // if compare value is positive go to the right
+        (cmp_result > 0) &&
             (node = avl_search(node->right, element, cmp));
 
+        // return node
         return node;
     }
 }
