@@ -9,6 +9,58 @@ signed char value_compare(const void *first, const void *second)
     return first - second;
 }
 
+// O(CE+CVE+C) | C is negligible
+signed char update_longest_road(GraphPtr graph, signed char *longest_road_achievement)
+{
+    unsigned char color_offset, vertex_offset, max_road_color = BLACK;
+    signed char temp_length, max_road_length = 0, max_road_per_color[MAX_PLAYERS] = {0}, old_val;
+
+    for (color_offset = 0; color_offset < MAX_PLAYERS; color_offset++)
+    {
+        max_road_per_color[color_offset] = dfs_score(graph, color_offset);
+
+        (max_road_per_color[color_offset] > max_road_length) &&
+            (max_road_length = max_road_per_color[color_offset],
+             max_road_color = color_offset);
+    }
+
+    // if the same max road length apply to only 1 player, only then change
+    (vector_count(max_road_per_color,
+                  MAX_PLAYERS,
+                  max_road_length) == 1) &&
+        (*longest_road_achievement = max_road_color);
+
+    // if the max road length is below 5, return longest road player index to -1
+    (max_road_length < 5) &&
+        (*longest_road_achievement = -1);
+
+    print_vec((unsigned char *)max_road_per_color, MAX_PLAYERS);
+
+    return *longest_road_achievement;
+}
+
+signed char update_biggest_army(PlayerPtr players,
+                                signed char num_of_players,
+                                signed char *biggest_army_achievement)
+{
+    unsigned char maxIndex = 0;
+
+    while (--num_of_players >= 0)
+    {
+        (players[num_of_players].knightUsed > players[maxIndex].knightUsed) &&
+            (maxIndex = num_of_players);
+    }
+
+    *biggest_army_achievement = maxIndex;
+
+    // if the knight used is below 3, then set the biggest army player index to -1
+    (players[maxIndex].knightUsed < 3) &&
+        (*biggest_army_achievement = -1);
+
+    printt("\t\tmax = %d (%d)\n", players[maxIndex].knightUsed, maxIndex);
+    return *biggest_army_achievement;
+}
+
 bool buy_road(PlayerPtr player,
               GraphPtr graph,
               const signed char cost[TOTAL_MATERIALS],
@@ -25,7 +77,7 @@ bool buy_road(PlayerPtr player,
     player->amounts[ROAD]--;
     putts("transfer_materials buy_road");
 
-    transferMats &&transfer_materials(player, bank, cost, false);
+    (transferMats) && (transfer_materials(player, bank, cost, false));
 
     return change_road(player->color, graph, from, to);
 }
@@ -62,13 +114,16 @@ bool transfer_materials(PlayerPtr player,
 {
     signed char *player_mats = (signed char *)player->materials;
 
+    signed char *(*manip[])(const signed char *, const signed char *, signed char) = {
+        vector_add, vector_sub};
+
     // remove cost from player materials
-    signed char *new_materials = (to_player ? vector_add : vector_sub)(player_mats, cost, TOTAL_MATERIALS);
+    signed char *new_materials = manip[!to_player](player_mats, cost, TOTAL_MATERIALS);
     vector_cpy(player_mats, (signed char *)new_materials, TOTAL_MATERIALS);
     free(new_materials);
 
     // update bank
-    new_materials = (to_player ? vector_sub : vector_add)(bank, cost, TOTAL_MATERIALS);
+    new_materials = manip[to_player](bank, cost, TOTAL_MATERIALS);
     vector_cpy(bank, (signed char *)new_materials, TOTAL_MATERIALS);
     free(new_materials);
 
@@ -146,16 +201,19 @@ void transfer_dev_card(PlayerPtr player,
 {
     signed char *player_devs = (signed char *)player->developmentCards;
 
+    signed char *(*manip[])(const signed char *, const signed char *, signed char) = {
+        vector_add, vector_sub};
+
     // remove cost from player materials
     signed char *new_materials =
-        (to_player ? vector_add : vector_sub)(player_devs, cost, TOTAL_DEVELOPMENT_CARD);
+        manip[!to_player](player_devs, cost, TOTAL_DEVELOPMENT_CARD);
     vector_cpy(player_devs, new_materials, TOTAL_DEVELOPMENT_CARD);
 
     free(new_materials);
 
     // update bank
     new_materials =
-        (to_player ? vector_sub : vector_add)(bank, cost, TOTAL_DEVELOPMENT_CARD);
+        manip[to_player](bank, cost, TOTAL_DEVELOPMENT_CARD);
     vector_cpy(bank, new_materials, TOTAL_DEVELOPMENT_CARD);
 
     free(new_materials);
@@ -262,11 +320,15 @@ bool buy_settlement(PlayerPtr player,
 void use_dev_knight(PlayerPtr player, int socket, GameState state)
 {
     unsigned char size, area = moveRobberTo(player, state->graph, state->robberArea);
+
     player->knightUsed++;
     state->robberArea = area;
 
     // update bot developments cards
     player->developmentCards[KNIGHT_CARD]--;
+
+    update_biggest_army(state->players, state->num_of_players,
+                        state->achievementCards + BIGGEST_ARMY);
 
     // update user
     unsigned char *buffer = calloc(size = 2, sizeof(unsigned char));
@@ -319,6 +381,7 @@ void use_dev_roads(PlayerPtr player, int socket, GameState state)
         BOT_SEND_FREE(socket, size, buffer);
     }
 
+    update_longest_road(state->graph, state->achievementCards + LONGEST_PATH);
     // update bot developments cards
     player->developmentCards[ROADS_CARD]--;
 

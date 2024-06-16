@@ -45,4 +45,5 @@ signed char vector_order_find_last(const signed char *source,
                                    signed char size,
                                    bool (*condition)(signed char));
 unsigned char find_first_true_index(bool *arr, unsigned char size);
+signed char *vector_upper_limit(signed char *source, signed char *limits, signed char size);
 #endif

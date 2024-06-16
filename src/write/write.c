@@ -95,9 +95,11 @@ byte *adjacentVertecies(byte dot, byte *size)
 
     const byte isAbove5 = vertexRow > 5;
 
+    const byte addons[] = {-1 + 2 * +isAbove5, 1 + -isAbove5};
+    const byte axises[] = {above, below};
     dots[0] = (modify(offset, 0, above));
     dots[1] = (modify(offset, 0 + -(isAbove5 && isEvan), below));
-    dots[2] = (modify(offset, isEvan ? 1 + -isAbove5 : -1 + 2 * +isAbove5, isEvan ? below : above));
+    dots[2] = (modify(offset, addons[isEvan], axises[isEvan]));
 
     *size = 3;
     removeDuplicatesAndValue(dots, size, dot);

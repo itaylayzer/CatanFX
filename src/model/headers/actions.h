@@ -14,6 +14,11 @@ void transfer_all_players_mats(PlayerPtr players,
                                unsigned char player_index,
                                signed char num_of_players,
                                unsigned char mat);
+// O(CE+CVE+C) | C is negligible
+signed char update_longest_road(GraphPtr graph, signed char *longest_road_achievement);
+signed char update_biggest_army(PlayerPtr players,
+                                signed char num_of_players,
+                                signed char *biggest_army_achievement);
 bool buy_road(PlayerPtr player,
               GraphPtr graph,
               const signed char cost[TOTAL_MATERIALS],

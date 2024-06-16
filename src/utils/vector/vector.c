@@ -169,11 +169,13 @@ void vector_reverse(signed char *arr, unsigned char size)
 void print_vec(unsigned char *arr, signed char size)
 {
     unsigned char offset;
+    char *strings[] = {", %d", "%d"};
+
     printf("[");
 
     for (offset = 0; offset < size; offset++)
     {
-        printf(offset ? ", %d" : "%d", arr[offset]);
+        printf(strings[!offset], arr[offset]);
     }
 
     printf("]\n");
@@ -210,4 +212,13 @@ unsigned char find_first_true_index(bool *arr, unsigned char size)
     while (!arr[offset])
         offset++;
     return offset;
+}
+signed char *vector_upper_limit(signed char *source, signed char *limits, signed char size)
+{
+    while (--size >= 0)
+    {
+        source[size] = bmin(source[size], limits[size]);
+    }
+
+    return source;
 }

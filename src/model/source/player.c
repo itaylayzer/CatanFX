@@ -583,12 +583,13 @@ void play_actions_with_conditions(GameState state,
         {
             putts("condition worked");
             actions[offset](player, socket, state, &queue);
+
             queue_destroy(&queue);
             queue_init(&queue);
-            // socket_short_update(socket);
+
             usleep(200000);
         }
-        // socket_short_update(socket);
+
         queue_destroy(&queue);
         usleep(200000);
     }
@@ -912,7 +913,7 @@ bool state_can_buy_development(PlayerPtr player, GameState state, QueuePtr queue
 
 // action functions
 
-void handle_deal_num(PlayerPtr player,
+void handle_deal_num(PlayerPtr player, int socket,
                      GameState state, unsigned char deal_num)
 
 {
@@ -922,6 +923,8 @@ void handle_deal_num(PlayerPtr player,
     unsigned char deal_mat_from = (deal_num & 0x07) - 1;
     unsigned char deal_type = (deal_num >> 3) & 0x03;
     unsigned char deal_mat_to = deal_num >> 5;
+
+    socket_short_log(socket, 8 + (deal_type == 2));
 
     handle_deal(player, state, deal_mat_from, deal_mat_to, deal_type);
 }
@@ -937,6 +940,7 @@ void handle_deal(PlayerPtr player, GameState state, unsigned char deal_mat_from,
     transfer_materials(player, state->bankMaterials, cost_to_player, true);
 }
 void handle_action_q(PlayerPtr player,
+                     int socket,
                      GameState state,
                      QueuePtr actionsQ)
 {
@@ -944,9 +948,8 @@ void handle_action_q(PlayerPtr player,
 
     while (!queue_empty(*actionsQ))
     {
-        handle_deal_num(player, state,
+        handle_deal_num(player, socket, state,
                         convert_void_ptr_to_unsigned_char(dequeue(actionsQ)));
-        // maybe sleep and update player?;
     }
 }
 
@@ -957,7 +960,7 @@ void state_buy_road(PlayerPtr player,
 {
     putts("state_buy_road");
 
-    handle_action_q(player, state, actionsQ);
+    handle_action_q(player, socket, state, actionsQ);
 
     Stack stk;
     stack_init(&stk);
@@ -974,6 +977,8 @@ void state_buy_road(PlayerPtr player,
     buy_road(player, state->graph, store[ROAD],
              state->bankMaterials, true, road & 0xFF, road >> 8);
 
+    update_longest_road(state->graph, state->achievementCards + LONGEST_PATH);
+
     unsigned char *buffer = calloc(size = 3, sizeof(unsigned char));
     buffer[0] = 2;
     buffer[1] = road & 0xFF;
@@ -988,7 +993,7 @@ void state_buy_settlement(PlayerPtr player,
                           QueuePtr actionsQ)
 {
     putts("state_buy_settlement");
-    handle_action_q(player, state, actionsQ);
+    handle_action_q(player, socket, state, actionsQ);
 
     unsigned char size, ast = state->astIndexes[player->color - 1];
 
@@ -1015,7 +1020,7 @@ void state_buy_city(PlayerPtr player,
 {
     putts("state_buy_city");
 
-    handle_action_q(player, state, actionsQ);
+    handle_action_q(player, socket, state, actionsQ);
 
     unsigned char size, ast = state->astIndexes[player->color - 1];
 
@@ -1041,7 +1046,7 @@ void state_buy_development(PlayerPtr player,
 {
     putts("state_buy_development");
 
-    handle_action_q(player, state, actionsQ);
+    handle_action_q(player, socket, state, actionsQ);
 
     socket_short_log(socket, 3);
 

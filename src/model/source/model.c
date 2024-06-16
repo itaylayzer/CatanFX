@@ -187,25 +187,46 @@ bool bis_neg(signed char x)
 {
     return x < 0;
 }
+
+bool inf_player_actionable_amount_devcards(GameState state,
+                                           signed char *params,
+                                           unsigned char offset)
+{
+    return vector_sum(state->bankDevelopments, TOTAL_DEVELOPMENT_CARD);
+}
+bool inf_player_actionable_amount_player(GameState state,
+                                         signed char *params,
+                                         unsigned char offset)
+{
+    return state->players[params[0]].amounts[offset];
+}
+
 unsigned char *inf_player_actionable(unsigned char *size, signed char *params,
                                      int socket, GameState state)
 {
     unsigned char *arr = calloc((*size = 2), sizeof(signed char)), offset;
+    bool (*amounts_fn[])(GameState, signed char *, unsigned char) = {inf_player_actionable_amount_player, inf_player_actionable_amount_devcards};
+
+    bool player_has_materials, has_amount, bank_has_materials;
 
     for (offset = 0; offset < TOTAL_STORE; offset++)
     {
 
-        bool not_neg = !(vector_manip_condition(
-                             (signed char *)state->players[params[0]].materials,
-                             store[offset], TOTAL_MATERIALS,
-                             vector_sub, bis_neg) >>
-                         1);
+        player_has_materials = !(vector_manip_condition(
+                                     (signed char *)state->players[params[0]].materials,
+                                     store[offset], TOTAL_MATERIALS,
+                                     vector_sub, bis_neg) >>
+                                 1);
 
-        bool has_amount = offset == DEVELOPMENT_CARD
-                              ? vector_sum(state->bankDevelopments, TOTAL_DEVELOPMENT_CARD)
-                              : state->players[params[0]].amounts[offset];
+        has_amount = amounts_fn[offset == DEVELOPMENT_CARD](state, params, offset);
 
-        arr[0] |= (not_neg && has_amount) << offset;
+        bank_has_materials = !(vector_manip_condition(
+                                   state->bankMaterials,
+                                   store[offset], TOTAL_MATERIALS,
+                                   vector_sub, bis_neg) >>
+                               1);
+
+        arr[0] |= (player_has_materials && has_amount && bank_has_materials) << offset;
     }
     arr[1] = state->players->harbors;
 
@@ -293,36 +314,6 @@ void print_edge_offset(const void *ptr)
 {
     EdgePtr edge = (EdgePtr)ptr;
     printt(" %d ", edge->offset);
-}
-
-// O(CE+CVE+C) | C is negligible
-signed char update_longest_road(GraphPtr graph, signed char *longest_road_achievement)
-{
-    unsigned char color_offset, vertex_offset, max_road_color = BLACK;
-    signed char temp_length, max_road_length = 0, max_road_per_color[MAX_PLAYERS] = {0}, old_val;
-
-    for (color_offset = 0; color_offset < MAX_PLAYERS; color_offset++)
-    {
-        max_road_per_color[color_offset] = dfs_score(graph, color_offset);
-
-        (max_road_per_color[color_offset] > max_road_length) &&
-            (max_road_length = max_road_per_color[color_offset],
-             max_road_color = color_offset);
-    }
-
-    // if the same max road length apply to only 1 player, only then change
-    (vector_count(max_road_per_color,
-                  MAX_PLAYERS,
-                  max_road_length) == 1) &&
-        (*longest_road_achievement = max_road_color);
-
-    // if the max road length is below 5, return longest road player index to -1
-    (max_road_length < 5) &&
-        (*longest_road_achievement = -1);
-
-    print_vec((unsigned char *)max_road_per_color, MAX_PLAYERS);
-
-    return *longest_road_achievement;
 }
 
 unsigned char switch_action_store_road(signed char *params, GameState state)
@@ -436,7 +427,7 @@ void collect_materials_area(VertexPtr area, PlayerPtr players, signed char *bank
 
     for (player_offset = 0; player_offset < MAX_PLAYERS; player_offset++)
     {
-        transfer_materials(players + player_offset, bank, mats_to_players[player_offset], true);
+        transfer_materials(players + player_offset, bank, vector_upper_limit(mats_to_players[player_offset], bank, TOTAL_MATERIALS), true);
     }
 }
 
@@ -463,27 +454,7 @@ void collect_materials(unsigned char rolled_num,
         collect_materials_area(vertecies[vertex], players, bank);
     }
 }
-signed char update_biggest_army(PlayerPtr players,
-                                signed char num_of_players,
-                                signed char *biggest_army_achievement)
-{
-    unsigned char maxIndex = 0;
 
-    while (--num_of_players >= 0)
-    {
-        (players[num_of_players].knightUsed > players[maxIndex].knightUsed) &&
-            (maxIndex = num_of_players);
-    }
-
-    *biggest_army_achievement = maxIndex;
-
-    // if the knight used is below 3, then set the biggest army player index to -1
-    (players[maxIndex].knightUsed < 3) &&
-        (*biggest_army_achievement = -1);
-
-    printt("\t\tmax = %d (%d)\n", players[maxIndex].knightUsed, maxIndex);
-    return *biggest_army_achievement;
-}
 bool move_robber_take(signed char *params, GameState state, unsigned char target_index)
 {
     unsigned char cost[TOTAL_MATERIALS] = {0};
