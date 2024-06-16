@@ -177,15 +177,9 @@ unsigned char *roll_dice(unsigned char *size, signed char *params,
     arr = single_byte(size, (dice << 4) | (sum - dice));
 
     printt("\trolled number %hhu while arr %hhd (%hhd, %hhd)\n", sum, arr[0], sum - dice, dice);
-    switch (sum)
-    {
-    case 7:
-        break;
 
-    default:
-        collect_materials(sum, state->players, state->graph, state->bankMaterials, state->robberArea);
-        break;
-    }
+    (sum != 7) &&
+        (collect_materials(sum, state->players, state->graph, state->bankMaterials, state->robberArea), 1);
 
     return arr;
 }
@@ -331,67 +325,89 @@ signed char update_longest_road(GraphPtr graph, signed char *longest_road_achiev
     return *longest_road_achievement;
 }
 
+unsigned char switch_action_store_road(signed char *params, GameState state)
+{
+    buy_road(state->players,
+             state->graph,
+             store[ROAD],
+             state->bankMaterials,
+             params[1],
+             params[2] + AREAS,
+             params[3] + AREAS);
+    unsigned char res = update_longest_road(state->graph, state->achievementCards + LONGEST_PATH);
+    return res;
+}
+
+unsigned char switch_action_store_settlement(signed char *params, GameState state)
+{
+    unsigned char res = buy_settlement(state->players,
+                                       state->graph,
+                                       store[SETTLEMENT],
+                                       state->bankMaterials,
+                                       params[1],
+                                       params[2] + AREAS);
+    return res;
+}
+
+unsigned char switch_action_store_city(signed char *params, GameState state)
+{
+    unsigned char res = buy_city(state->players,
+                                 state->graph,
+                                 store[CITY],
+                                 state->bankMaterials,
+                                 params[2] + AREAS);
+    return res;
+}
+unsigned char switch_action_store_development(signed char *params, GameState state)
+{
+    unsigned char res = buy_developement(state->players,
+                                         state->bankMaterials,
+                                         state->bankDevelopments,
+                                         store[DEVELOPMENT_CARD]);
+    return res;
+}
+
 unsigned char *switch_action_store(unsigned char *size, signed char *params,
                                    int socket, GameState state)
 {
-    unsigned char *res = calloc((*size = 1), sizeof(unsigned char));
+    unsigned char product = params[0];
+    unsigned char *res = single_byte(size, false);
 
-    switch (params[0])
-    {
-    case 0:
-        buy_road(state->players,
-                 state->graph,
-                 store[ROAD],
-                 state->bankMaterials,
-                 params[1],
-                 params[2] + AREAS,
-                 params[3] + AREAS);
-        res[0] = update_longest_road(state->graph, state->achievementCards + LONGEST_PATH);
-        break;
-    case 1:
-        res[0] = buy_settlement(state->players,
-                                state->graph,
-                                store[SETTLEMENT],
-                                state->bankMaterials,
-                                params[1],
-                                params[2] + AREAS);
-        break;
-    case 2:
-        res[0] = buy_city(state->players,
-                          state->graph,
-                          store[CITY],
-                          state->bankMaterials,
-                          params[2] + AREAS);
-        break;
-    case 3:
-        res[0] = buy_developement(state->players,
-                                  state->bankMaterials,
-                                  state->bankDevelopments,
-                                  store[DEVELOPMENT_CARD]);
-        break;
-    default:
-        res[0] = false;
-        break;
-    }
+    unsigned char (*actions[])(signed char *, GameState) = {
+        switch_action_store_road,
+        switch_action_store_settlement,
+        switch_action_store_city,
+        switch_action_store_development};
+
+    res[0] = actions[product](params, state);
+
     return res;
+}
+
+bool switch_dev_card_yop(signed char *params, GameState state)
+{
+    signed char mats_to_transfer[TOTAL_MATERIALS] = {0};
+    mats_to_transfer[params[1]]++;
+    mats_to_transfer[params[2]]++;
+    putts("transfer_materials switch dev card yop");
+    transfer_materials(state->players, state->bankMaterials, mats_to_transfer, true);
+    return true;
+}
+bool switch_dev_card_monopol(signed char *params, GameState state)
+{
+    transfer_all_players_mats(state->players, 0, (signed char)state->num_of_players, params[1]);
+    return true;
 }
 
 unsigned char *switch_dev_card(unsigned char *size, signed char *params,
                                int socket, GameState state)
 {
-    switch (params[0])
-    {
-    case 3:
-    {
-        signed char mats_to_transfer[TOTAL_MATERIALS] = {0};
-        mats_to_transfer[params[1]]++;
-        mats_to_transfer[params[2]]++;
-        transfer_materials(state->players, state->bankMaterials, mats_to_transfer, true);
-    }
-    break;
-    case 4:
-        transfer_all_players_mats(state->players, 0, (signed char)state->num_of_players, params[1]);
-    }
+    bool conditions[2] = {params[0] == 3, params[0] == 4};
+    bool (*actions[])(signed char *, GameState) = {switch_dev_card_yop, switch_dev_card_monopol};
+
+    unsigned char index = find_first_true_index(conditions, 2);
+    (index < 2) && actions[index](params, state);
+
     state->players->developmentCards[params[0]]--;
 
     return single_byte(size, 0);
@@ -468,6 +484,24 @@ signed char update_biggest_army(PlayerPtr players,
     printt("\t\tmax = %d (%d)\n", players[maxIndex].knightUsed, maxIndex);
     return *biggest_army_achievement;
 }
+bool move_robber_take(signed char *params, GameState state, unsigned char target_index)
+{
+    unsigned char cost[TOTAL_MATERIALS] = {0};
+    cost[random_index_by_vals(TOTAL_MATERIALS,
+                              (signed char *)state->players[target_index].materials)]++;
+    putts("transfer_materials move robber take");
+    transfer_materials(state->players + params[0],
+                       (signed char *)state->players[target_index].materials,
+                       (signed char *)cost, true);
+    printt("steal mode player index: %d\n", target_index);
+    return true;
+}
+bool move_robber_knight(signed char *params, GameState state, unsigned char target_index)
+{
+    state->players[params[0]].knightUsed++;
+    printt("pullin up knight!! %d\n", state->players[params[0]].knightUsed);
+    return true;
+}
 unsigned char *move_robber(unsigned char *size, signed char *params,
                            int socket, GameState state)
 {
@@ -475,29 +509,11 @@ unsigned char *move_robber(unsigned char *size, signed char *params,
     unsigned char target_index = params[1]; // if got 7!
     (state->robberArea) = params[2];
 
-    switch (target_index)
-    {
-    case 4:
-        break;
-    case 3:
-    case 2:
-    case 1:
-    {
-        unsigned char cost[TOTAL_MATERIALS] = {0};
-        cost[random_index_by_vals(TOTAL_MATERIALS,
-                                  (signed char *)state->players[target_index].materials)]++;
-        transfer_materials(state->players + params[0],
-                           (signed char *)state->players[target_index].materials,
-                           (signed char *)cost, true);
-        printt("steal mode player index: %d\n", target_index);
-    }
-    break;
+    bool conditions[2] = {target_index > 0 && target_index <= state->num_of_players, !target_index};
+    bool (*actions[])(signed char *, GameState, unsigned char) = {move_robber_take, move_robber_knight};
 
-    case 0:
-        state->players[params[0]].knightUsed++;
-        printt("pullin up knight!! %d\n", state->players[params[0]].knightUsed);
-        break;
-    }
+    unsigned char index = find_first_true_index(conditions, 2);
+    (index < 2) && actions[index](params, state, target_index);
 
     res[0] = update_biggest_army(state->players, state->num_of_players,
                                  state->achievementCards + BIGGEST_ARMY);
@@ -507,6 +523,7 @@ unsigned char *move_robber(unsigned char *size, signed char *params,
 unsigned char *drop_materials(unsigned char *size, signed char *params,
                               int socket, GameState state)
 {
+    putts("transfer_materials drop materials");
     transfer_materials(state->players + params[0], state->bankMaterials, params + 2, false);
 
     unsigned char offset;
@@ -555,6 +572,7 @@ bool bot_drop_materials(PlayerPtr player, GameState state)
         unsigned char cost[TOTAL_MATERIALS] = {0};
         signed char index = vector_order_find_last((signed char *)player->materials, (signed char *)order, TOTAL_MATERIALS, above_zero);
         cost[index]++;
+        putts("transfer_materials bot drop materials");
         transfer_materials(player, state->bankMaterials, (signed char *)cost, false);
     }
 

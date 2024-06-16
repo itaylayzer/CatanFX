@@ -31,6 +31,10 @@ bool buy_city(PlayerPtr player,
               const signed char cost[TOTAL_MATERIALS],
               signed char bank[TOTAL_MATERIALS],
               unsigned char index);
+void transfer_dev_card(PlayerPtr player,
+                       signed char bank[TOTAL_DEVELOPMENT_CARD],
+                       const signed char *cost,
+                       bool to_player);
 unsigned char buy_developement(PlayerPtr player,
                                signed char bank[TOTAL_MATERIALS],
                                signed char dev_bank[TOTAL_DEVELOPMENT_CARD],

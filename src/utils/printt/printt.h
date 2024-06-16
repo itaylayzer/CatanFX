@@ -7,7 +7,7 @@
 #include <time.h>
 
 //----------------------------------------------------------------------------------------
-//                                 Print with Time
+//                                 Printf with Time
 //                                 ---------------
 //
 // General      : The function prints a formatted message with Timestamp
@@ -21,7 +21,7 @@
 void printt(const char *format, ...);
 
 //----------------------------------------------------------------------------------------
-//                                 Put with Time
+//                                 Puts with Time
 //                                 -------------
 //
 // General      : The functions prints a message with Timestamp

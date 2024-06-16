@@ -240,28 +240,31 @@ unsigned short prioritiseWoodRoad(GraphPtr graph,
 
     while (!stack_empty(*buyable_roads))
     {
+        putts("\tprioritiseWoodRoad");
+
         edge_num = convert_void_ptr_to_unsigned_short(stack_pop(buyable_roads));
         vertex = edge_num >> 8;
 
         mats_prob = materials_probabilities(graph, vertex);
 
-        printt("F [%f %f %f %f %f] \n", mats_prob[0], mats_prob[1], mats_prob[2], mats_prob[3], mats_prob[4]);
+        printt("\t\tF [%f %f %f %f %f] \n", mats_prob[0], mats_prob[1], mats_prob[2], mats_prob[3], mats_prob[4]);
 
-        putts("before djkstra");
+        putts("\t\tbefore djkstra");
         graph_dijkstra(graph, vertex, BLACK);
-        putts("after dijkstra");
+        putts("\t\tafter dijkstra");
         bestWheatScore = best_vertex_score / graph_dijkstra_distance(graph, best_vertex);
 
         currentRoadScore = dfs_score(graph, player->color);
 
         // apply purchasing
         change_road(player->color, graph, edge_num & 0xFF, vertex);
+        putts("\t\tafter change_road");
 
         roadScore = (dfs_score(graph, player->color) - currentRoadScore) * 50;
 
         // cancel purchasing
         change_road(BLACK, graph, edge_num & 0xFF, vertex);
-
+        putts("\t\tafter change_road");
         heap_insert(&wheatScores, convert_unsigned_short_to_void_ptr(edge_num), wheatScore(mats_prob), heap_max);
         heap_insert(&bestWheatScores, convert_unsigned_short_to_void_ptr(edge_num), bestWheatScore, heap_max);
         heap_insert(&roadScores, convert_unsigned_short_to_void_ptr(edge_num), roadScore * 50, heap_max);
@@ -286,7 +289,7 @@ unsigned short prioritiseWoodRoad(GraphPtr graph,
     heap_destroy(&bestWheatScores);
     heap_destroy(&wheatScores);
     heap_destroy(&roadScores);
-
+    putts("after prioritiseWoodRoad");
     return edge_num;
 }
 unsigned short prioritiseWheatCardsRoad(GraphPtr graph,
@@ -835,7 +838,7 @@ bool state_can_buy_road(PlayerPtr player, GameState state, QueuePtr queue)
         // if player have buyable roads
         && buyableRoads(state->graph, &stk, player)
         // if bank have materials
-        && (vector_manip_condition(state->bankMaterials, store[SETTLEMENT], TOTAL_MATERIALS, vector_sub, above_equal_zero) & 0x01);
+        && (vector_manip_condition(state->bankMaterials, store[ROAD], TOTAL_MATERIALS, vector_sub, above_equal_zero) & 0x01);
 
     stack_destroy(&stk);
 
@@ -929,7 +932,7 @@ void handle_deal(PlayerPtr player, GameState state, unsigned char deal_mat_from,
 
     cost_from_player[deal_mat_from] = deal_type + 2;
     cost_to_player[deal_mat_to]++;
-
+    putts("transfer_materials handle deal");
     transfer_materials(player, state->bankMaterials, cost_from_player, false);
     transfer_materials(player, state->bankMaterials, cost_to_player, true);
 }
@@ -968,7 +971,7 @@ void state_buy_road(PlayerPtr player,
     unsigned short road = prioritiseRoads[!!ast](state->graph, player, state->astHeaps,
                                                  &stk);
 
-    buy_road(player, state->graph, store[CITY],
+    buy_road(player, state->graph, store[ROAD],
              state->bankMaterials, true, road & 0xFF, road >> 8);
 
     unsigned char *buffer = calloc(size = 3, sizeof(unsigned char));
@@ -1052,6 +1055,11 @@ void state_buy_development(PlayerPtr player,
         use_dev_monopol};
 
     use_development[index](player, socket, state);
+
+    signed char cost[TOTAL_DEVELOPMENT_CARD] = {0};
+    cost[index] += index != 1;
+
+    transfer_dev_card(player, state->bankDevelopments, cost, false);
 }
 
 bool state_steal(PlayerPtr player, int socket, GameState state)
@@ -1072,6 +1080,8 @@ bool state_steal(PlayerPtr player, int socket, GameState state)
     unsigned char cost[TOTAL_MATERIALS] = {0};
     cost[random_index_by_vals(TOTAL_MATERIALS,
                               (signed char *)state->players[target_index].materials)] += found;
+
+    putts("transfer_materials state steal");
     transfer_materials(player,
                        (signed char *)state->players[target_index].materials,
                        (signed char *)cost, true);

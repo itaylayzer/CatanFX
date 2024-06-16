@@ -23,6 +23,7 @@ bool buy_road(PlayerPtr player,
     avl_insert(&player->roads, convert_unsigned_short_to_void_ptr(edge_num), value_compare);
 
     player->amounts[ROAD]--;
+    putts("transfer_materials buy_road");
 
     transferMats &&transfer_materials(player, bank, cost, false);
 
@@ -69,8 +70,22 @@ bool transfer_materials(PlayerPtr player,
     // update bank
     new_materials = (to_player ? vector_sub : vector_add)(bank, cost, TOTAL_MATERIALS);
     vector_cpy(bank, (signed char *)new_materials, TOTAL_MATERIALS);
-
     free(new_materials);
+
+    if (vector_any((signed char *)player->materials, TOTAL_MATERIALS, below_zero))
+    {
+        puts("transfer_materials player->materials");
+        print_vec(player->materials, TOTAL_MATERIALS);
+
+        exit(0);
+    }
+    if (vector_any(bank, TOTAL_MATERIALS, below_zero))
+    {
+        puts("transfer_materials bank");
+        print_vec((unsigned char *)bank, TOTAL_MATERIALS);
+        exit(0);
+    }
+
     return true;
 }
 void transfer_all_players_mats(PlayerPtr players,
@@ -88,7 +103,7 @@ void transfer_all_players_mats(PlayerPtr players,
         is_other_player = (num_of_players != player_index);
 
         mats_to_transfer[mat] = is_other_player * other->materials[mat];
-
+        putts("transfer_materials transfer_all_players_mats");
         is_other_player &&
             transfer_materials(players + player_index, (signed char *)other->materials, mats_to_transfer, true);
     }
@@ -100,7 +115,7 @@ bool buy_city(PlayerPtr player,
               signed char bank[TOTAL_MATERIALS],
               unsigned char index)
 {
-
+    putts("transfer_materials buy city");
     transfer_materials(player, bank, cost, false);
 
     // change settlement color
@@ -154,6 +169,7 @@ unsigned char buy_developement(PlayerPtr player,
     signed char *how_many = calloc(TOTAL_DEVELOPMENT_CARD, sizeof(signed char));
     unsigned char index = random_index_by_vals(TOTAL_DEVELOPMENT_CARD, dev_bank);
     how_many[index] = 1;
+    putts("transfer_materials buy development");
     transfer_materials(player, bank, cost, false);
     transfer_dev_card(player, dev_bank, how_many, true);
 
@@ -182,6 +198,36 @@ unsigned char *svertex_to_materials(GraphPtr graph, signed char index)
     return mats;
 }
 
+bool buy_settlement_to_player(PlayerPtr player,
+                              GraphPtr graph,
+                              const signed char cost[TOTAL_MATERIALS],
+                              signed char bank[TOTAL_MATERIALS],
+                              unsigned char index)
+{
+    printt("transfer_materials buy settlement to player");
+
+    unsigned char *materials = svertex_to_materials(graph, index);
+    print_vec(materials, TOTAL_MATERIALS);
+    transfer_materials(player, bank, (signed char *)materials, true);
+
+    free(materials);
+
+    return true;
+}
+
+bool buy_settlement_from_player(PlayerPtr player,
+                                GraphPtr graph,
+                                const signed char cost[TOTAL_MATERIALS],
+                                signed char bank[TOTAL_MATERIALS],
+                                unsigned char index)
+{
+    putts("transfer_materials buy settlement from player");
+
+    transfer_materials(player, bank, cost, false);
+
+    return true;
+}
+
 bool buy_settlement(PlayerPtr player,
                     GraphPtr graph,
                     const signed char cost[TOTAL_MATERIALS],
@@ -189,22 +235,13 @@ bool buy_settlement(PlayerPtr player,
                     signed char transferMats, // -1 to player 1 from player
                     unsigned char index)
 {
-    switch (transferMats)
-    {
-    case 1:
-        transfer_materials(player, bank, cost, false);
-        break;
-    case -1:
-    {
-        unsigned char *materials = svertex_to_materials(graph, index);
-        transfer_materials(player, bank, (signed char *)materials, true);
 
-        free(materials);
-        break;
-    }
-    default:
-        break;
-    }
+    bool conditions[2] = {transferMats == -1, transferMats == 1};
+    unsigned char true_index = find_first_true_index(conditions, 2);
+    bool (*transfer_actions[])(PlayerPtr, GraphPtr, const signed char[TOTAL_MATERIALS],
+                               signed char[TOTAL_MATERIALS], unsigned char) = {buy_settlement_to_player, buy_settlement_from_player};
+
+    (true_index < 2) && transfer_actions[true_index](player, graph, cost, bank, index);
 
     // change settlement color
     graph->vertices[index].color = player->color;
@@ -253,6 +290,7 @@ void use_dev_point(PlayerPtr player, int socket, GameState state)
 void use_dev_roads(PlayerPtr player, int socket, GameState state)
 {
 
+    putts("use_dev_roads");
     // get astrategy
     unsigned char offset, size, astindex = state->astIndexes[player->color - 1];
 
@@ -267,9 +305,11 @@ void use_dev_roads(PlayerPtr player, int socket, GameState state)
     for (offset = 0; offset < 2; offset++)
     {
         unsigned short road = prioritiseRoad[!!astindex](state->graph, player, state->astHeaps, &stk);
+        putts("\t use_dev_roads before buy road");
 
-        buy_road(player, state->graph, store[ROAD], state->bankMaterials, true,
+        buy_road(player, state->graph, store[ROAD], state->bankMaterials, false,
                  road >> 8, road & 0xFF);
+        putts("\t use_dev_roads after buy road");
 
         unsigned char *buffer = calloc(size = 3, sizeof(unsigned char));
         buffer[0] = 2;
@@ -315,7 +355,7 @@ void use_dev_yop(PlayerPtr player, int socket, GameState state)
         !condition &&
             (bank[min_index] = SIGNED_MAX_VALUE);
     }
-
+    putts("transfer_materials use dev yop");
     (!tried_everything) &&
         (transfer_materials(player, state->bankMaterials, (signed char *)cost, true),
          player->developmentCards[YEAR_OF_PLANT_CARD]--,
