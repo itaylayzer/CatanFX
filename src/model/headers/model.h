@@ -24,7 +24,7 @@
 #include "../../server/sock.h"
 #include "../../utils/math/rand.h"
 #include "../../utils/convert/convert.h"
-#include "./vec_utils.h"
+#include "../../utils/vector/vector.h"
 #include "./macro.h"
 #include "./player.h"
 #include "./actions.h"

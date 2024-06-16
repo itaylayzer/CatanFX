@@ -1,4 +1,4 @@
-#include "../headers/vec_utils.h"
+#include "vector.h"
 
 bool below_zero(signed char x)
 {
@@ -192,9 +192,9 @@ unsigned char vector_manip_condition(const signed char *first,
     return all + (any << 1);
 }
 signed char vector_order_find_last(const signed char *source,
-                                     const signed char *order,
-                                     signed char size,
-                                     bool (*condition)(signed char))
+                                   const signed char *order,
+                                   signed char size,
+                                   bool (*condition)(signed char))
 {
     signed char find_index = 0, fixed_index;
     while (--size >= 0 && !find_index)
@@ -203,4 +203,11 @@ signed char vector_order_find_last(const signed char *source,
         find_index = (fixed_index + 1) * condition(source[fixed_index]);
     }
     return find_index - 1;
+}
+unsigned char find_first_true_index(bool *arr, unsigned char size)
+{
+    unsigned char offset = 0;
+    while (!arr[offset])
+        offset++;
+    return offset;
 }

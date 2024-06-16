@@ -12,14 +12,14 @@
 #include "../../controller/types.h"
 #include "../../controller/constants.h"
 #include "../../utils/convert/convert.h"
-#include "./vec_utils.h"
+#include "../../utils/vector/vector.h"
 #include "./macro.h"
 #include "../../structures/graph/graph.h"
 #include "./actions.h"
 
 // helper
 bool buyableSettlement(PlayerPtr player, VertexPtr source, bool needRoad);
-unsigned char find_first_true_index(bool *arr, unsigned char size);
+
 void handle_deal(PlayerPtr player, GameState state, unsigned char deal_mat_from, unsigned char deal_mat_to, unsigned deal_type);
 
 // astrategies scores

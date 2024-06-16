@@ -165,13 +165,6 @@ unsigned char buyableMaterial(unsigned char astrategy,
 
     return result;
 }
-unsigned char find_first_true_index(bool *arr, unsigned char size)
-{
-    unsigned char offset = 0;
-    while (!arr[offset])
-        offset++;
-    return offset;
-}
 
 // astrategies scores
 float woodScore(float mats[TOTAL_MATERIALS])

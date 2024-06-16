@@ -7,13 +7,23 @@ void print_error(const char *type, const int code)
     perror(error_buffer);
 }
 
+void error_reading(signed char *buffer, int socket, GameState state)
+{
+    putts("error_reading");
+}
+
+void eod(signed char *buffer, int socket, GameState state)
+{
+    putts("eod");
+}
+
 int server_listen(void (*handle_request)(
                       signed char *buffer,
                       int socket,
                       GameState state),
                   GameState state)
 {
-    int server_fd, new_socket, valread, error_code;
+    int server_fd, new_socket, valread = 1, error_code;
     struct sockaddr_in address;
 #if defined(__linux__)
     int
@@ -60,26 +70,18 @@ int server_listen(void (*handle_request)(
            "accept failed");
 
     putts("Client connected");
-    while (1)
+    while (valread != 0 && valread != -1)
     {
         buffer = calloc(BUFFER_SIZE, sizeof(signed char));
         valread = recv(new_socket, buffer, BUFFER_SIZE, 0);
-        switch (valread)
-        {
-        case -1:
-            perror("read");
-            return 0; // FIXME: exit(EXIT_FAILURE)
-            break;
-        case 0:
-            putts("eod");
-            return 0; // exit(EXIT_SUCCESS);
-            break;
-        default:
-            handle_request(buffer,
-                           new_socket,
-                           state);
-        }
+
+        bool conditions[3] = {valread == -1, valread == 0, true};
+        void (*handle_val_read[3])(signed char *, int, GameState) = {error_reading, eod, handle_request};
+
+        unsigned char index = find_first_true_index(conditions, 3);
+        handle_val_read[index](buffer, new_socket, state);
+
         free(buffer);
     }
-    return 0;
+    return valread;
 }

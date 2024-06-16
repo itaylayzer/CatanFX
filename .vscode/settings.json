@@ -22,6 +22,9 @@
         "actions.h": "c",
         "iterator": "c",
         "rand.h": "c",
-        "compare.h": "c"
+        "compare.h": "c",
+        "heap.h": "c",
+        "vector.h": "c",
+        "sock.h": "c"
     }
 }

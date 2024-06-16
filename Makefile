@@ -15,6 +15,7 @@ SRCS=$(wildcard $(SRC_DIR)/*.c) \
      $(wildcard $(SRC_DIR)/structures/graph/*.c) \
 	 $(wildcard $(SRC_DIR)/utils/math/*.c) \
 	 $(wildcard $(SRC_DIR)/utils/convert/*.c) \
+	 $(wildcard $(SRC_DIR)/utils/vector/*.c) \
 	 $(wildcard $(SRC_DIR)/structures/linked_list/*.c) \
 	 $(wildcard $(SRC_DIR)/structures/heap/*.c) \
 	 $(wildcard $(SRC_DIR)/structures/linked_list/circular/*.c) \

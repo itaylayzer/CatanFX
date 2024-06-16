@@ -72,7 +72,7 @@ void dijkstra_travarse(Heap *scores, unsigned char color)
 
     // insert to the heap if the new weight is below the old weight
     (condition && vertex_weight > dest->weight) &&
-        heap_insert(&scores, dest, dest->weight, heap_min);
+        heap_insert(scores, dest, dest->weight, heap_min);
 
     QUEUE_TRAVARSE_FINISH;
 

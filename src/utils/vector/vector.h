@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "../../utils/math/compare.h"
-#include "../../utils/math/rand.h"
+#include "../math/compare.h"
+#include "../math/rand.h"
 
 #define SIGNED_MAX_VALUE 127
 
@@ -44,4 +44,5 @@ signed char vector_order_find_last(const signed char *source,
                                    const signed char *order,
                                    signed char size,
                                    bool (*condition)(signed char));
+unsigned char find_first_true_index(bool *arr, unsigned char size);
 #endif
