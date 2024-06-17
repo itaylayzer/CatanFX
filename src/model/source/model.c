@@ -742,7 +742,6 @@ unsigned char *handle_rest_turns(unsigned char *size, signed char *params,
 
         // run play functions
         stealing = playFn[initial_state](state->players + turnColor, socket, state);
-        putts("player done");
 
         // increase turn
         (state->turnOffset)++;
@@ -751,6 +750,8 @@ unsigned char *handle_rest_turns(unsigned char *size, signed char *params,
         _buff[0] = 0;
         _buff[1] = (state->turnOffset) % state->num_of_players;
         _buff[2] = stealing && vector_sum((signed char *)state->players->materials, TOTAL_MATERIALS) >= 7;
+
+        BOT_SEND(socket, _size, _buff);
     }
 
     putts("done");
