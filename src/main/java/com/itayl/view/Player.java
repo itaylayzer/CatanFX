@@ -111,7 +111,7 @@ public class Player {
 
         byte sum = 0;
         for (int i = 0; i < devcards.length; i++) {
-            sum += devcards[i];
+            sum += BytesUtils.max(devcards[i], (byte) 0);
         }
         return sum;
     }

@@ -255,6 +255,8 @@ public class LocalPlayer extends Player {
     private void handleBot(byte[] response) {
         System.out.println("Player.getTurnID() = " + Player.getTurnID());
         EnemyPlayer enemy = EnemyPlayer.enemies[Player.getTurnID() - 1];
+        if (response.length == 0)
+            return;
         System.out.println("response[0]:" + response[0]);
         CatanBoard board = CatanBoard.getInstance();
         switch (response[0]) {
