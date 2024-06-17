@@ -17,7 +17,7 @@ float *materials_probabilities(GraphPtr graph, unsigned char vertex)
 
     tempVertex = edge->vertex;
 
-    mats_prob[tempVertex->material_number & 0x07] +=
+    mats_prob[extract_area_materials(tempVertex->material_number)] +=
         probs[(tempVertex->material_number >> 3) - 2] * condition;
 
     QUEUE_TRAVARSE_FINISH;

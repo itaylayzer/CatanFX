@@ -45,12 +45,14 @@ signed char update_biggest_army(PlayerPtr players,
 {
     unsigned char maxIndex = 0;
 
+    // for each player
     while (--num_of_players >= 0)
     {
+        // update maxIndex
         (players[num_of_players].knightUsed > players[maxIndex].knightUsed) &&
             (maxIndex = num_of_players);
     }
-
+    // update biggest army achivement
     *biggest_army_achievement = maxIndex;
 
     // if the knight used is below 3, then set the biggest army player index to -1
@@ -72,8 +74,10 @@ bool buy_road(PlayerPtr player,
     unsigned short edge_num;
     edge_num = from + (to << 8);
 
+    // insert to player roads
     avl_insert(&player->roads, convert_unsigned_short_to_void_ptr(edge_num), value_compare);
 
+    // decreate the ammount
     player->amounts[ROAD]--;
     putts("transfer_materials buy_road");
 
@@ -91,17 +95,21 @@ bool change_road(unsigned char color,
     EdgePtr foundPtr;
     EdgeRec lookRec;
 
+    // look original
     lookRec.offset = to;
 
     foundPtr = avl_search(graph->vertices[from].edges,
                           &lookRec, compare_edges_offset)
                    ->data;
+    //    set color
     foundPtr->color = color;
 
+    // reversed look
     lookRec.offset = from;
     foundPtr = avl_search(graph->vertices[to].edges,
                           &lookRec, compare_edges_offset)
                    ->data;
+    //    set color
     foundPtr->color = color;
 
     return true;
@@ -127,20 +135,6 @@ bool transfer_materials(PlayerPtr player,
     vector_cpy(bank, (signed char *)new_materials, TOTAL_MATERIALS);
     free(new_materials);
 
-    if (vector_any((signed char *)player->materials, TOTAL_MATERIALS, below_zero))
-    {
-        puts("transfer_materials player->materials");
-        print_vec(player->materials, TOTAL_MATERIALS);
-
-        exit(0);
-    }
-    if (vector_any(bank, TOTAL_MATERIALS, below_zero))
-    {
-        puts("transfer_materials bank");
-        print_vec((unsigned char *)bank, TOTAL_MATERIALS);
-        exit(0);
-    }
-
     return true;
 }
 void transfer_all_players_mats(PlayerPtr players,
@@ -150,6 +144,8 @@ void transfer_all_players_mats(PlayerPtr players,
 {
     PlayerPtr other;
     bool is_other_player;
+
+    // for each player
     while (--num_of_players >= 0)
     {
         other = players + num_of_players;
@@ -157,8 +153,11 @@ void transfer_all_players_mats(PlayerPtr players,
 
         is_other_player = (num_of_players != player_index);
 
+        // gather all materials
         mats_to_transfer[mat] = is_other_player * other->materials[mat];
         putts("transfer_materials transfer_all_players_mats");
+
+        // if other player transfer materials
         is_other_player &&
             transfer_materials(players + player_index, (signed char *)other->materials, mats_to_transfer, true);
     }
@@ -223,12 +222,16 @@ unsigned char buy_developement(PlayerPtr player,
                                signed char dev_bank[TOTAL_DEVELOPMENT_CARD],
                                const signed char cost[TOTAL_MATERIALS])
 {
-
+    // random selection
     signed char *how_many = calloc(TOTAL_DEVELOPMENT_CARD, sizeof(signed char));
     unsigned char index = random_index_by_vals(TOTAL_DEVELOPMENT_CARD, dev_bank);
     how_many[index] = 1;
     putts("transfer_materials buy development");
+
+    // buy with materials
     transfer_materials(player, bank, cost, false);
+
+    // transfer dev cards
     transfer_dev_card(player, dev_bank, how_many, true);
 
     return index;
@@ -245,10 +248,13 @@ unsigned char *svertex_to_materials(GraphPtr graph, signed char index)
     unsigned char material_number, size = 0, *mats = calloc(TOTAL_MATERIALS, sizeof(char));
     Node node = graph->vertices[index].edges;
 
+    // traverse near areas vertecies
     QUEUE_TRAVARSE(node, node);
     size++;
     edge = (EdgePtr)node->data;
     material_number = edge->vertex->material_number;
+
+    // if area vertex addd its material
     (edge->color == GRAY && material_number != 7 << 3) &&
         (mats[extract_area_materials(material_number)]++);
 
@@ -264,8 +270,11 @@ bool buy_settlement_to_player(PlayerPtr player,
 {
     printt("transfer_materials buy settlement to player");
 
+    // gather mateirals from settlement vertex
     unsigned char *materials = svertex_to_materials(graph, index);
     print_vec(materials, TOTAL_MATERIALS);
+
+    // transfer materials to player
     transfer_materials(player, bank, (signed char *)materials, true);
 
     free(materials);
@@ -281,6 +290,7 @@ bool buy_settlement_from_player(PlayerPtr player,
 {
     putts("transfer_materials buy settlement from player");
 
+    // transfer cost to bank
     transfer_materials(player, bank, cost, false);
 
     return true;
@@ -305,8 +315,10 @@ bool buy_settlement(PlayerPtr player,
     graph->vertices[index].color = player->color;
     player->victoryPoints++;
 
+    // insert the settlement
     avl_insert(&player->settlements, convert_unsigned_char_to_void_ptr(index), value_compare);
 
+    // increase victoryPoints and decrease amount
     player->victoryPoints++;
     player->amounts[SETTLEMENT]--;
 
@@ -327,6 +339,7 @@ void use_dev_knight(PlayerPtr player, int socket, GameState state)
     // update bot developments cards
     player->developmentCards[KNIGHT_CARD]--;
 
+    // run updat biggest army
     update_biggest_army(state->players, state->num_of_players,
                         state->achievementCards + BIGGEST_ARMY);
 
@@ -362,17 +375,21 @@ void use_dev_roads(PlayerPtr player, int socket, GameState state)
 
     buyableRoads(state->graph, &stk, player);
 
+    // pick the right road
     unsigned short (*prioritiseRoad[])(GraphPtr, PlayerPtr, Heap[TOTAL_ASTRATEGIES], StackPtr) = {prioritiseWoodRoad, prioritiseWheatCardsRoad};
 
+    // for 2 times
     for (offset = 0; offset < 2; offset++)
     {
         unsigned short road = prioritiseRoad[!!astindex](state->graph, player, state->astHeaps, &stk);
         putts("\t use_dev_roads before buy road");
 
+        // buy the road without paying to the bank
         buy_road(player, state->graph, store[ROAD], state->bankMaterials, false,
                  road >> 8, road & 0xFF);
         putts("\t use_dev_roads after buy road");
 
+        // notify socket
         unsigned char *buffer = calloc(size = 3, sizeof(unsigned char));
         buffer[0] = 2;
         buffer[1] = road & 0xFF;
@@ -381,6 +398,7 @@ void use_dev_roads(PlayerPtr player, int socket, GameState state)
         BOT_SEND_FREE(socket, size, buffer);
     }
 
+    // apply update longest road
     update_longest_road(state->graph, state->achievementCards + LONGEST_PATH);
     // update bot developments cards
     player->developmentCards[ROADS_CARD]--;
@@ -392,9 +410,12 @@ void use_dev_yop(PlayerPtr player, int socket, GameState state)
     unsigned char count = 2, astindex = state->astIndexes[player->color - 1], *product,
                   *mats;
     bool condition, tried_everything = false;
+
+    // pick the right order
     unsigned char *(*order[])(GraphPtr, PlayerPtr) = {
         woodMatsOrder, wheatMatsOrder, cardsMatsOrder};
 
+    // get the materials order
     mats = (product = order[astindex](state->graph, player)) + TOTAL_MATERIALS;
 
     signed char *sub = vector_sub((signed char *)player->materials,
@@ -403,8 +424,10 @@ void use_dev_yop(PlayerPtr player, int socket, GameState state)
 
     unsigned char cost[TOTAL_MATERIALS] = {0};
 
+    // while succeded to take 2 materials or tried every materials.
     while (count && !tried_everything)
     {
+        //
         unsigned char min_index = vector_min_index(sub, TOTAL_MATERIALS);
         tried_everything = bank[min_index] == SIGNED_MAX_VALUE;
 
@@ -419,6 +442,8 @@ void use_dev_yop(PlayerPtr player, int socket, GameState state)
             (bank[min_index] = SIGNED_MAX_VALUE);
     }
     putts("transfer_materials use dev yop");
+
+    // get materials and notify client
     (!tried_everything) &&
         (transfer_materials(player, state->bankMaterials, (signed char *)cost, true),
          player->developmentCards[YEAR_OF_PLANT_CARD]--,
@@ -432,6 +457,7 @@ void use_dev_monopol(PlayerPtr player, int socket, GameState state)
     unsigned char offset, astindex = state->astIndexes[player->color - 1], *product,
                           *mats;
 
+    // get the right order
     unsigned char *(*order[])(GraphPtr, PlayerPtr) = {
         woodMatsOrder, wheatMatsOrder, cardsMatsOrder};
 
@@ -442,10 +468,10 @@ void use_dev_monopol(PlayerPtr player, int socket, GameState state)
 
     unsigned char min_index = vector_min_index(sub, TOTAL_MATERIALS);
 
+    // steal from every player the right material
     transfer_all_players_mats(state->players, player->color, state->num_of_players, min_index);
 
     free(sub);
-
     free(product);
 
     // update bot developments cards

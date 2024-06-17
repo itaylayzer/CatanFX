@@ -38,5 +38,6 @@ def generate_function_comment():
 
 # Example usage:
 if __name__ == "__main__":
-    comment = generate_function_comment()
-    print(comment)
+    while True:
+        comment = generate_function_comment()
+        print(comment)
