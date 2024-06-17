@@ -1,7 +1,13 @@
 
 #include "../headers/model.h"
 
-// extract data functions
+unsigned char *single_byte(unsigned char *size, signed char value)
+{
+    // allocate a single element array
+    unsigned char *res = malloc(sizeof(unsigned char) * (*size = 1));
+    *res = value;
+    return res;
+}
 
 unsigned char extract_area_number(unsigned char material_number)
 {
@@ -12,27 +18,32 @@ void catan_edges(GraphPtr graph)
 {
     FILE *file;
 
+    // read edges.byte file
 #ifdef _WIN32
     fopen_s(&file, "edges.byte", "rb");
 #else
     file = fopen("edges.byte", "rb");
 #endif
 
+    // if the file is null exit the program
     assert(file && "could not open edges.byte!");
 
     signed char elements[2];
-    // printt("building graph\n");
+
+    // while not end of file
     while (!feof(file))
     {
+        // extract vertecies to join
         fread(elements, sizeof(signed char), 2, file);
 
         const unsigned char from = elements[0], to = elements[1];
         const bool is_connecting = (bmin(from, to) < AREAS);
 
+        // join vertecies
         graph_join(graph, from, to, BLACK + is_connecting);
     }
-    // printt("done graph\n");
 
+    // close file
     fclose(file);
 }
 
@@ -50,10 +61,12 @@ void catan_lands(GraphPtr graph)
     {
         middle_or_after = offset >= 9;
 
+        // give each area vertecies a number, material and a color
         graph->vertices[offset + middle_or_after].material_number = numbers[offset] << 3 | materials[offset];
         graph->vertices[offset + middle_or_after].color = GRAY;
     }
 
+    // give middle area its material, number and color
     graph->vertices[9].material_number = 7 << 3;
     graph->vertices[9].color = GRAY;
 }
@@ -62,10 +75,12 @@ void catan_harbors(GraphPtr graph, unsigned char harbors[HARBOR_COUNT * 2])
 {
     unsigned char offset, mats[HARBOR_COUNT] = {WOOD, WOOL, WHEAT, BRICK, ORE, GENERAL_DEAL, GENERAL_DEAL, GENERAL_DEAL, GENERAL_DEAL};
 
+    // shuffle materails
     vector_shuffle((signed char *)mats, HARBOR_COUNT);
 
     for (offset = 0; offset < HARBOR_COUNT; offset++)
     {
+        // give each vertecies its harbor related
         graph->vertices[harbors[offset * 2] + AREAS].harbor =
             graph->vertices[harbors[offset * 2 + 1] + AREAS].harbor =
                 mats[offset] + 1;
@@ -78,6 +93,7 @@ void catan_settle_vertecies(GraphPtr graph)
 
     for (offset = 0; offset < VERTECIES; offset++)
     {
+        // set settlement vertex colors to black
         graph->vertices[offset + AREAS].color = BLACK;
     }
 }
@@ -94,27 +110,17 @@ void catan_players_init(PlayerPtr players, signed char size)
 {
     while (--size >= 0)
     {
+        // for each player give defualts values defined by game rules
         players[size].color = size;
         players[size].amounts[ROAD] = 15;
         players[size].amounts[SETTLEMENT] = 5;
         players[size].amounts[CITY] = 4;
-
-        // // FIXME: remove
-        // players[size].materials[0] = 10;
-        // players[size].materials[1] = 10;
-        // players[size].materials[2] = 10;
-        // players[size].materials[3] = 10;
-        // players[size].materials[4] = 10;
-        // players[size].developmentCards[0] = 10;
-        // players[size].developmentCards[1] = 10;
-        // players[size].developmentCards[2] = 10;
-        // players[size].developmentCards[3] = 10;
-        // players[size].developmentCards[4] = 10;
     }
 }
 unsigned char *areas_numbers(unsigned char *size, signed char *params,
                              int socket, GameState state)
 {
+    // retrive areas numbers and materials to client
     unsigned char *arr = malloc(sizeof(signed char) * (*size = AREAS)), offset;
 
     for (offset = 0; offset < AREAS; offset++)
@@ -135,6 +141,7 @@ unsigned char *harbors_numbers(unsigned char *size, signed char *params,
 
         mat == GENERAL_DEAL && (mat_index += general_deal_counter++);
 
+        // set harbors numbers values
         harbors_numbs[mat_index * 2] = state->harbors[offset * 2];
         harbors_numbs[mat_index * 2 + 1] = state->harbors[offset * 2 + 1];
     }
@@ -154,11 +161,13 @@ unsigned char *players_around_area(unsigned char *size, signed char *params,
     EdgePtr edge;
     Node node;
 
+    // for each edge
     QUEUE_TRAVARSE(area->edges, node);
 
     edge = node->data;
     dest = edge->vertex;
 
+    // if color belong to a player add it to the bit map
     (dest->color < BLACK) &&
         (playerBits |= 1 << dest->color);
 
@@ -172,12 +181,15 @@ unsigned char *roll_dice(unsigned char *size, signed char *params,
 {
     unsigned char *arr, dice, sum;
 
-    sum = /*dice = 3;*/ brand(1, 7);
-    sum += /*(dice = 4); */ dice = brand(1, 7);
+    sum = brand(1, 7);
+    sum += dice = brand(1, 7);
+
+    // combine 2 dices to 1 byte value
     arr = single_byte(size, (dice << 4) | (sum - dice));
 
     printt("\trolled number %hhu while arr %hhd (%hhd, %hhd)\n", sum, arr[0], sum - dice, dice);
 
+    // if the combination is not equal to 7 collect materials to players
     (sum != 7) &&
         (collect_materials(sum, state->players, state->graph, state->bankMaterials, state->robberArea), 1);
 
@@ -209,6 +221,7 @@ unsigned char *inf_player_actionable(unsigned char *size, signed char *params,
 
     bool player_has_materials, has_amount, bank_has_materials;
 
+    // for each item on the store
     for (offset = 0; offset < TOTAL_STORE; offset++)
     {
 
@@ -225,7 +238,7 @@ unsigned char *inf_player_actionable(unsigned char *size, signed char *params,
                                    store[offset], TOTAL_MATERIALS,
                                    vector_sub, bis_neg) >>
                                1);
-
+        // allow only if player has enough materials && bank has enough materials && player have amount
         arr[0] |= (player_has_materials && has_amount && bank_has_materials) << offset;
     }
     arr[1] = state->players->harbors;
@@ -243,10 +256,12 @@ unsigned char *inf_players_manip(unsigned char *size,
     PlayerPtr player = players + offset;
     unsigned char *res;
 
+    // switch between bank and player if the offset is MAX PLAYERS
     bool _is_bank = offset == MAX_PLAYERS;
     signed char *vec = bank;
     !_is_bank && (vec = (signed char *)manip(player));
 
+    // duplicate and return
     res = (unsigned char *)vector_dup(vec, (*size = count));
 
     return res;
@@ -287,37 +302,33 @@ unsigned char *inf_player_devcards(unsigned char *size, signed char *params,
 unsigned char *inf_player_victory_points(unsigned char *size, signed char *params,
                                          int socket, GameState state)
 {
+    // get victory points
     unsigned char victory_points = state->players[params[0]].victoryPoints;
-    victory_points += state->achievementCards[BIGGEST_ARMY] == params[0];
-    victory_points += state->achievementCards[LONGEST_PATH] == params[0];
+
+    // checks for achivement cards victory points
+    victory_points += (state->achievementCards[BIGGEST_ARMY] == params[0]) * 2;
+    victory_points += (state->achievementCards[LONGEST_PATH] == params[0]) * 2;
+
+    // return to socket
     return single_byte(size, victory_points);
 }
 
 unsigned char *inf_player_amounts(unsigned char *size, signed char *params,
                                   int socket, GameState state)
 {
+    // return vector duplicate of the player amounts vector
     return (unsigned char *)vector_dup((signed char *)state->players[params[0]].amounts, (signed char)(*size = TOTAL_STORE - 1));
 }
 unsigned char *inf_achivement_cards(unsigned char *size, signed char *params,
                                     int socket, GameState state)
 {
+    // return vector duplicate of the game achivement cards
     return (unsigned char *)vector_dup(state->achievementCards, (*size = TOTAL_ACHIEVEMENTS_CARD));
-}
-unsigned char *single_byte(unsigned char *size, signed char value)
-{
-    unsigned char *res = malloc(sizeof(unsigned char) * (*size = 1));
-    *res = value;
-    return res;
-}
-
-void print_edge_offset(const void *ptr)
-{
-    EdgePtr edge = (EdgePtr)ptr;
-    printt(" %d ", edge->offset);
 }
 
 unsigned char switch_action_store_road(signed char *params, GameState state)
 {
+    // buy road
     buy_road(state->players,
              state->graph,
              store[ROAD],
@@ -325,6 +336,7 @@ unsigned char switch_action_store_road(signed char *params, GameState state)
              params[1],
              params[2] + AREAS,
              params[3] + AREAS);
+    //  apply updat elongest road
     unsigned char res = update_longest_road(state->graph, state->achievementCards + LONGEST_PATH);
     return res;
 }
@@ -364,6 +376,7 @@ unsigned char *switch_action_store(unsigned char *size, signed char *params,
     unsigned char product = params[0];
     unsigned char *res = single_byte(size, false);
 
+    // switch between actions
     unsigned char (*actions[])(signed char *, GameState) = {
         switch_action_store_road,
         switch_action_store_settlement,
@@ -377,10 +390,14 @@ unsigned char *switch_action_store(unsigned char *size, signed char *params,
 
 bool switch_dev_card_yop(signed char *params, GameState state)
 {
+    // cost vector
     signed char mats_to_transfer[TOTAL_MATERIALS] = {0};
+
     mats_to_transfer[params[1]]++;
     mats_to_transfer[params[2]]++;
+
     putts("transfer_materials switch dev card yop");
+    // transfer cost
     transfer_materials(state->players, state->bankMaterials, mats_to_transfer, true);
     return true;
 }
@@ -393,13 +410,19 @@ bool switch_dev_card_monopol(signed char *params, GameState state)
 unsigned char *switch_dev_card(unsigned char *size, signed char *params,
                                int socket, GameState state)
 {
-    bool conditions[2] = {params[0] == 3, params[0] == 4};
+    signed char cost[TOTAL_DEVELOPMENT_CARD] = {0};
+    unsigned char dcard = params[0];
+    // only apply cost if its not victory point card
+    cost[dcard] += dcard != VICTORY_POINTS_CARD;
+
+    bool conditions[2] = {dcard == 3, dcard == 4};
     bool (*actions[])(signed char *, GameState) = {switch_dev_card_yop, switch_dev_card_monopol};
 
     unsigned char index = find_first_true_index(conditions, 2);
     (index < 2) && actions[index](params, state);
 
-    state->players->developmentCards[params[0]]--;
+    // decreate development cards
+    transfer_dev_card(state->players, state->bankDevelopments, cost, false);
 
     return single_byte(size, 0);
 }
@@ -408,25 +431,30 @@ void collect_materials_area(VertexPtr area, PlayerPtr players, signed char *bank
     Node node;
     EdgePtr edge;
 
-    signed char(*mats_to_players)[TOTAL_MATERIALS] =
-        calloc(MAX_PLAYERS, sizeof(*mats_to_players));
+    // 2d array of players and materials
+    signed char mats_to_players[MAX_PLAYERS][TOTAL_MATERIALS] = {0};
 
     const unsigned char material = extract_area_materials(area->material_number);
     unsigned char player_offset;
 
     bool is_city;
 
+    // for each edge
     QUEUE_TRAVARSE(area->edges, node);
 
     edge = node->data;
     player_offset = edge->vertex->color & 0x0F;
     is_city = (edge->vertex->color >> 6) & 0x01;
+
+    // add materials if its belong to player & double it if its city
     mats_to_players[player_offset][material] += (player_offset < MAX_PLAYERS) * (1 + is_city);
 
     QUEUE_TRAVARSE_FINISH;
 
+    // for each player
     for (player_offset = 0; player_offset < MAX_PLAYERS; player_offset++)
     {
+        // transfer each player its materials
         transfer_materials(players + player_offset, bank, vector_upper_limit(mats_to_players[player_offset], bank, TOTAL_MATERIALS), true);
     }
 }
@@ -442,8 +470,10 @@ void collect_materials(unsigned char rolled_num,
     unsigned char offset;
     signed char vertex;
 
+    // for each area vertex
     for (offset = 0, vertex = 0; offset < AREAS; offset++)
     {
+        // if the rolled num equal to the vertex area number then add this to
         (extract_area_number(graph->vertices[offset].material_number) == rolled_num &&
          robberArea != offset) &&
             (vertecies[vertex++] = graph->vertices + offset);
@@ -457,20 +487,22 @@ void collect_materials(unsigned char rolled_num,
 
 bool move_robber_take(signed char *params, GameState state, unsigned char target_index)
 {
+
+    // steal from player random material
     unsigned char cost[TOTAL_MATERIALS] = {0};
     cost[random_index_by_vals(TOTAL_MATERIALS,
                               (signed char *)state->players[target_index].materials)]++;
-    putts("transfer_materials move robber take");
+
+    //   transfer materials
     transfer_materials(state->players + params[0],
                        (signed char *)state->players[target_index].materials,
                        (signed char *)cost, true);
-    printt("steal mode player index: %d\n", target_index);
     return true;
 }
 bool move_robber_knight(signed char *params, GameState state, unsigned char target_index)
 {
+    // increase the knight used variable of the player
     state->players[params[0]].knightUsed++;
-    printt("pullin up knight!! %d\n", state->players[params[0]].knightUsed);
     return true;
 }
 unsigned char *move_robber(unsigned char *size, signed char *params,
@@ -480,12 +512,14 @@ unsigned char *move_robber(unsigned char *size, signed char *params,
     unsigned char target_index = params[1]; // if got 7!
     (state->robberArea) = params[2];
 
+    // switch between states steal or knight
     bool conditions[2] = {target_index > 0 && target_index <= state->num_of_players, !target_index};
     bool (*actions[])(signed char *, GameState, unsigned char) = {move_robber_take, move_robber_knight};
 
     unsigned char index = find_first_true_index(conditions, 2);
     (index < 2) && actions[index](params, state, target_index);
 
+    // apply update biggest army
     res[0] = update_biggest_army(state->players, state->num_of_players,
                                  state->achievementCards + BIGGEST_ARMY);
     printt("returning %hhd\n", *res);
@@ -495,9 +529,11 @@ unsigned char *drop_materials(unsigned char *size, signed char *params,
                               int socket, GameState state)
 {
     putts("transfer_materials drop materials");
+    // transfer materials
     transfer_materials(state->players + params[0], state->bankMaterials, params + 2, false);
 
     unsigned char offset;
+    // if also the rest of the bot needs to drop materials then apply bot drop materials
     for (offset = 1; offset < state->num_of_players && params[1]; offset++)
     {
         vector_sum((signed char *)state->players[offset].materials, TOTAL_MATERIALS) >= 7 && bot_drop_materials(state->players + offset, state);
@@ -509,15 +545,19 @@ unsigned char *drop_materials(unsigned char *size, signed char *params,
 unsigned char *make_a_deal(unsigned char *size, signed char *params, int socket, GameState state)
 {
 
+    // extract data
     unsigned char deal_num = params[0];
     unsigned char deal_mat_from = (deal_num & 0x07) - 1;
     unsigned char deal_mat_to = (deal_num >> 3) - 1;
 
+    // switch between deals condition
     bool conditions[3] = {state->players->harbors >> deal_mat_from, state->players->harbors >> TOTAL_MATERIALS, true};
 
+    // find deal type
     unsigned char deal_type = find_first_true_index(conditions, 3);
     printt("local player deal: from: %d to: %d type: %d\n", deal_mat_from, deal_mat_to, deal_type);
 
+    // handle deal
     handle_deal(state->players, state, deal_mat_from, deal_mat_to, deal_type);
 
     return single_byte(size, 0);
@@ -529,6 +569,7 @@ bool bot_drop_materials(PlayerPtr player, GameState state)
     unsigned char astIndex = state->astIndexes[player->color - 1];
     unsigned char amount = vector_sum((signed char *)player->materials, TOTAL_MATERIALS) / 2;
 
+    // get the right order
     unsigned char *(*func[3])(GraphPtr, PlayerPtr) = {woodMatsOrder,
                                                       wheatMatsOrder,
                                                       cardsMatsOrder};
@@ -540,8 +581,13 @@ bool bot_drop_materials(PlayerPtr player, GameState state)
 
     while (amount--)
     {
+        // reset cost vector
         unsigned char cost[TOTAL_MATERIALS] = {0};
+
+        // find material
         signed char index = vector_order_find_last((signed char *)player->materials, (signed char *)order, TOTAL_MATERIALS, above_zero);
+
+        // increase the cost of the chosen material
         cost[index]++;
         putts("transfer_materials bot drop materials");
         transfer_materials(player, state->bankMaterials, (signed char *)cost, false);
@@ -553,6 +599,7 @@ bool bot_drop_materials(PlayerPtr player, GameState state)
 }
 bool bot_plays(PlayerPtr player, int socket, GameState state)
 {
+    // in normal rounds this functions apply
     unsigned char astIndex = state->astIndexes[player->color - 1];
     unsigned char size, *buffer, *temp;
     bool need_stealing;
@@ -568,7 +615,6 @@ bool bot_plays(PlayerPtr player, int socket, GameState state)
     free(temp);
 
     buffer[0] = 3;
-
     size = 2;
 
     print_vec(buffer, 2);
@@ -577,6 +623,7 @@ bool bot_plays(PlayerPtr player, int socket, GameState state)
 
     (need_stealing) && (usleep(200000), state_steal(player, socket, state));
 
+    // find right action to do
     bool (**conditionsFunctions)(PlayerPtr, GameState, QueuePtr);
     void (**actionsFunctions)(PlayerPtr, int, GameState, QueuePtr);
 
@@ -585,10 +632,12 @@ bool bot_plays(PlayerPtr player, int socket, GameState state)
         wheat_init_actions,
         cards_init_actions};
 
+    // perform actions initializer
     init_actions[astIndex](&conditionsFunctions, &actionsFunctions);
     putts("after init");
     usleep(200000);
 
+    // play with the actions
     play_actions_with_conditions(state,
                                  player,
                                  socket,
@@ -606,6 +655,8 @@ bool bot_plays(PlayerPtr player, int socket, GameState state)
 bool bot_buy_first(PlayerPtr player, int socket, GameState state)
 {
 
+    // in the first 2 rounds this functions apply
+
     putts("bot_buy_first");
     usleep(200000);
 
@@ -618,6 +669,7 @@ bool bot_buy_first(PlayerPtr player, int socket, GameState state)
     unsigned char vertex = 0;
     putts("start searching vertex");
 
+    // search for vertex to buy
     vertex = convert_void_ptr_to_unsigned_char(heap_top(heap));
 
     while (!(state->graph->vertices[vertex].color == BLACK && buyableSettlement(player, state->graph->vertices + vertex, false)))
@@ -631,6 +683,7 @@ bool bot_buy_first(PlayerPtr player, int socket, GameState state)
     heap_extract(heap, heap_max, NULL);
     putts("buy settlement");
 
+    // buy the right settlement and notify the socket
     buy_settlement(player, state->graph, store[SETTLEMENT],
                    state->bankMaterials, -state->turnOffset / state->num_of_players, vertex);
 
@@ -643,6 +696,7 @@ bool bot_buy_first(PlayerPtr player, int socket, GameState state)
 
     putts("prefered road");
 
+    // get buyable around vertex
     Stack buyableRoads;
     stack_init(&buyableRoads);
 
@@ -654,6 +708,7 @@ bool bot_buy_first(PlayerPtr player, int socket, GameState state)
 
     printt("buying road %d to %d\n", prefered_road & 0xFF, prefered_road >> 8);
 
+    // buy road and notify the socket
     buy_road(player, state->graph, store[ROAD], state->bankMaterials, false, prefered_road & 0xFF, prefered_road >> 8);
     putts("calloc");
 
@@ -685,17 +740,17 @@ unsigned char *handle_rest_turns(unsigned char *size, signed char *params,
     {
         printt("start: player index %d", turnColor);
 
+        // run play functions
         stealing = playFn[initial_state](state->players + turnColor, socket, state);
         putts("player done");
 
+        // increase turn
         (state->turnOffset)++;
 
+        // notify socket the turn ends
         _buff[0] = 0;
         _buff[1] = (state->turnOffset) % state->num_of_players;
         _buff[2] = stealing && vector_sum((signed char *)state->players->materials, TOTAL_MATERIALS) >= 7;
-
-        BOT_SEND(socket, _size, _buff)
-        // printt("\tbot number %d done playing!", turnColor);
     }
 
     putts("done");
@@ -705,5 +760,6 @@ unsigned char *handle_rest_turns(unsigned char *size, signed char *params,
 }
 unsigned char *close_server(unsigned char *size, signed char *params, int socket, GameState state)
 {
+    // close server
     exit(EXIT_SUCCESS);
 }

@@ -11,18 +11,6 @@
 #include "./constants.h"
 #include "./state.h"
 
-//----------------------------------------------------------------------------------------
-//                                 catan start
-//                                 -----------
-//
-// General      : The functions start the game server.
-//
-// Parameters   :
-//          signed char - how many players (In)
-//
-// Return Value : None.
-//
-//----------------------------------------------------------------------------------------
 void catan_start(signed char);
 
 #endif
