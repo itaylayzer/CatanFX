@@ -21,7 +21,7 @@
          <children>
             <VBox prefWidth="100.0" spacing="10.0" VBox.vgrow="NEVER">
                <children>
-                  <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" text="# Itay Lazyerovich" textAlignment="CENTER" textFill="#9a9a9a99">
+                  <Label alignment="CENTER" contentDisplay="CENTER" maxWidth="1.7976931348623157E308" text="# Itay Layzerovich" textAlignment="CENTER" textFill="#9a9a9a99">
                      <font>
                         <Font name="Consolas Italic" size="15.0" />
                      </font>
