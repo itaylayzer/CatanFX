@@ -6,6 +6,8 @@ Recreating Catan experience using javafx and c language, in client-server archit
 
 worked between the start of february till the mid of june.
 
+**Common Issue: Client java version (install the latest)**
+
 ## How to Run:
 
 the client is in this branch while the server is in another branch called "model". the client is written to run in any system/os, but the model currently only runs in linux for some reason (opening socket didnt work in my windows).
