@@ -340,7 +340,19 @@ unsigned short prioritiseWheatCardsRoad(GraphPtr graph,
         putts("before djkstra");
         graph_dijkstra(graph, vertex, BLACK);
         putts("after dijkstra");
-        bestWoodScore = best_vertex_score / graph_dijkstra_distance(graph, best_vertex);
+
+        unsigned char dist = graph_dijkstra_distance(graph, best_vertex);
+
+        if (dist == 0)
+        {
+            putts("Error: graph_dijkstra_distance returned 0 — cannot divide");
+            bestWoodScore = 0;
+        }
+        else
+        {
+            bestWoodScore = best_vertex_score / dist;
+        }
+
         heap_insert(&woodScores, convert_unsigned_short_to_void_ptr(edge_num), woodScore(mats_prob), heap_max);
         heap_insert(&bestWoodScores, convert_unsigned_short_to_void_ptr(edge_num), bestWoodScore, heap_max);
 
