@@ -10,7 +10,7 @@
 //
 //----------------------------------------------------------------------------------------
 
-const signed char store[TOTAL_STORE][TOTAL_MATERIALS];
-const float probs[11];
-unsigned char harbors[HARBOR_COUNT * 2];
+extern const signed char store[TOTAL_STORE][TOTAL_MATERIALS];
+extern const float probs[11];
+extern unsigned char harbors[HARBOR_COUNT * 2];
 #endif

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <stdarg.h>
 
 //----------------------------------------------------------------------------------------
 //                                 Printf with Time
